@@ -13,8 +13,8 @@ namespace leap {
   template<typename T, typename>
   struct field_serializer_t;
 
-  template<class T>
-  void Serialize(std::ostream& os, const T& obj) {
+  template<class stream_t, class T>
+  void Serialize(stream_t&& os, const T& obj) {
     static_assert(!std::is_pointer<T>::value, "Do not serialize a pointer to an object, serialize a reference");
     static_assert(
       !std::is_base_of<std::false_type, field_serializer_t<T, void>>::value,
@@ -29,8 +29,8 @@ namespace leap {
     ar.Process();
   }
 
-  template<class T>
-  std::shared_ptr<T> Deserialize(std::istream& is) {
+  template<class T, class stream_t>
+  std::shared_ptr<T> Deserialize(stream_t&& is) {
     auto retVal = std::make_shared<leap::internal::Allocation<T>>();
     
     // Initialize the archive with work to be done:
@@ -44,10 +44,5 @@ namespace leap {
     );
 
     return retVal;
-  }
-
-  template<class T>
-  std::shared_ptr<T> Deserialize(std::istream&& is) {
-    return Deserialize<T>(is);
   }
 }
