@@ -39,6 +39,10 @@ void IArchiveImpl::Skip(uint64_t ncb) {
   is.ignore(ncb);
 }
 
+std::istream& IArchiveImpl::GetStream() const {
+  return is;
+}
+
 void IArchiveImpl::Process(const deserialization_task& task) {
   objMap[1] = task.pObj;
   work.push(task);

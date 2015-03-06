@@ -47,6 +47,7 @@ namespace leap {
     // OArchive overrides:
     uint32_t RegisterObject(const field_serializer& serializer, const void* pObj) override;
     void Write(const void* pBuf, uint64_t ncb) const override;
+    std::ostream& GetStream() const override;
 
     /// <summary>
     /// Processes objects on the internal queue until the queue is empty

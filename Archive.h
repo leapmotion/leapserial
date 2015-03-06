@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <iosfwd>
 
 namespace leap {
   struct create_delete;
@@ -61,6 +62,11 @@ namespace leap {
     virtual uint32_t RegisterObject(const field_serializer& serializer, const void* pObj) = 0;
 
     /// <summary>
+    /// Get  a stream interface to the archive
+    /// </summary>
+    virtual std::ostream& GetStream() const = 0;
+    
+    /// <summary>
     /// Writes the specified bytes to the output stream
     /// </summary>
     virtual void Write(const void* pBuf, uint64_t ncb) const = 0;
@@ -101,6 +107,11 @@ namespace leap {
     /// be at a minimum default constructed, the returned object may nevertheless have yet to be deserialized.
     /// </remarks>
     virtual void* Lookup(const create_delete& cd, const field_serializer& serializer, uint32_t objId) = 0;
+
+    /// <summary>
+    /// Get a stream interface to the archive
+    /// </summary>
+    virtual std::istream& GetStream() const = 0;
 
     /// <summary>
     /// Reads the specified number of bytes from the input stream

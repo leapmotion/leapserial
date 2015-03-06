@@ -37,6 +37,10 @@ void OArchiveImpl::Write(const void* pBuf, uint64_t ncb) const {
   os.write((const char*) pBuf, ncb);
 }
 
+std::ostream& OArchiveImpl::GetStream() const {
+  return os;
+}
+
 void OArchiveImpl::Process(void) {
   for (; !deferred.empty(); deferred.pop()) {
     work& w = deferred.front();
