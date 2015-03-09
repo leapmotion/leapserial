@@ -1,4 +1,4 @@
-set(LeapResource_SRCS
+set(LeapSerial_SRCS
   Allocation.h
   Allocation.cpp
   Archive.h
@@ -14,20 +14,20 @@ set(LeapResource_SRCS
   serial_traits.h
 )
 
-set(LeapResourceTest_SRCS
+set(LeapSerialTest_SRCS
   test/DescriptorTest.cpp
 )
 
-add_pch(LeapResource_SRCS "stdafx.h" "stdafx.cpp")
+add_pch(LeapSerial_SRCS "stdafx.h" "stdafx.cpp")
 
-add_library(LeapResource ${LeapResource_SRCS})
-target_link_libraries(LeapResource Autowiring::Autowiring)
-set_property(TARGET LeapResource PROPERTY FOLDER "Utility")
+add_library(LeapSerial ${LeapSerial_SRCS})
+target_link_libraries(LeapSerial Autowiring::Autowiring)
+set_property(TARGET LeapSerial PROPERTY FOLDER "Utility")
 
 if(BUILD_TESTING)
-  add_pch(LeapResourceTest_SRCS "stdafx.h" "stdafx.cpp")
-  add_executable(LeapResourceTest ${LeapResourceTest_SRCS} "../gtest-all-guard.cpp")
-  target_strip(LeapResourceTest)
-  target_link_libraries(LeapResourceTest LeapResource Autowiring::AutoTesting)
-  set_property(TARGET LeapResourceTest PROPERTY FOLDER "Utility")
+  add_pch(LeapSerialTest_SRCS "stdafx.h" "stdafx.cpp")
+  add_executable(LeapSerialTest ${LeapSerialTest_SRCS} "../gtest-all-guard.cpp")
+  target_strip(LeapSerialTest)
+  target_link_libraries(LeapSerialTest LeapSerial Autowiring::AutoTesting)
+  set_property(TARGET LeapSerialTest PROPERTY FOLDER "Utility")
 endif()
