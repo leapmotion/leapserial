@@ -1,0 +1,66 @@
+#pragma once
+#include "Archive.h"
+#include "Descriptor.h"
+#include "serial_traits.h"
+#include <istream>
+#include <ostream>
+#include <string>
+#include <map>
+#include <unordered_map>
+
+namespace leap {
+  struct descriptor;
+  class IArchive;
+  class OArchive;
+
+  template<typename T, typename = void>
+  struct field_serializer_t:
+    std::false_type
+  {};
+
+  template<class T>
+  struct serial_traits;
+
+  // Objects that provide serial_traits should use those traits externally
+  template<typename T>
+  struct field_serializer_t<T, typename std::enable_if<!std::is_base_of<std::false_type, serial_traits<T>>::value>::type>:
+    field_serializer
+  {
+    serial_type type(void) const override {
+      if (std::is_integral<T>::value)
+        // Integral types can be written as varint
+        return serial_type::varint;
+
+      if (std::is_floating_point<T>::value)
+        // Floating-point numbers are bit-width fields
+        switch (sizeof(T)) {
+        case 8:
+          return serial_type::b64;
+        case 4:
+          return serial_type::b32;
+        default:
+          break;
+        }
+
+      // Default type will be a counted string
+      return serial_type::string;
+    }
+
+    uint64_t size(const void* pObj) const override {
+      return serial_traits<T>::size(*static_cast<const T*>(pObj));
+    }
+
+    void serialize(OArchive& ar, const void* pObj) const override {
+      serial_traits<T>::serialize(ar, *static_cast<const T*>(pObj));
+    }
+
+    void deserialize(IArchive& ar, void* pObj, uint64_t ncb) const override {
+      serial_traits<T>::deserialize(ar, *static_cast<T*>(pObj), ncb);
+    }
+
+    static const field_serializer& GetDescriptor(void) {
+      static const field_serializer_t m{};
+      return m;
+    }
+  };
+}
