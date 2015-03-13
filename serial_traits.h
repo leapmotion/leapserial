@@ -193,7 +193,7 @@ namespace leap {
   template<typename T, typename Alloc>
   struct serial_traits<std::vector<T, Alloc>>
   {
-    static uint64_t size(const std::vector<T>& v) {
+    static uint64_t size(const std::vector<T, Alloc>& v) {
       if (internal::is_constant_size<T>::value)
         // Constant-sized element types have a simple equation to compute total size
         return sizeof(uint32_t) + v.size() * sizeof(T);
@@ -205,7 +205,7 @@ namespace leap {
       return retVal;
     }
 
-    static void serialize(OArchive& ar, const std::vector<T>& v) {
+    static void serialize(OArchive& ar, const std::vector<T, Alloc>& v) {
       // Write the number of entries first:
       uint32_t nEntries = static_cast<uint32_t>(v.size());
       ar.Write(&nEntries, sizeof(nEntries));
@@ -215,7 +215,7 @@ namespace leap {
         serial_traits<T>::serialize(ar, cur);
     }
 
-    static void deserialize(IArchive& ar, std::vector<T>& v, uint64_t ncb) {
+    static void deserialize(IArchive& ar, std::vector<T, Alloc>& v, uint64_t ncb) {
       // Read the number of entries first:
       uint32_t nEntries;
       ar.Read(&nEntries, sizeof(nEntries));
