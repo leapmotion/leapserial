@@ -1,5 +1,6 @@
 #pragma once
 #include "Archive.h"
+#include <vector>
 #include <map>
 #include <string>
 #include <unordered_map>
