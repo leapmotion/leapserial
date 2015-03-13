@@ -433,3 +433,41 @@ TEST_F(SerializationTest, NamedFieldCheck) {
   ASSERT_EQ(201, b->fooC);
 }
 
+struct HasArrayOfPointers {
+  MyRepeatedStructure* mrs[4];
+
+  static leap::descriptor GetDescriptor(void) {
+    return{
+      &HasArrayOfPointers::mrs
+    };
+  }
+};
+
+TEST_F(SerializationTest, ArrayOfPointersTest) {
+  std::ostringstream os;
+
+  {
+    int v = 999;
+
+    MyRepeatedStructure mrs[2];
+    mrs[0].pv = &v;
+    mrs[1].pv = &v;
+
+    HasArrayOfPointers aop;
+    aop.mrs[0] = &mrs[0];
+    aop.mrs[1] = &mrs[1];
+    aop.mrs[2] = &mrs[1];
+    aop.mrs[3] = nullptr;
+
+    // Round-trip serialize:
+    leap::Serialize(os, aop);
+  }
+
+  auto obj = leap::Deserialize<HasArrayOfPointers>(std::istringstream(os.str()));
+
+  ASSERT_NE(obj->mrs[0], obj->mrs[1]) << "Object identity incorrectly aliased";
+  ASSERT_EQ(obj->mrs[1], obj->mrs[2]) << "Object identity not correctly detected in array serialization";
+  ASSERT_EQ(nullptr, obj->mrs[3]) << "Null entry not correctly deserialized in an array";
+  ASSERT_EQ(obj->mrs[0]->pv, obj->mrs[1]->pv) << "Object identity not correctly detected in array serialization";
+  ASSERT_EQ(999, *obj->mrs[0]->pv) << "Array object not correctly deserialized to the value it holds";
+}

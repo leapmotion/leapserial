@@ -171,6 +171,24 @@ namespace leap {
     }
   };
 
+  template<typename T, int N>
+  struct serial_traits<T[N]>
+  {
+    static uint64_t size(const T* pObj) {
+      return 0;
+    }
+
+    static void serialize(OArchive& ar, const T* pObj) {
+      for (int i = 0; i < N; i++)
+        serial_traits<T>::serialize(ar, pObj[i]);
+    }
+
+    static void deserialize(IArchive& ar, T* pObj, uint64_t ncb) {
+      for (int i = 0; i < N; i++)
+        serial_traits<T>::deserialize(ar, pObj[i], 0);
+    }
+  };
+
   // Convenience specialization for std::vector
   template<typename T, typename Alloc>
   struct serial_traits<std::vector<T, Alloc>>
