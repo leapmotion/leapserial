@@ -471,3 +471,36 @@ TEST_F(SerializationTest, ArrayOfPointersTest) {
   ASSERT_EQ(obj->mrs[0]->pv, obj->mrs[1]->pv) << "Object identity not correctly detected in array serialization";
   ASSERT_EQ(999, *obj->mrs[0]->pv) << "Array object not correctly deserialized to the value it holds";
 }
+
+struct HasPostInitRoutine {
+  int foo = 101;
+  int bar = 102;
+  std::string helloWorld = "Hello World";
+
+  void PostInit(void) {
+    bar = foo;
+  }
+
+  static leap::descriptor GetDescriptor(void) {
+    return{
+      &HasPostInitRoutine::foo,
+      {1, &HasPostInitRoutine::helloWorld},
+      &HasPostInitRoutine::PostInit
+    };
+  }
+};
+
+TEST_F(SerializationTest, PostInitTest) {
+  std::ostringstream os;
+  {
+    HasPostInitRoutine hpit;
+    hpit.foo = 12991;
+
+    leap::Serialize(os, hpit);
+  }
+
+  auto read = leap::Deserialize<HasPostInitRoutine>(std::istringstream(os.str()));
+  ASSERT_EQ("Hello World", read->helloWorld) << "Identified field not correctly deserialized";
+  ASSERT_EQ(12991, read->foo) << "Deserialization of primitve member did not correctly occur";
+  ASSERT_EQ(12991, read->bar) << "Post initialization routine did not run as expected";
+}

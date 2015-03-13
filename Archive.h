@@ -9,6 +9,9 @@ namespace leap {
   class IArchive;
 
   enum class serial_type {
+    // Null type, this type is never serialized
+    ignored = -1,
+
     varint = 0,
     b64 = 1,
     string = 2,

@@ -2,10 +2,7 @@
 #include "Archive.h"
 #include "Descriptor.h"
 #include "serial_traits.h"
-#include <istream>
-#include <ostream>
-#include <string>
-#include <map>
+#include <mutex>
 #include <unordered_map>
 
 namespace leap {
@@ -61,6 +58,46 @@ namespace leap {
     static const field_serializer& GetDescriptor(void) {
       static const field_serializer_t m{};
       return m;
+    }
+  };
+
+  template<typename T>
+  struct field_serializer_t<void(T::*)()>:
+    field_serializer
+  {
+    void(T::*pfn)();
+
+    serial_type type(void) const override {
+      // Default type will be a counted string
+      return serial_type::ignored;
+    }
+
+    uint64_t size(const void* pObj) const override {
+      return 0;
+    }
+
+    void serialize(OArchive& ar, const void* pObj) const override {
+      // Does nothing
+    }
+
+    void deserialize(IArchive& ar, void* pObj, uint64_t ncb) const override {
+      (static_cast<T*>(pObj)->*pfn)();
+    }
+
+    struct hash {
+      size_t operator()(void(T::*pfn)()) const {
+        return *reinterpret_cast<size_t*>(&pfn);
+      }
+    };
+
+    static const field_serializer& GetDescriptor(void(T::*pfn)()) {
+      static std::unordered_map<void(T::*)(), field_serializer_t, hash> mp;
+      static std::mutex lock;
+
+      std::lock_guard<std::mutex> lk(lock);
+      auto& entry = mp[pfn];
+      entry.pfn = pfn;
+      return entry;
     }
   };
 }
