@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Serializer.h"
+#include "DataTypes.h"
 #include <gtest/gtest.h>
 #include <sstream>
 #include <type_traits>
@@ -312,6 +313,16 @@ TEST_F(SerializationTest, VectorOfFields) {
   ASSERT_EQ(20UL, b->size()) << "Unexpected number of elements deserialized from a vector";
   for (auto& cur : *b)
     ASSERT_EQ(10009, cur.foo);
+
+  //Try a type that requires Eigen alignment
+  stdvectorV2 eigenVec;
+
+  eigenVec.resize(20);
+  std::ostringstream os2;
+  leap::Serialize(os2, eigenVec);
+
+  auto c = leap::Deserialize<stdvectorV2>(std::istringstream(os2.str()));
+  ASSERT_EQ(20UL, c->size()) << "Unexpected number of elements deserialized from a vector";
 }
 
 TEST_F(SerializationTest, ExpectedByteCount) {
