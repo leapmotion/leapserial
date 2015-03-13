@@ -1,5 +1,6 @@
 #pragma once
 #include "Archive.h"
+#include "Descriptor.h"
 #include "serial_traits.h"
 #include <mutex>
 #include <unordered_map>

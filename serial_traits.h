@@ -1,6 +1,5 @@
 #pragma once
 #include "Archive.h"
-#include "Descriptor.h"
 #include <vector>
 #include <map>
 #include <string>
