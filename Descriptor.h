@@ -1,5 +1,6 @@
 #pragma once
 #include "Archive.h"
+#include "field_serializer.h"
 #include <initializer_list>
 #include <iosfwd>
 #include <unordered_map>
