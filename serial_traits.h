@@ -1,5 +1,7 @@
 #pragma once
 #include "Archive.h"
+#include "Descriptor.h"
+#include "field_serializer_t.h"
 #include <vector>
 #include <map>
 #include <string>
@@ -10,11 +12,11 @@
 #endif
 
 namespace leap {
-  template<typename T, typename>
-  struct field_serializer_t;
-
   template<typename T>
   struct serial_traits;
+
+  template<typename T, typename>
+  struct field_serializer_t;
 
   template<typename T, typename = void>
   struct primitive_serial_traits:
@@ -25,29 +27,6 @@ namespace leap {
   struct create_delete {
     void* (*pfnAlloc)();
     void(*pfnFree)(void*);
-  };
-
-  /// <summary>
-  /// Inherits true_type if the specified serialization member function needs to use an input allocator
-  /// </summary>
-  template<typename T, typename = void>
-  struct serializer_needs_allocation
-  {
-    template<typename U>
-    static std::false_type select(
-      decltype(
-        serial_traits<U>::deserialize(
-          *static_cast<IArchive*>(nullptr),
-          *static_cast<U*>(nullptr),
-          0
-        )
-      )*
-    );
-
-    template<typename>
-    static std::true_type select(...);
-
-    static const bool value = decltype(select<T>(nullptr))::value;
   };
 
   namespace internal {
@@ -106,8 +85,8 @@ namespace leap {
     }
 
     // GetDescriptor is defined for our type, we can invoke it
-    static const descriptor& GetDescriptor(void) {
-      static const descriptor desc = T::GetDescriptor();
+    static const field_serializer& GetDescriptor(void) {
+      static const auto desc = T::GetDescriptor();
       return desc;
     }
   };

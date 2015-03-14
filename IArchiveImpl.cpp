@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "IArchiveImpl.h"
+#include "field_serializer.h"
 #include "serial_traits.h"
 #include <iostream>
 
@@ -101,6 +102,10 @@ void IArchiveImpl::Process(const deserialization_task& task) {
       break;
     case serial_type::varint:
       // No idea how much, leave it to the consumer
+      ncb = 0;
+      break;
+    case serial_type::ignored:
+      // Shold never happen, but if it does, then read no bytes
       ncb = 0;
       break;
     }

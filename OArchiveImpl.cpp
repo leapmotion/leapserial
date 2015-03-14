@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "OArchiveImpl.h"
+#include "field_serializer.h"
 #include <iostream>
 
 using namespace leap;
