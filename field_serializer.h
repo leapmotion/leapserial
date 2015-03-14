@@ -1,6 +1,5 @@
 #pragma once
 #include "Archive.h"
-#include "Descriptor.h"
 #include "serial_traits.h"
 #include <mutex>
 #include <unordered_map>
@@ -23,6 +22,10 @@ namespace leap {
   struct field_serializer_t<T, typename std::enable_if<!std::is_base_of<std::false_type, serial_traits<T>>::value>::type>:
     field_serializer
   {
+    bool allocates(void) const override {
+      return serializer_needs_allocation<T>::value;
+    }
+
     serial_type type(void) const override {
       if (std::is_integral<T>::value)
         // Integral types can be written as varint
@@ -47,11 +50,11 @@ namespace leap {
       return serial_traits<T>::size(*static_cast<const T*>(pObj));
     }
 
-    void serialize(OArchive& ar, const void* pObj) const override {
+    void serialize(OArchiveRegistry& ar, const void* pObj) const override {
       serial_traits<T>::serialize(ar, *static_cast<const T*>(pObj));
     }
 
-    void deserialize(IArchive& ar, void* pObj, uint64_t ncb) const override {
+    void deserialize(IArchiveRegistry& ar, void* pObj, uint64_t ncb) const override {
       serial_traits<T>::deserialize(ar, *static_cast<T*>(pObj), ncb);
     }
 
@@ -67,6 +70,8 @@ namespace leap {
   {
     void(T::*pfn)();
 
+    bool allocates(void) const override { return false; }
+
     serial_type type(void) const override {
       // Default type will be a counted string
       return serial_type::ignored;
@@ -76,11 +81,11 @@ namespace leap {
       return 0;
     }
 
-    void serialize(OArchive& ar, const void* pObj) const override {
+    void serialize(OArchiveRegistry& ar, const void* pObj) const override {
       // Does nothing
     }
 
-    void deserialize(IArchive& ar, void* pObj, uint64_t ncb) const override {
+    void deserialize(IArchiveRegistry& ar, void* pObj, uint64_t ncb) const override {
       (static_cast<T*>(pObj)->*pfn)();
     }
 

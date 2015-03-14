@@ -5,7 +5,7 @@
 
 namespace leap {
   class OArchiveImpl:
-    public OArchive
+    public OArchiveRegistry
   {
   public:
     OArchiveImpl(std::ostream& os);

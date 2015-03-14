@@ -13,6 +13,9 @@ namespace leap {
   template<typename T, typename>
   struct field_serializer_t;
 
+  template<typename T>
+  struct serial_traits;
+
   template<typename T, typename = void>
   struct primitive_serial_traits:
     std::false_type
@@ -21,7 +24,30 @@ namespace leap {
   // Create/delete structure used to describe how to allocate and free a memory block
   struct create_delete {
     void* (*pfnAlloc)();
-    void (*pfnFree)(void*);
+    void(*pfnFree)(void*);
+  };
+
+  /// <summary>
+  /// Inherits true_type if the specified serialization member function needs to use an input allocator
+  /// </summary>
+  template<typename T, typename = void>
+  struct serializer_needs_allocation
+  {
+    template<typename U>
+    static std::false_type select(
+      decltype(
+        serial_traits<U>::deserialize(
+          *static_cast<IArchive*>(nullptr),
+          *static_cast<U*>(nullptr),
+          0
+        )
+      )*
+    );
+
+    template<typename>
+    static std::true_type select(...);
+
+    static const bool value = decltype(select<T>(nullptr))::value;
   };
 
   namespace internal {
@@ -71,11 +97,11 @@ namespace leap {
       return GetDescriptor().size(&obj);
     }
 
-    static void serialize(OArchive& ar, const T& obj) {
+    static void serialize(OArchiveRegistry& ar, const T& obj) {
       GetDescriptor().serialize(ar, &obj);
     }
 
-    static void deserialize(IArchive& ar, T& obj, uint64_t ncb) {
+    static void deserialize(IArchiveRegistry& ar, T& obj, uint64_t ncb) {
       GetDescriptor().deserialize(ar, &obj, ncb);
     }
 
@@ -142,7 +168,7 @@ namespace leap {
     static const size_t constant_size = sizeof(uint32_t);
     static uint64_t size(const T*const) { return sizeof(uint32_t); }
 
-    static void serialize(OArchive& ar, const T* pObj) {
+    static void serialize(OArchiveRegistry& ar, const T* pObj) {
       // We need an ID for this object.  The RegisterObject method provides us with a way to do
       // this, but we also need to give this method the descriptor to be used to serialize the
       // object that we're pointed to right now.
@@ -153,19 +179,17 @@ namespace leap {
       ar.Write(&objId, sizeof(objId));
     }
 
-    static void deserialize(IArchive& ar, T*& pObj, uint64_t ncb) {
-      static const create_delete cd {
-        []() -> void* { return new T; },
-        [](void* ptr) { delete (T*) ptr; }
-      };
-
+    static void deserialize(IArchiveRegistry& ar, T*& pObj, uint64_t ncb) {
       // We expect to find an ID in the intput stream
       uint32_t objId;
       ar.Read(&objId, sizeof(objId));
 
       // Now we just perform a lookup into our archive and store the result here
       pObj = (T*)ar.Lookup(
-        cd,
+        {
+          []() -> void* { return new T; },
+          [](void* ptr) { delete (T*) ptr; }
+        },
         field_serializer_t<T, void>::GetDescriptor(),
         objId
       );
@@ -179,12 +203,12 @@ namespace leap {
       return 0;
     }
 
-    static void serialize(OArchive& ar, const T* pObj) {
+    static void serialize(OArchiveRegistry& ar, const T* pObj) {
       for (int i = 0; i < N; i++)
         serial_traits<T>::serialize(ar, pObj[i]);
     }
 
-    static void deserialize(IArchive& ar, T* pObj, uint64_t ncb) {
+    static void deserialize(IArchiveRegistry& ar, T* pObj, uint64_t ncb) {
       for (int i = 0; i < N; i++)
         serial_traits<T>::deserialize(ar, pObj[i], 0);
     }
@@ -206,7 +230,7 @@ namespace leap {
       return retVal;
     }
 
-    static void serialize(OArchive& ar, const std::vector<T, Alloc>& v) {
+    static void serialize(OArchiveRegistry& ar, const std::vector<T, Alloc>& v) {
       // Write the number of entries first:
       uint32_t nEntries = static_cast<uint32_t>(v.size());
       ar.Write(&nEntries, sizeof(nEntries));
@@ -216,7 +240,7 @@ namespace leap {
         serial_traits<T>::serialize(ar, cur);
     }
 
-    static void deserialize(IArchive& ar, std::vector<T, Alloc>& v, uint64_t ncb) {
+    static void deserialize(IArchiveRegistry& ar, std::vector<T, Alloc>& v, uint64_t ncb) {
       // Read the number of entries first:
       uint32_t nEntries;
       ar.Read(&nEntries, sizeof(nEntries));

@@ -5,8 +5,10 @@
 namespace leap {
   struct create_delete;
   struct descriptor;
-  class OArchive;
   class IArchive;
+  class IArchiveRegistry;
+  class OArchive;
+  class OArchiveRegistry;
 
   enum class serial_type {
     // Null type, this type is never serialized
@@ -23,8 +25,13 @@ namespace leap {
   /// </summary>
   struct field_serializer {
     /// <returns>
+    /// True if this serializer or any child serializer requires memory management
+    /// </returns>
+    virtual bool allocates(void) const = 0;
+
+    /// <returns>
     /// The field type, used for serial operations
-    /// </returns.
+    /// </returns>
     virtual serial_type type(void) const = 0;
 
     /// <returns>
@@ -35,7 +42,7 @@ namespace leap {
     /// <summary>
     /// Serializes the object into the specified buffer
     /// </summary>
-    virtual void serialize(OArchive& ar, const void* pObj) const = 0;
+    virtual void serialize(OArchiveRegistry& ar, const void* pObj) const = 0;
 
     /// <summary>
     /// Deserializes the object from the specified archive
@@ -46,7 +53,7 @@ namespace leap {
     /// <remarks>
     /// The "ncb" field is only valid if the type of this object is serial_type::string.
     /// </remarks>
-    virtual void deserialize(IArchive& ar, void* pObj, uint64_t ncb) const = 0;
+    virtual void deserialize(IArchiveRegistry& ar, void* pObj, uint64_t ncb) const = 0;
   };
 
   /// <summary>
@@ -58,11 +65,6 @@ namespace leap {
     /// Creates a new output archive based on the specified stream
     /// </summary>
     virtual ~OArchive(void) {}
-
-    /// <summary>
-    /// Registers an object for serialization, returning the ID that will be given to the object
-    /// </summary>
-    virtual uint32_t RegisterObject(const field_serializer& serializer, const void* pObj) = 0;
 
     /// <summary>
     /// Get  a stream interface to the archive
@@ -91,6 +93,21 @@ namespace leap {
     void Write(uint64_t value) const { return Write(&value, sizeof(value)); }
   };
 
+  /// <summary>
+  /// "Regstry" interface for serialization operations that need to serialize foreign object references
+  /// </summary>
+  class OArchiveRegistry:
+    public OArchive
+  {
+  public:
+    virtual ~OArchiveRegistry(void) {}
+
+    /// <summary>
+    /// Registers an object for serialization, returning the ID that will be given to the object
+    /// </summary>
+    virtual uint32_t RegisterObject(const field_serializer& serializer, const void* pObj) = 0;
+  };
+
   class IArchive {
   public:
     /// <summary>
@@ -99,24 +116,14 @@ namespace leap {
     virtual ~IArchive(void) {}
 
     /// <summary>
-    /// Registers an encountered identifier for later deserialization
-    /// </summary>
-    /// <param name="pfnAllocate">The allocation routine, to be invoked if the object isn't found</param>
-    /// <param name="desc">The descriptor that will be used to deserialize the object, if needed</param>
-    /// <param name="objId">The ID of the object that has been encountered</param>
-    /// <returns>A pointer to the object</returns>
-    /// <remarks>
-    /// While this method does always return a valid pointer, and the pointed-to object is guaranteed to
-    /// be at a minimum default constructed, the returned object may nevertheless have yet to be deserialized.
-    /// </remarks>
-    virtual void* Lookup(const create_delete& cd, const field_serializer& serializer, uint32_t objId) = 0;
-
-    /// <summary>
     /// Get a stream interface to the archive
     /// </summary>
     virtual std::istream& GetStream() const = 0;
 
     /// <summary>
+    /// This method is permitted in the IArchive class because it does not require that the archive take responsibility
+    /// for the proffered object, and in fact can allow the IArchive to abdicate responsibility for a type for which it
+    /// may have been formerly responsible.
     /// Reads the specified number of bytes from the input stream
     /// </summary>
     virtual void Read(void* pBuf, uint64_t ncb) = 0;
@@ -141,5 +148,28 @@ namespace leap {
     /// Interprets bytes from the output stream as a single varint
     /// </sumamry>
     int64_t ReadVarint(void);
+  };
+
+  /// <summary>
+  /// "Regstry" interface for serialization operations that need to serialize foreign object references
+  /// </summary>
+  class IArchiveRegistry:
+    public IArchive
+  {
+  public:
+    virtual ~IArchiveRegistry(void) {}
+
+    /// <summary>
+    /// Registers an encountered identifier for later deserialization
+    /// </summary>
+    /// <param name="pfnAllocate">The allocation routine, to be invoked if the object isn't found</param>
+    /// <param name="desc">The descriptor that will be used to deserialize the object, if needed</param>
+    /// <param name="objId">The ID of the object that has been encountered</param>
+    /// <returns>A pointer to the object</returns>
+    /// <remarks>
+    /// While this method does always return a valid pointer, and the pointed-to object is guaranteed to
+    /// be at a minimum default constructed, the returned object may nevertheless have yet to be deserialized.
+    /// </remarks>
+    virtual void* Lookup(const create_delete& cd, const field_serializer& serializer, uint32_t objId) = 0;
   };
 }

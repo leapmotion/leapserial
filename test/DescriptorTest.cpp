@@ -47,6 +47,11 @@ struct MySimpleStructure {
 };
 
 static_assert(
+  leap::serializer_needs_allocation<MySimpleStructure>::value,
+  "A field which trivally requires allocation was not statically detected to require such a thing"
+);
+
+static_assert(
   std::is_same<
     std::result_of<decltype(&MySimpleStructure::GetDescriptor) ()>::type,
     leap::descriptor
@@ -58,6 +63,8 @@ static_assert(leap::internal::has_getdescriptor<MySimpleStructure>::value, "GetD
 TEST_F(SerializationTest, VerifyTrivialDescriptor) {
   // Obtain the descriptor for the simple structure first, verify all properties
   leap::descriptor desc = MySimpleStructure::GetDescriptor();
+
+  ASSERT_TRUE(desc.allocates()) << "MySimpleStructure is an allocating type and was not correctly identified as such";
 
   ASSERT_EQ(
     &desc.field_descriptors[0].serializer,
@@ -349,7 +356,7 @@ TEST_F(SerializationTest, VarintDoubleCheck) {
   // Read operation should result in the same value
   std::istringstream is(buf);
   leap::internal::Allocation<std::string> alloc;
-  leap::IArchiveImpl iarch(is, alloc);
+  leap::IArchiveImpl iarch(is, nullptr);
   ASSERT_EQ(150, iarch.ReadVarint()) << "Read of a varint didn't return the original value";
 }
 
@@ -503,4 +510,38 @@ TEST_F(SerializationTest, PostInitTest) {
   ASSERT_EQ("Hello World", read->helloWorld) << "Identified field not correctly deserialized";
   ASSERT_EQ(12991, read->foo) << "Deserialization of primitve member did not correctly occur";
   ASSERT_EQ(12991, read->bar) << "Post initialization routine did not run as expected";
+}
+
+struct MyInlineType {
+  int foo = 101;
+  int bar = 102;
+  std::string helloWorld = "Hello World!";
+
+  static leap::descriptor GetDescriptor(void) {
+    return{
+      &MyInlineType::foo,
+      &MyInlineType::bar,
+      &MyInlineType::helloWorld
+    };
+  }
+};
+
+TEST_F(SerializationTest, InlineDeserializationTest) {
+  std::string str;
+  {
+    std::ostringstream os;
+    MyInlineType mit;
+    leap::Serialize(os, mit);
+    str = os.str();
+  }
+
+  ASSERT_FALSE(MyInlineType::GetDescriptor().allocates()) << "Inline type improperly indicated that it requires an allocator";
+
+  // Trivial short syntax check:
+  MyInlineType houp;
+  leap::Deserialize(std::istringstream(str), houp);
+
+  ASSERT_EQ(101, houp.foo);
+  ASSERT_EQ(102, houp.bar);
+  ASSERT_EQ("Hello World!", houp.helloWorld);
 }

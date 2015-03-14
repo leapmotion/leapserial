@@ -1,32 +1,35 @@
 #include "stdafx.h"
 #include "IArchiveImpl.h"
+#include "serial_traits.h"
 #include <iostream>
 
 using namespace leap;
 
-IArchiveImpl::IArchiveImpl(std::istream& is, internal::AllocationBase& alloc) :
-  is(is),
-  alloc(alloc)
+IArchiveImpl::IArchiveImpl(std::istream& is, void* pRootObj) :
+  is(is)
 {
   // This sentry addition means we never have to test objId against zero
-  objMap[0] = nullptr;
+  objMap[0] = {nullptr, nullptr};
 
   // Object ID #1 is the root object
-  objMap[1] = alloc.GetRoot();
+  objMap[1] = {pRootObj, nullptr};
 }
 
-IArchiveImpl::~IArchiveImpl(void) {}
+IArchiveImpl::~IArchiveImpl(void) {
+  ClearObjectTable();
+}
 
 void* IArchiveImpl::Lookup(const create_delete& cd, const field_serializer& serializer, uint32_t objId) {
   auto q = objMap.find(objId);
   if (q != objMap.end())
-    return q->second;
+    return q->second.pObj;
 
   // Not yet initialized, allocate and queue up
-  void*& pObj = objMap[objId];
-  pObj = alloc.Register(cd);
-  work.push(deserialization_task(&serializer, objId, pObj));
-  return pObj;
+  auto& entry = objMap[objId];
+  entry.pObj = cd.pfnAlloc();
+  entry.pfnFree = cd.pfnFree;
+  work.push(deserialization_task(&serializer, objId, entry.pObj));
+  return entry.pObj;
 }
 
 void IArchiveImpl::Read(void* pBuf, uint64_t ncb) {
@@ -43,8 +46,37 @@ std::istream& IArchiveImpl::GetStream() const {
   return is;
 }
 
+void IArchiveImpl::Transfer(internal::AllocationBase& alloc) {
+  for (auto& cur : objMap)
+    if (cur.second.pfnFree)
+      // Transfer cleanup responsibility to the allocator
+      alloc.garbageList.push_back(
+        std::make_pair(
+          cur.second.pObj,
+          cur.second.pfnFree
+        )
+      );
+
+  objMap.clear();
+}
+
+size_t IArchiveImpl::ClearObjectTable(void) {
+  size_t n = 0;
+  for (auto& cur : objMap)
+    if (cur.second.pfnFree) {
+      // One more entry freed
+      n++;
+
+      // Transfer cleanup responsibility to the allocator
+      cur.second.pfnFree(cur.second.pObj);
+    }
+
+  objMap.clear();
+  return n;
+}
+
 void IArchiveImpl::Process(const deserialization_task& task) {
-  objMap[1] = task.pObj;
+  objMap[1] = {task.pObj, nullptr};
   work.push(task);
 
   // Continue to work as long as there is work to be done

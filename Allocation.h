@@ -21,11 +21,6 @@ namespace leap { namespace internal {
     std::vector<std::pair<void*, void(*)(void*)>> garbageList;
 
     /// <summary>
-    /// Creates a new allocation
-    /// </summary>
-    void* Register(const create_delete& cd);
-
-    /// <summary>
     /// Retrieves a pointer to the so-called "root object," which should follow the allocation base immediately
     /// </summary>
     void* GetRoot(void);

@@ -29,20 +29,52 @@ namespace leap {
     ar.Process();
   }
 
+  /// <summary>
+  /// Deserialization routine that returns and std::shared_ptr for memory allocation maintenance
+  /// </summary>
   template<class T, class stream_t>
   std::shared_ptr<T> Deserialize(stream_t&& is) {
     auto retVal = std::make_shared<leap::internal::Allocation<T>>();
+    T* pObj = retVal.get();
     
     // Initialize the archive with work to be done:
-    IArchiveImpl ar(is, *retVal);
+    IArchiveImpl ar(is, pObj);
     ar.Process(
       IArchiveImpl::deserialization_task(
         &field_serializer_t<T, void>::GetDescriptor(),
         0,
-        static_cast<T*>(retVal.get())
+        pObj
       )
     );
 
+    ar.Transfer(*retVal);
     return retVal;
+  }
+
+  /// <summary>
+  /// Deserialization routine that returns and std::shared_ptr for memory allocation maintenance
+  /// </summary>
+  template<class T>
+  void Deserialize(std::istream& is, T& obj) {
+    // Initialize the archive with work to be done:
+    IArchiveImpl ar(is, &obj);
+    ar.Process(
+      IArchiveImpl::deserialization_task(
+        &field_serializer_t<T, void>::GetDescriptor(),
+        0,
+        &obj
+      )
+    );
+
+    // If objects exist that require transferrence, then we have an error
+    if (ar.ClearObjectTable())
+      throw std::runtime_error(
+        "Attempted to perform an allocator-free deserialization on a stream whose types are not completely responsible for their own cleanup"
+      );
+  }
+
+  template<class T>
+  void Deserialize(std::istream&& is, T& obj) {
+    Deserialize<T>(is, obj);
   }
 }

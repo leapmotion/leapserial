@@ -5,12 +5,17 @@
 
 using namespace leap;
 
-leap::descriptor::descriptor(std::initializer_list<field_descriptor> field_descriptors) {
-  for (const auto& field_descriptor : field_descriptors)
+leap::descriptor::descriptor(const field_descriptor* begin, const field_descriptor* end) {
+  for (auto cur = begin; cur != end; cur++) {
+    const auto& field_descriptor = *cur;
     if (field_descriptor.identifier)
       this->identified_descriptors.insert(std::make_pair(field_descriptor.identifier, field_descriptor));
     else
       this->field_descriptors.push_back(field_descriptor);
+
+    // Intentional boolean optimization
+    m_allocates = m_allocates || field_descriptor.serializer.allocates();
+  }
 }
 
 uint64_t leap::descriptor::size(const void* pObj) const {
@@ -44,7 +49,7 @@ uint64_t leap::descriptor::size(const void* pObj) const {
   return retVal;
 }
 
-void leap::descriptor::serialize(OArchive& ar, const void* pObj) const {
+void leap::descriptor::serialize(OArchiveRegistry& ar, const void* pObj) const {
   // Stationary descriptors first:
   for (const auto& field_descriptor : field_descriptors)
     field_descriptor.serializer.serialize(
@@ -80,7 +85,7 @@ void leap::descriptor::serialize(OArchive& ar, const void* pObj) const {
   }
 }
 
-void leap::descriptor::deserialize(IArchive& ar, void* pObj, uint64_t ncb) const {
+void leap::descriptor::deserialize(IArchiveRegistry& ar, void* pObj, uint64_t ncb) const {
   uint64_t countLimit = ar.Count() + ncb;
   for (const auto& field_descriptor : field_descriptors)
     field_descriptor.serializer.deserialize(
