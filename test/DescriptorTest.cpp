@@ -628,8 +628,8 @@ TEST_F(SerializationTest, CoerceUniquePtr) {
   {
     std::ostringstream os;
     HasOnlyUniquePtrs houp;
-    houp.u1 = std::make_unique<CountsTotalInstances>(23);
-    houp.u2 = std::make_unique<CountsTotalInstances>(244);
+    houp.u1 = std::unique_ptr<CountsTotalInstances>(new CountsTotalInstances(23));
+    houp.u2 = std::unique_ptr<CountsTotalInstances>(new CountsTotalInstances(244));
     leap::Serialize(os, houp);
     str = os.str();
   }
