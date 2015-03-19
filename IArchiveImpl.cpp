@@ -33,6 +33,24 @@ void* IArchiveImpl::Lookup(const create_delete& cd, const field_serializer& seri
   return entry.pObj;
 }
 
+void* IArchiveImpl::Release(void* (*pfnAlloc)(), const field_serializer& serializer, uint32_t objId) {
+  auto q = objMap.find(objId);
+  if (q != objMap.end()) {
+    if (q->second.pfnFree)
+      q->second.pfnFree = nullptr;
+    else
+      throw std::runtime_error("Attempted to release the same object twice");
+    return q->second.pObj;
+  }
+
+  // Not yet initialized, allocate and queue up
+  auto& entry = objMap[objId];
+  entry.pObj = pfnAlloc();
+  entry.pfnFree = nullptr;
+  work.push(deserialization_task(&serializer, objId, entry.pObj));
+  return entry.pObj;
+}
+
 void IArchiveImpl::Read(void* pBuf, uint64_t ncb) {
   if(!is.read((char*) pBuf, ncb))
     throw std::runtime_error("End of file reached prematurely");

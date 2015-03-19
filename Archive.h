@@ -86,9 +86,17 @@ namespace leap {
     virtual std::istream& GetStream() const = 0;
 
     /// <summary>
+    /// Identical to Lookup, except this prevents the IArchive from delegating delete responsibilities to the allocation
+    /// </summary>
+    /// <param name="pfnAlloc">The routine to be used for allocation</param>
+    /// <remarks>
     /// This method is permitted in the IArchive class because it does not require that the archive take responsibility
     /// for the proffered object, and in fact can allow the IArchive to abdicate responsibility for a type for which it
     /// may have been formerly responsible.
+    /// </remarks>
+    virtual void* Release(void* (*pfnAlloc)(), const field_serializer& serializer, uint32_t objId) = 0;
+
+    /// <summary>
     /// Reads the specified number of bytes from the input stream
     /// </summary>
     virtual void Read(void* pBuf, uint64_t ncb) = 0;

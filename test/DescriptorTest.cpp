@@ -545,3 +545,100 @@ TEST_F(SerializationTest, InlineDeserializationTest) {
   ASSERT_EQ(102, houp.bar);
   ASSERT_EQ("Hello World!", houp.helloWorld);
 }
+
+struct CountsTotalInstances {
+  CountsTotalInstances(int value = 299):
+    value(value)
+  {
+    s_count++;
+  }
+  ~CountsTotalInstances(void) {
+    s_count--;
+  }
+
+  int value;
+
+  static int s_count;
+
+  static leap::descriptor GetDescriptor(void) {
+    return{
+      &CountsTotalInstances::value
+    };
+  }
+};
+
+int CountsTotalInstances::s_count = 0;
+
+struct HasUniqueAndDumbPointer {
+  CountsTotalInstances* dumb;
+  std::unique_ptr<CountsTotalInstances> unique;
+
+  static leap::descriptor GetDescriptor(void) {
+    return {
+      &HasUniqueAndDumbPointer::dumb,
+      &HasUniqueAndDumbPointer::unique
+    };
+  }
+};
+
+TEST_F(SerializationTest, UniquePtrTest) {
+  std::string str;
+  {
+    HasUniqueAndDumbPointer huadp;
+
+    huadp.unique.reset(new CountsTotalInstances);
+    huadp.dumb = huadp.unique.get();
+
+    std::ostringstream os;
+    leap::Serialize(os, huadp);
+    str = os.str();
+  }
+
+  std::unique_ptr<CountsTotalInstances> cti;
+  {
+    // Recover value:
+    auto deserialized = leap::Deserialize<HasUniqueAndDumbPointer>(std::istringstream(str));
+    ASSERT_EQ(deserialized->dumb, deserialized->unique.get()) << "Unique pointer was not deserialized equivalently to a dumb pointer";
+
+    // Values should be equivalent:
+    ASSERT_EQ(deserialized->dumb, deserialized->unique.get()) << "Dumb pointer did not correctly deserialize to an identical unique pointer";
+
+    // Now ensure that we can strip the unique_ptr correctly and that the deserialized instance is valid:
+    cti = std::move(deserialized->unique);
+  }
+
+  // Ensure that the object was not deleted--should still have one count
+  ASSERT_EQ(1UL, CountsTotalInstances::s_count) << "Expected one instance to escape deletion";
+}
+
+struct HasOnlyUniquePtrs {
+  std::unique_ptr<CountsTotalInstances> u1;
+  std::unique_ptr<CountsTotalInstances> u2;
+
+  static leap::descriptor GetDescriptor(void) {
+    return{
+      &HasOnlyUniquePtrs::u1,
+      &HasOnlyUniquePtrs::u2
+    };
+  }
+};
+
+TEST_F(SerializationTest, CoerceUniquePtr) {
+  std::string str;
+  {
+    std::ostringstream os;
+    HasOnlyUniquePtrs houp;
+    houp.u1 = std::make_unique<CountsTotalInstances>(23);
+    houp.u2 = std::make_unique<CountsTotalInstances>(244);
+    leap::Serialize(os, houp);
+    str = os.str();
+  }
+
+  // Verify that the short syntax works:
+  HasOnlyUniquePtrs houp;
+  leap::Deserialize(std::istringstream(str), houp);
+
+  // Now ensure that our unique pointers came back properly:
+  ASSERT_EQ(23, houp.u1->value);
+  ASSERT_EQ(244, houp.u2->value);
+}

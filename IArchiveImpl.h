@@ -58,6 +58,7 @@ namespace leap {
   public:
     // IArchive overrides:
     void* Lookup(const create_delete& cd, const field_serializer& serializer, uint32_t objId) override;
+    void* Release(void* (*pfnAlloc)(), const field_serializer& serializer, uint32_t objId) override;
     std::istream& GetStream() const override;
     void Read(void* pBuf, uint64_t ncb) override;
     void Skip(uint64_t ncb) override;

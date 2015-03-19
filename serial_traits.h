@@ -4,6 +4,7 @@
 #include "field_serializer_t.h"
 #include <vector>
 #include <map>
+#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -295,6 +296,39 @@ namespace leap {
         serial_traits<typename Container::key_type>::deserialize(ar, key, 0);
         serial_traits<typename Container::mapped_type>::deserialize(ar, obj[key], 0);
       }
+    }
+  };
+
+  template<typename T>
+  struct serial_traits<std::unique_ptr<T>> {
+    typedef std::unique_ptr<T> type;
+
+    static uint64_t size(const type& pObj) {
+      return sizeof(uint32_t);
+    }
+
+    static void serialize(OArchiveRegistry& ar, const type& obj) {
+      // Identical implementation to serial_traits<T*>
+      uint32_t objId = ar.RegisterObject(
+        field_serializer_t<T, void>::GetDescriptor(),
+        obj.get()
+      );
+      ar.Write(&objId, sizeof(objId));
+    }
+
+    static void deserialize(IArchive& ar, type& obj, uint64_t ncb) {
+      // Object ID, then directed registration:
+      uint32_t objId;
+      ar.Read(&objId, sizeof(objId));
+
+      // Now we just perform a lookup into our archive and store the result here
+      obj.reset(
+        (T*)ar.Release(
+          []() -> void* { return new T; },
+          field_serializer_t<T, void>::GetDescriptor(),
+          objId
+        )
+      );
     }
   };
 
