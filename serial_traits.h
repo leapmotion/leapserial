@@ -176,7 +176,7 @@ namespace leap {
     }
   };
 
-  template<typename T, int N>
+  template<typename T, size_t N>
   struct serial_traits<T[N]>
   {
     static uint64_t size(const T* pObj) {
@@ -191,6 +191,42 @@ namespace leap {
     static void deserialize(IArchiveRegistry& ar, T* pObj, uint64_t ncb) {
       for (int i = 0; i < N; i++)
         serial_traits<T>::deserialize(ar, pObj[i], 0);
+    }
+  };
+  
+  template<typename T, size_t N>
+  struct serial_traits<std::array<T,N>>
+  {
+    static uint64_t size(const std::array<T, N>& v) {
+      if (internal::is_constant_size<T>::value)
+        // Constant-sized element types have a simple equation to compute total size
+        return sizeof(uint32_t) + v.size() * sizeof(T);
+      
+      // More complex types require summation on a per-element basis
+      uint64_t retVal = sizeof(uint32_t);
+      for (const auto& cur : v)
+        retVal += serial_traits<T>::size(cur);
+      return retVal;
+    }
+    
+    static void serialize(OArchiveRegistry& ar, const std::array<T, N>& v) {
+      // Write the number of entries first:
+      uint32_t nEntries = static_cast<uint32_t>(v.size());
+      ar.Write(&nEntries, sizeof(nEntries));
+      
+      // Write each entry out, one at a time, using the preferred serializer
+      for (const auto& cur : v)
+        serial_traits<T>::serialize(ar, cur);
+    }
+    
+    static void deserialize(IArchiveRegistry& ar, std::array<T, N>& v, uint64_t ncb) {
+      // Read the number of entries first:
+      uint32_t nEntries;
+      ar.Read(&nEntries, sizeof(nEntries));
+      
+      // Now loop until we get the desired number of entries from the stream
+      for (auto& cur : v)
+        serial_traits<T>::deserialize(ar, cur, 0);
     }
   };
 

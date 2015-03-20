@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Serializer.h"
 #include <gtest/gtest.h>
+#include <array>
 #include <sstream>
 #include <type_traits>
 
@@ -544,6 +545,38 @@ TEST_F(SerializationTest, InlineDeserializationTest) {
   ASSERT_EQ(101, houp.foo);
   ASSERT_EQ(102, houp.bar);
   ASSERT_EQ("Hello World!", houp.helloWorld);
+}
+
+TEST_F(SerializationTest, Array) {
+  //std::array
+  {
+    std::stringstream os;
+    {
+      std::array<int,5> array{1,2,3,4,5};
+      leap::Serialize(os, array);
+    }
+    
+    std::shared_ptr<std::array<int,5>> array = leap::Deserialize<std::array<int,5>>(os);
+    
+    ASSERT_EQ(1, (*array)[0]);
+    ASSERT_EQ(2, (*array)[1]);
+    ASSERT_EQ(3, (*array)[2]);
+  }
+  
+  //C-Array
+  {
+    std::stringstream os;
+    {
+      std::array<int,5> array{1,2,3,4,5};
+      leap::Serialize(os, array);
+    }
+    
+    std::shared_ptr<std::array<int,5>> array = leap::Deserialize<std::array<int,5>>(os);
+    
+    ASSERT_EQ(1, (*array)[0]);
+    ASSERT_EQ(2, (*array)[1]);
+    ASSERT_EQ(3, (*array)[2]);
+  }
 }
 
 struct CountsTotalInstances {
