@@ -2,15 +2,12 @@
 #include "Archive.h"
 #include "Descriptor.h"
 #include "field_serializer_t.h"
-#include <vector>
+#include <array>
 #include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
-
-#ifdef _MSC_VER
-#include <intrin.h>
-#endif
+#include <vector>
 
 namespace leap {
   template<typename T>
