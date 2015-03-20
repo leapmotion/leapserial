@@ -547,36 +547,34 @@ TEST_F(SerializationTest, InlineDeserializationTest) {
   ASSERT_EQ("Hello World!", houp.helloWorld);
 }
 
-TEST_F(SerializationTest, Array) {
-  //std::array
+TEST_F(SerializationTest, StlArray) {
+  std::stringstream os;
   {
-    std::stringstream os;
-    {
-      std::array<int,5> array{1,2,3,4,5};
-      leap::Serialize(os, array);
-    }
-    
-    std::shared_ptr<std::array<int,5>> array = leap::Deserialize<std::array<int,5>>(os);
-    
-    ASSERT_EQ(1, (*array)[0]);
-    ASSERT_EQ(2, (*array)[1]);
-    ASSERT_EQ(3, (*array)[2]);
+    std::array<int, 5> array{1, 2, 3, 4, 5};
+    leap::Serialize(os, array);
   }
-  
+
+  std::shared_ptr<std::array<int, 5>> array = leap::Deserialize<std::array<int, 5>>(os);
+
+  ASSERT_EQ(1, (*array)[0]);
+  ASSERT_EQ(2, (*array)[1]);
+  ASSERT_EQ(3, (*array)[2]);
+}
+
+TEST_F(SerializationTest, NativeArray) {
   //C-Array
+  std::stringstream os;
   {
-    std::stringstream os;
-    {
-      std::array<int,5> array{1,2,3,4,5};
-      leap::Serialize(os, array);
-    }
-    
-    std::shared_ptr<std::array<int,5>> array = leap::Deserialize<std::array<int,5>>(os);
-    
-    ASSERT_EQ(1, (*array)[0]);
-    ASSERT_EQ(2, (*array)[1]);
-    ASSERT_EQ(3, (*array)[2]);
+    int ary [] = {1, 2, 3, 4, 5};
+    leap::Serialize(os, ary);
   }
+
+  int ary[5];
+  leap::Deserialize(os, ary);
+
+  ASSERT_EQ(1, ary[0]);
+  ASSERT_EQ(2, ary[1]);
+  ASSERT_EQ(3, ary[2]);
 }
 
 struct CountsTotalInstances {
