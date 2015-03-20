@@ -14,36 +14,13 @@ namespace leap {
   template<typename T>
   struct serial_traits;
 
-  /// <summary>
-  /// Holds true if the specified serialization member function needs to use an input allocator
-  /// </summary>
-  template<typename T, typename = void>
-  struct serializer_needs_allocation
-  {
-    template<typename U>
-    static std::false_type select(
-      decltype(
-        serial_traits<U>::deserialize(
-          *static_cast<IArchive*>(nullptr),
-          *static_cast<U*>(nullptr),
-          0
-        )
-      )*
-    );
-
-    template<typename>
-    static std::true_type select(...);
-
-    static const bool value = decltype(select<T>(nullptr))::value;
-  };
-
   // Objects that provide serial_traits should use those traits externally
   template<typename T>
   struct field_serializer_t<T, typename std::enable_if<!std::is_base_of<std::false_type, serial_traits<T>>::value>::type> :
     field_serializer
   {
     bool allocates(void) const override {
-      return serializer_needs_allocation<T>::value;
+      return serializer_is_irresponsible<T>::value;
     }
 
     serial_type type(void) const override {

@@ -48,7 +48,7 @@ struct MySimpleStructure {
 };
 
 static_assert(
-  leap::serializer_needs_allocation<MySimpleStructure>::value,
+  leap::serializer_is_irresponsible<MySimpleStructure>::value,
   "A field which trivally requires allocation was not statically detected to require such a thing"
 );
 
@@ -706,4 +706,42 @@ TEST_F(SerializationTest, CanSerializeEnumsTest) {
   leap::Deserialize(std::istringstream(str), hem);
 
   ASSERT_EQ(eMySimpleEnum_Second, hem.member) << "Deserialized enum-type member did not come back correctly";
+}
+static_assert(leap::serializer_is_irresponsible<int*>::value, "Irresponsible allocator was not correctly inferred");
+static_assert(leap::serializer_is_irresponsible<std::vector<int*>>::value, "Irresponsible allocator was not correctly inferred");
+static_assert(leap::serializer_is_irresponsible<std::map<std::string, std::vector<int*>>>::value, "Irresponsible allocator was not correctly inferred");
+static_assert(!leap::serializer_is_irresponsible<std::vector<int>>::value, "Irresponsibility incorrectly inferred in a responsible allocator");
+static_assert(!leap::serializer_is_irresponsible<std::map<std::string, std::vector<int>>>::value, "Irresponsibility incorrectly inferred in a responsible allocator");
+
+TEST_F(SerializationTest, ComplexMapOfStringToVectorTest) {
+  std::string str;
+
+  // Serialize the complex map type first
+  {
+    std::map<std::string, std::vector<int>> mm;
+    mm["a"] = std::vector<int> {1, 2, 3};
+    mm["b"] = std::vector<int> {4, 5, 6};
+    mm["c"] = std::vector<int> {7, 8, 9};
+
+    std::ostringstream ss;
+    leap::Serialize(ss, mm);
+    str = ss.str();
+  }
+
+  // Try to get it back:
+  std::map<std::string, std::vector<int>> mm;
+  leap::Deserialize(std::istringstream(str), mm);
+
+  ASSERT_EQ(1UL, mm.count("a")) << "Deserialized map was missing an essential member";
+  ASSERT_EQ(1UL, mm.count("b")) << "Deserialized map was missing an essential member";
+  ASSERT_EQ(1UL, mm.count("c")) << "Deserialized map was missing an essential member";
+
+  const auto& a = mm["a"];
+  ASSERT_EQ(3UL, a.size()) << "Vector was sized incorrectly";
+
+  const auto& c = mm["c"];
+  ASSERT_EQ(3UL, c.size()) << "Vector was sized incorrectly";
+  ASSERT_EQ(7, c[0]);
+  ASSERT_EQ(8, c[1]);
+  ASSERT_EQ(9, c[2]);
 }

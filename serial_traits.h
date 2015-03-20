@@ -16,6 +16,9 @@ namespace leap {
   template<typename T, typename>
   struct field_serializer_t;
 
+  template<typename T>
+  struct serializer_is_irresponsible;
+
   template<typename T, typename = void>
   struct primitive_serial_traits:
     std::false_type
@@ -247,6 +250,12 @@ namespace leap {
   template<typename T, typename Alloc>
   struct serial_traits<std::vector<T, Alloc>>
   {
+    // We are irresponsible if and only if T is irresponsible
+    static const bool is_irresponsible = serializer_is_irresponsible<T>::value;
+
+    // If we're irresponsible, we need a more powerful archive registry as an input
+    typedef typename std::conditional<is_irresponsible, IArchiveRegistry, IArchive>::type iarchive;
+
     static uint64_t size(const std::vector<T, Alloc>& v) {
       if (internal::is_constant_size<T>::value)
         // Constant-sized element types have a simple equation to compute total size
@@ -269,7 +278,7 @@ namespace leap {
         serial_traits<T>::serialize(ar, cur);
     }
 
-    static void deserialize(IArchiveRegistry& ar, std::vector<T, Alloc>& v, uint64_t ncb) {
+    static void deserialize(iarchive& ar, std::vector<T, Alloc>& v, uint64_t ncb) {
       // Read the number of entries first:
       uint32_t nEntries;
       ar.Read(&nEntries, sizeof(nEntries));
@@ -312,6 +321,20 @@ namespace leap {
   template<typename Container>
   struct serial_traits_map_t
   {
+    typedef serial_traits<typename Container::key_type> key_traits;
+    typedef serial_traits<typename Container::mapped_type> mapped_traits;
+
+    // Convenience static.  We need to make allocations if either our key or value type
+    // needs to make allocations.
+    static const bool sc_needsAllocation =
+      serializer_is_irresponsible<typename Container::key_type>::value ||
+      serializer_is_irresponsible<typename Container::mapped_type>::value;
+
+    // We need to know if either the key type or the mapped type is irresponsible.
+    // If it is, we're going to need to ensure we accept the correct input archive
+    // type in order to ensure values are correctly propagated.
+    typedef typename std::conditional<sc_needsAllocation, IArchiveRegistry, IArchive>::type iarchive;
+
     static uint64_t size(const Container& obj) {
       // Sum up all sizes for all child objects
       uint64_t retVal = sizeof(uint32_t);
@@ -322,19 +345,19 @@ namespace leap {
       return retVal;
     }
 
-    static void serialize(OArchive& ar, const Container& obj) {
+    static void serialize(OArchiveRegistry& ar, const Container& obj) {
       // Write the number of entries first:
       uint32_t nEntries = static_cast<uint32_t>(obj.size());
       ar.Write(&nEntries, sizeof(nEntries));
 
       // Write out each key/value pair, one at a time
       for (const auto& cur : obj) {
-        serial_traits<typename Container::key_type>::serialize(ar, cur.first);
-        serial_traits<typename Container::mapped_type>::serialize(ar, cur.second);
+        key_traits::serialize(ar, cur.first);
+        mapped_traits::serialize(ar, cur.second);
       }
     }
 
-    static void deserialize(IArchive& ar, Container& obj, uint64_t ncb) {
+    static void deserialize(iarchive& ar, Container& obj, uint64_t ncb) {
       // Read the number of entries first:
       uint32_t nEntries;
       ar.Read(&nEntries, sizeof(nEntries));
@@ -342,8 +365,8 @@ namespace leap {
       // Now read in all values:
       while (nEntries--) {
         typename Container::key_type key;
-        serial_traits<typename Container::key_type>::deserialize(ar, key, 0);
-        serial_traits<typename Container::mapped_type>::deserialize(ar, obj[key], 0);
+        key_traits::deserialize(ar, key, 0);
+        mapped_traits::deserialize(ar, obj[key], 0);
       }
     }
   };
