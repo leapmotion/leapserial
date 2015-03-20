@@ -116,8 +116,23 @@ namespace leap {
   template<typename T>
   struct primitive_serial_traits<T, typename std::enable_if<std::is_integral<T>::value>::type>
   {
-    static const size_t constant_size = sizeof(T);
+    // Trivial serialization/deserialization operations
+    static uint64_t size(T val) {
+      return OArchive::VarintSize(val);
+    }
 
+    static void serialize(OArchive& ar, T val) {
+      ar.WriteVarint(val);
+    }
+
+    static void deserialize(IArchive& ar, T& val, uint64_t ncb) {
+      val = static_cast<T>(ar.ReadVarint());
+    }
+  };
+
+  template<typename T>
+  struct primitive_serial_traits<T, typename std::enable_if<std::is_enum<T>::value>::type>
+  {
     // Trivial serialization/deserialization operations
     static uint64_t size(T val) {
       return OArchive::VarintSize(val);
@@ -135,7 +150,8 @@ namespace leap {
   template<typename T>
   struct serial_traits:
     primitive_serial_traits<T, void>
-  {};
+  {
+  };
 
   // If we have a pointer to another object, we have to write an ID out and not the entire object
   // The object will be serialized at some other time

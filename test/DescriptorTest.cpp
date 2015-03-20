@@ -675,3 +675,37 @@ TEST_F(SerializationTest, CoerceUniquePtr) {
   ASSERT_EQ(23, houp.u1->value);
   ASSERT_EQ(244, houp.u2->value);
 }
+
+enum eMySimpleEnum {
+  eMySimpleEnum_First,
+  eMySimpleEnum_Second = 995
+};
+
+class HasAnEnumMember {
+public:
+  eMySimpleEnum member = eMySimpleEnum_Second;
+
+  static leap::descriptor GetDescriptor(void) {
+    return{
+      &HasAnEnumMember::member
+    };
+  }
+};
+
+TEST_F(SerializationTest, CanSerializeEnumsTest) {
+  std::string str;
+  {
+    std::ostringstream os;
+    HasAnEnumMember hem;
+    leap::Serialize(os, hem);
+    str = os.str();
+  }
+
+  ASSERT_FALSE(MyInlineType::GetDescriptor().allocates()) << "Inline type improperly indicated that it requires an allocator";
+
+  // Trivial short syntax check:
+  HasAnEnumMember hem;
+  leap::Deserialize(std::istringstream(str), hem);
+
+  ASSERT_EQ(eMySimpleEnum_Second, hem.member) << "Deserialized enum-type member did not come back correctly";
+}

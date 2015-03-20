@@ -7,7 +7,9 @@
 
 namespace leap {
   template<typename T, typename = void>
-  struct field_serializer_t;
+  struct field_serializer_t {
+    static_assert(std::is_same<T, void>::value, "An attempt was made to serialize type T, which does not provide a serial_traits entry or GetDescriptor function");
+  };
 
   template<typename T>
   struct serial_traits;
@@ -37,7 +39,7 @@ namespace leap {
 
   // Objects that provide serial_traits should use those traits externally
   template<typename T>
-  struct field_serializer_t<T, typename std::enable_if<!std::is_base_of<std::false_type, serial_traits<T>>::value>::type>:
+  struct field_serializer_t<T, typename std::enable_if<!std::is_base_of<std::false_type, serial_traits<T>>::value>::type> :
     field_serializer
   {
     bool allocates(void) const override {
@@ -58,7 +60,7 @@ namespace leap {
           return serial_type::b32;
         default:
           break;
-        }
+      }
 
       // Default type will be a counted string
       return serial_type::string;
