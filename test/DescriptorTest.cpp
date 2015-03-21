@@ -78,7 +78,7 @@ TEST_F(SerializationTest, VerifyTrivialDescriptor) {
 }
 
 TEST_F(SerializationTest, VerifyRoundTrip) {
-  std::ostringstream oss;
+  std::stringstream ss;
 
   // Serialize to an output stream
   {
@@ -101,11 +101,11 @@ TEST_F(SerializationTest, VerifyRoundTrip) {
     myStruct.myString = "Hello world!";
     myStruct.myWString = L"World hello!";
 
-    leap::Serialize(oss, myStruct);
+    leap::Serialize(ss, myStruct);
   }
 
   // Now deserialize
-  auto allocation = leap::Deserialize<MySimpleStructure>(std::istringstream(oss.str()));
+  auto allocation = leap::Deserialize<MySimpleStructure>(ss);
 
   // Validate everything came back:
   ASSERT_EQ(101, allocation->a) << "First serialized field did not deserialize properly";
@@ -140,19 +140,19 @@ struct SimpleStruct {
 };
 
 TEST_F(SerializationTest, CanSerializeMaps) {
-  std::ostringstream oss;
+  std::stringstream ss;
 
   {
-    SimpleStruct ss;
-    ss.myMap[0] = 555;
-    ss.myMap[232] = 12;
-    ss.myUnorderedMap[29] = 44;
-    ss.myUnorderedMap[30] = 4014;
-    leap::Serialize(oss, ss);
+    SimpleStruct x;
+    x.myMap[0] = 555;
+    x.myMap[232] = 12;
+    x.myUnorderedMap[29] = 44;
+    x.myUnorderedMap[30] = 4014;
+    leap::Serialize(ss, x);
   }
 
   // Deserialize, make sure map entries are in the right place
-  auto x = leap::Deserialize<SimpleStruct>(std::istringstream(oss.str()));
+  auto x = leap::Deserialize<SimpleStruct>(ss);
   ASSERT_EQ(2UL, x->myMap.size()) << "Map has an incorrect number of elements";
   ASSERT_EQ(555, x->myMap[0]);
   ASSERT_EQ(12, x->myMap[232]);
@@ -191,7 +191,7 @@ struct MyLinkedList {
 };
 
 TEST_F(SerializationTest, VerifyDoublyLinkedList) {
-  std::ostringstream oss;
+  std::stringstream ss;
 
   {
     MyLinkedList<int> head{1};
@@ -220,10 +220,10 @@ TEST_F(SerializationTest, VerifyDoublyLinkedList) {
     ASSERT_EQ(1, tail.next->value);
     ASSERT_EQ(2, tail.prev->value);
 
-    leap::Serialize(oss, head);
+    leap::Serialize(ss, head);
   }
 
-  auto ll = leap::Deserialize<MyLinkedList<int>>(std::istringstream(oss.str()));
+  auto ll = leap::Deserialize<MyLinkedList<int>>(ss);
   MyLinkedList<int>& head = *ll;
   ASSERT_TRUE(head.next != nullptr);
   MyLinkedList<int>& middle = *head.next;
@@ -248,19 +248,19 @@ TEST_F(SerializationTest, VerifyDoublyLinkedList) {
 }
 
 TEST_F(SerializationTest, NullPointerDereferenceCheck) {
-  std::ostringstream oss;
+  std::stringstream ss;
   {
     MyLinkedList<int> ll;
     ll.next = &ll;
     ll.prev = nullptr;
     ll.value = 192;
 
-    leap::Serialize(oss, ll);
+    leap::Serialize(ss, ll);
   }
 
   // Deserialize, ensure we get null back
   {
-    auto ll = leap::Deserialize<MyLinkedList<int>>(std::istringstream(oss.str()));
+    auto ll = leap::Deserialize<MyLinkedList<int>>(ss);
     ASSERT_EQ(192, ll->value);
     ASSERT_EQ(ll.get(), ll->next);
     ASSERT_EQ(nullptr, ll->prev);
@@ -290,10 +290,10 @@ TEST_F(SerializationTest, EmbeddedFieldCheck) {
   top.next = nullptr;
 
   // Round-trip serialization:
-  std::ostringstream os;
-  leap::Serialize(os, root);
+  std::stringstream ss;
+  leap::Serialize(ss, root);
 
-  auto swef = leap::Deserialize<StructureWithEmbeddedField>(std::istringstream(os.str()));
+  auto swef = leap::Deserialize<StructureWithEmbeddedField>(ss);
 
   ASSERT_EQ(1029, swef->embedded.value);
   ASSERT_EQ(292, swef->embedded.next->value);
@@ -528,19 +528,14 @@ struct MyInlineType {
 };
 
 TEST_F(SerializationTest, InlineDeserializationTest) {
-  std::string str;
-  {
-    std::ostringstream os;
-    MyInlineType mit;
-    leap::Serialize(os, mit);
-    str = os.str();
-  }
+  std::stringstream ss;
+  leap::Serialize(ss, MyInlineType());
 
   ASSERT_FALSE(MyInlineType::GetDescriptor().allocates()) << "Inline type improperly indicated that it requires an allocator";
 
   // Trivial short syntax check:
   MyInlineType houp;
-  leap::Deserialize(std::istringstream(str), houp);
+  leap::Deserialize(ss, houp);
 
   ASSERT_EQ(101, houp.foo);
   ASSERT_EQ(102, houp.bar);
@@ -548,17 +543,14 @@ TEST_F(SerializationTest, InlineDeserializationTest) {
 }
 
 TEST_F(SerializationTest, StlArray) {
-  std::stringstream os;
-  {
-    std::array<int, 5> array{1, 2, 3, 4, 5};
-    leap::Serialize(os, array);
-  }
+  std::stringstream ss;
+  leap::Serialize(ss, std::array<int, 5>{1, 2, 3, 4, 5});
 
-  std::shared_ptr<std::array<int, 5>> array = leap::Deserialize<std::array<int, 5>>(os);
-
-  ASSERT_EQ(1, (*array)[0]);
-  ASSERT_EQ(2, (*array)[1]);
-  ASSERT_EQ(3, (*array)[2]);
+  std::array<int, 5> ary;
+  leap::Deserialize(ss, ary);
+  ASSERT_EQ(1, ary[0]);
+  ASSERT_EQ(2, ary[1]);
+  ASSERT_EQ(3, ary[2]);
 }
 
 TEST_F(SerializationTest, NativeArray) {
@@ -691,19 +683,14 @@ public:
 };
 
 TEST_F(SerializationTest, CanSerializeEnumsTest) {
-  std::string str;
-  {
-    std::ostringstream os;
-    HasAnEnumMember hem;
-    leap::Serialize(os, hem);
-    str = os.str();
-  }
+  std::stringstream ss;
+  leap::Serialize(ss, HasAnEnumMember());
 
   ASSERT_FALSE(MyInlineType::GetDescriptor().allocates()) << "Inline type improperly indicated that it requires an allocator";
 
   // Trivial short syntax check:
   HasAnEnumMember hem;
-  leap::Deserialize(std::istringstream(str), hem);
+  leap::Deserialize(ss, hem);
 
   ASSERT_EQ(eMySimpleEnum_Second, hem.member) << "Deserialized enum-type member did not come back correctly";
 }
