@@ -200,12 +200,12 @@ namespace leap {
     }
 
     static void serialize(OArchiveRegistry& ar, const T* pObj) {
-      for (int i = 0; i < N; i++)
+      for (size_t i = 0; i < N; i++)
         serial_traits<T>::serialize(ar, pObj[i]);
     }
 
     static void deserialize(IArchiveRegistry& ar, T* pObj, uint64_t ncb) {
-      for (int i = 0; i < N; i++)
+      for (size_t i = 0; i < N; i++)
         serial_traits<T>::deserialize(ar, pObj[i], 0);
     }
   };
