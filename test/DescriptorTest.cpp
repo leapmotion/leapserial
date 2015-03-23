@@ -759,6 +759,25 @@ TEST_F(SerializationTest, CanSerializeSharedPtrs) {
   ASSERT_EQ(2UL, res.a.use_count()) << "Incorrect use count detected";
 }
 
+TEST_F(SerializationTest, SharedPtrOfSharedPtrs) {
+  std::shared_ptr<HasThreeSharedPointers> sphtsp = std::make_shared<HasThreeSharedPointers>();
+  sphtsp->a = std::make_shared<int>(101);
+  sphtsp->b = std::make_shared<int>(199);
+  sphtsp->c = sphtsp->a;
+
+  // Round trip
+  std::stringstream ss;
+  leap::Serialize(ss, sphtsp);
+
+  std::shared_ptr<HasThreeSharedPointers> res;
+  leap::Deserialize(ss, res);
+  ASSERT_EQ(res->a, res->c) << "Aliased shared pointer was not correctly detected in a second pass";
+  ASSERT_EQ(101, *res->a) << "Aliased shared pointer was not correctly stored";
+  ASSERT_EQ(199, *res->b) << "Ordinary shared pointer was not correctly stored";
+
+  ASSERT_EQ(2UL, res->a.use_count()) << "Incorrect use count detected";
+}
+
 TEST_F(SerializationTest, VectorOfSharedPointers) {
   std::vector<std::shared_ptr<int>> vosp;
 
