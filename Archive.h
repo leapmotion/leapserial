@@ -1,6 +1,7 @@
 #pragma once
-#include <stdint.h>
 #include <iosfwd>
+#include <memory>
+#include <stdint.h>
 
 namespace leap {
   struct create_delete;
@@ -85,16 +86,38 @@ namespace leap {
     /// </summary>
     virtual std::istream& GetStream() const = 0;
 
+    struct ReleasedMemory {
+      ReleasedMemory(void* pObject, std::shared_ptr<void> pContext) :
+        pObject(pObject),
+        pContext(pContext)
+      {}
+
+      // The actually released object
+      void* pObject;
+
+      // A context block associated with the released object.  This context block must be a shared pointer
+      // in order to ensure proper memory cleanup takes place.
+      std::shared_ptr<void> pContext;
+    };
+
     /// <summary>
-    /// Identical to Lookup, except this prevents the IArchive from delegating delete responsibilities to the allocation
+    /// Identical to IArchiveRegistry::Lookup, except this prevents the IArchive from delegating delete responsibilities to the allocation
     /// </summary>
     /// <param name="pfnAlloc">The routine to be used for allocation</param>
+    /// <param name="serializer">The descriptor to use to deserialize this object, if necessary</param>
+    /// <returns>A ReleasedMemory structure</returns>
     /// <remarks>
     /// This method is permitted in the IArchive class because it does not require that the archive take responsibility
     /// for the proffered object, and in fact can allow the IArchive to abdicate responsibility for a type for which it
     /// may have been formerly responsible.
     /// </remarks>
-    virtual void* Release(void* (*pfnAlloc)(), const field_serializer& serializer, uint32_t objId) = 0;
+    virtual ReleasedMemory Release(ReleasedMemory(*pfnAlloc)(), const field_serializer& serializer, uint32_t objId) = 0;
+
+    /// <summary>
+    /// Corrolary routine to Release
+    /// </summary>
+    /// <returns>True if the specified object identifier refers to a block of memory that has already been released</returns>
+    virtual bool IsReleased(uint32_t objId) = 0;
 
     /// <summary>
     /// Reads the specified number of bytes from the input stream

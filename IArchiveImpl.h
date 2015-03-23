@@ -23,17 +23,17 @@ namespace leap {
       deserialization_task(
         const field_serializer* serializer,
         uint32_t id,
-        void* pObj
+        void* pObject
       ) :
         serializer(serializer),
         id(id),
-        pObj(pObj)
+        pObject(pObject)
       {}
 
       // Descriptor, identifier, and object pointer
       const field_serializer* serializer;
       uint32_t id;
-      void* pObj;
+      void* pObject;
     };
 
   private:
@@ -44,7 +44,13 @@ namespace leap {
     uint64_t m_count = 0;
 
     struct entry {
-      void* pObj;
+      // A pointer to the raw object
+      void* pObject;
+
+      // Caller-specified context field, if Release was called, otherwise nullptr
+      std::shared_ptr<void> pContext;
+
+      // A pointer to the routine that will be used to clean up the object
       void(*pfnFree)(void*);
     };
 
@@ -58,7 +64,8 @@ namespace leap {
   public:
     // IArchive overrides:
     void* Lookup(const create_delete& cd, const field_serializer& serializer, uint32_t objId) override;
-    void* Release(void* (*pfnAlloc)(), const field_serializer& serializer, uint32_t objId) override;
+    ReleasedMemory Release(ReleasedMemory(*pfnAlloc)(), const field_serializer& serializer, uint32_t objId) override;
+    bool IsReleased(uint32_t objId) override;
     std::istream& GetStream() const override;
     void Read(void* pBuf, uint64_t ncb) override;
     void Skip(uint64_t ncb) override;

@@ -23,32 +23,37 @@ IArchiveImpl::~IArchiveImpl(void) {
 void* IArchiveImpl::Lookup(const create_delete& cd, const field_serializer& serializer, uint32_t objId) {
   auto q = objMap.find(objId);
   if (q != objMap.end())
-    return q->second.pObj;
+    return q->second.pObject;
 
   // Not yet initialized, allocate and queue up
   auto& entry = objMap[objId];
-  entry.pObj = cd.pfnAlloc();
+  entry.pObject = cd.pfnAlloc();
   entry.pfnFree = cd.pfnFree;
-  work.push(deserialization_task(&serializer, objId, entry.pObj));
-  return entry.pObj;
+  work.push(deserialization_task(&serializer, objId, entry.pObject));
+  return entry.pObject;
 }
 
-void* IArchiveImpl::Release(void* (*pfnAlloc)(), const field_serializer& serializer, uint32_t objId) {
+IArchive::ReleasedMemory IArchiveImpl::Release(ReleasedMemory(*pfnAlloc)(), const field_serializer& serializer, uint32_t objId) {
   auto q = objMap.find(objId);
   if (q != objMap.end()) {
-    if (q->second.pfnFree)
-      q->second.pfnFree = nullptr;
-    else
-      throw std::runtime_error("Attempted to release the same object twice");
-    return q->second.pObj;
+    // Object already allocated, we just need to remove control back to ourselves
+    q->second.pfnFree = nullptr;
+    return {q->second.pObject, q->second.pContext};
   }
 
   // Not yet initialized, allocate and queue up
   auto& entry = objMap[objId];
-  entry.pObj = pfnAlloc();
+  IArchive::ReleasedMemory retVal = pfnAlloc();
+  entry.pObject = retVal.pObject;
+  entry.pContext = retVal.pContext;
   entry.pfnFree = nullptr;
-  work.push(deserialization_task(&serializer, objId, entry.pObj));
-  return entry.pObj;
+  work.push(deserialization_task(&serializer, objId, entry.pObject));
+  return retVal;
+}
+
+bool IArchiveImpl::IsReleased(uint32_t objId) {
+  auto q = objMap.find(objId);
+  return q != objMap.end() && !q->second.pfnFree;
 }
 
 void IArchiveImpl::Read(void* pBuf, uint64_t ncb) {
@@ -71,7 +76,7 @@ void IArchiveImpl::Transfer(internal::AllocationBase& alloc) {
       // Transfer cleanup responsibility to the allocator
       alloc.garbageList.push_back(
         std::make_pair(
-          cur.second.pObj,
+          cur.second.pObject,
           cur.second.pfnFree
         )
       );
@@ -87,7 +92,7 @@ size_t IArchiveImpl::ClearObjectTable(void) {
       n++;
 
       // Transfer cleanup responsibility to the allocator
-      cur.second.pfnFree(cur.second.pObj);
+      cur.second.pfnFree(cur.second.pObject);
     }
 
   objMap.clear();
@@ -95,7 +100,7 @@ size_t IArchiveImpl::ClearObjectTable(void) {
 }
 
 void IArchiveImpl::Process(const deserialization_task& task) {
-  objMap[1] = {task.pObj, nullptr};
+  objMap[1] = {task.pObject, nullptr};
   work.push(task);
 
   // Continue to work as long as there is work to be done
@@ -128,6 +133,6 @@ void IArchiveImpl::Process(const deserialization_task& task) {
       break;
     }
 
-    task.serializer->deserialize(*this, task.pObj, ncb);
+    task.serializer->deserialize(*this, task.pObject, ncb);
   }
 }

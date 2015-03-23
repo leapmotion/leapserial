@@ -725,3 +725,69 @@ TEST_F(SerializationTest, ComplexMapOfStringToVectorTest) {
   ASSERT_EQ(8, c[1]);
   ASSERT_EQ(9, c[2]);
 }
+
+struct HasThreeSharedPointers {
+  std::shared_ptr<int> a;
+  std::shared_ptr<int> b;
+  std::shared_ptr<int> c;
+
+  static leap::descriptor GetDescriptor(void) {
+    return {
+      &HasThreeSharedPointers::a,
+      &HasThreeSharedPointers::b,
+      &HasThreeSharedPointers::c
+    };
+  }
+};
+
+TEST_F(SerializationTest, CanSerializeSharedPtrs) {
+  HasThreeSharedPointers htsp;
+  htsp.a = std::make_shared<int>(101);
+  htsp.b = std::make_shared<int>(199);
+  htsp.c = htsp.a;
+
+  // Round trip
+  std::stringstream ss;
+  leap::Serialize(ss, htsp);
+
+  HasThreeSharedPointers res;
+  leap::Deserialize(ss, res);
+  ASSERT_EQ(res.a, res.c) << "Aliased shared pointer was not correctly detected in a second pass";
+  ASSERT_EQ(101, *res.a) << "Aliased shared pointer was not correctly stored";
+  ASSERT_EQ(199, *res.b) << "Ordinary shared pointer was not correctly stored";
+
+  ASSERT_EQ(2UL, res.a.use_count()) << "Incorrect use count detected";
+}
+
+TEST_F(SerializationTest, VectorOfSharedPointers) {
+  std::vector<std::shared_ptr<int>> vosp;
+
+  // Fill the vector with originals:
+  for (int i = 10; i--;)
+    vosp.push_back(std::make_shared<int>(i));
+
+  // Create some duplicates:
+  vosp.resize(14);
+  vosp[10] = vosp[4];
+  vosp[11] = vosp[4];
+  vosp[12] = vosp[5];
+  vosp[13] = vosp[9];
+
+  // Round trip, as per usual
+  std::stringstream ss;
+  leap::Serialize(ss, vosp);
+
+  std::vector<std::shared_ptr<int>> ret;
+  leap::Deserialize(ss, ret);
+  ASSERT_EQ(14, ret.size()) << "Incorrect number of deserialized entries";
+
+  const char* msg = "Aliased entries did not correctly match when deserialized";
+  ASSERT_EQ(ret[4], ret[10]) << msg;
+  ASSERT_EQ(ret[4], ret[11]) << msg;
+  ASSERT_EQ(ret[5], ret[12]) << msg;
+  ASSERT_EQ(ret[9], ret[13]) << msg;
+
+  ASSERT_EQ(3UL, ret[4].use_count()) << "Expected three aliases when deserializing";
+  ASSERT_EQ(2UL, ret[5].use_count()) << "Expected two aliases when deserializing";
+  ASSERT_EQ(2UL, ret[9].use_count()) << "Expected two aliases when deserializing";
+}

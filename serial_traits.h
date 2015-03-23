@@ -250,6 +250,11 @@ namespace leap {
   template<typename T, typename Alloc>
   struct serial_traits<std::vector<T, Alloc>>
   {
+    static_assert(
+      !std::is_base_of<std::false_type, serial_traits<T>>::value,
+      "Attempted to serialize a vector of type T, but T is not serializable"
+    );
+
     // We are irresponsible if and only if T is irresponsible
     static const bool is_irresponsible = serializer_is_irresponsible<T>::value;
 
@@ -321,8 +326,19 @@ namespace leap {
   template<typename Container>
   struct serial_traits_map_t
   {
-    typedef serial_traits<typename Container::key_type> key_traits;
-    typedef serial_traits<typename Container::mapped_type> mapped_traits;
+    typedef typename Container::key_type key_type;
+    typedef typename Container::mapped_type mapped_type;
+    typedef serial_traits<key_type> key_traits;
+    typedef serial_traits<mapped_type> mapped_traits;
+    
+    static_assert(
+      !std::is_base_of<std::false_type, serial_traits<key_type>>::value,
+      "Attempted to serialize a map, but the map's key type is not serializable"
+    );
+    static_assert(
+      !std::is_base_of<std::false_type, serial_traits<mapped_type>>::value,
+      "Attempted to serialize a map, but the map's mapped type is not serializable"
+    );
 
     // Convenience static.  We need to make allocations if either our key or value type
     // needs to make allocations.
@@ -393,14 +409,54 @@ namespace leap {
       uint32_t objId;
       ar.Read(&objId, sizeof(objId));
 
+      // Verify no unique pointer aliases:
+      if (ar.IsReleased(objId))
+        throw std::runtime_error("Attempted to map the same object into two distinct unique pointers");
+
       // Now we just perform a lookup into our archive and store the result here
-      obj.reset(
-        (T*)ar.Release(
-          []() -> void* { return new T; },
-          field_serializer_t<T, void>::GetDescriptor(),
-          objId
-        )
+      auto released = ar.Release(
+        [] {
+          return IArchive::ReleasedMemory{new T, nullptr};
+        },
+        field_serializer_t<T, void>::GetDescriptor(),
+        objId
       );
+      obj.reset(static_cast<T*>(released.pObject));
+    }
+  };
+
+  template<typename T>
+  struct serial_traits<std::shared_ptr<T>> {
+    typedef std::shared_ptr<T> type;
+
+    static uint64_t size(const type& pObj) {
+      return sizeof(uint32_t);
+    }
+
+    static void serialize(OArchiveRegistry& ar, const type& obj) {
+      // Identical implementation to serial_traits<T*>
+      uint32_t objId = ar.RegisterObject(
+        field_serializer_t<T, void>::GetDescriptor(),
+        obj.get()
+      );
+      ar.Write(&objId, sizeof(objId));
+    }
+
+    static void deserialize(IArchive& ar, type& obj, uint64_t ncb) {
+      // Object ID, then directed registration:
+      uint32_t objId;
+      ar.Read(&objId, sizeof(objId));
+
+      // We're using the shared pointer directly as our context field
+      auto released = ar.Release(
+        [] {
+          std::shared_ptr<T> retVal = std::make_shared<T>();
+          return IArchive::ReleasedMemory{retVal.get(), retVal};
+        },
+        field_serializer_t<T, void>::GetDescriptor(),
+        objId
+      );
+      obj = std::static_pointer_cast<T>(released.pContext);
     }
   };
 
