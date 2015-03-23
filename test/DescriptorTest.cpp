@@ -347,17 +347,16 @@ TEST_F(SerializationTest, ExpectedByteCount) {
 }
 
 TEST_F(SerializationTest, VarintDoubleCheck) {
-  std::ostringstream os;
-  leap::OArchiveImpl oarch(os);
+  std::stringstream ss;
+  leap::OArchiveImpl oarch(ss);
   oarch.WriteVarint(150);
   
-  std::string buf = os.str();
+  std::string buf = ss.str();
   ASSERT_STREQ("\x96\x01", buf.c_str()) << "Varint serialization is incorrect";
 
   // Read operation should result in the same value
-  std::istringstream is(buf);
   leap::internal::Allocation<std::string> alloc;
-  leap::IArchiveImpl iarch(is, nullptr);
+  leap::IArchiveImpl iarch(ss, nullptr);
   ASSERT_EQ(150, iarch.ReadVarint()) << "Read of a varint didn't return the original value";
 }
 
@@ -605,22 +604,20 @@ struct HasUniqueAndDumbPointer {
 };
 
 TEST_F(SerializationTest, UniquePtrTest) {
-  std::string str;
+  std::stringstream ss;
   {
     HasUniqueAndDumbPointer huadp;
 
     huadp.unique.reset(new CountsTotalInstances);
     huadp.dumb = huadp.unique.get();
 
-    std::ostringstream os;
-    leap::Serialize(os, huadp);
-    str = os.str();
+    leap::Serialize(ss, huadp);
   }
 
   std::unique_ptr<CountsTotalInstances> cti;
   {
     // Recover value:
-    auto deserialized = leap::Deserialize<HasUniqueAndDumbPointer>(std::istringstream(str));
+    auto deserialized = leap::Deserialize<HasUniqueAndDumbPointer>(ss);
     ASSERT_EQ(deserialized->dumb, deserialized->unique.get()) << "Unique pointer was not deserialized equivalently to a dumb pointer";
 
     // Values should be equivalent:
@@ -647,19 +644,17 @@ struct HasOnlyUniquePtrs {
 };
 
 TEST_F(SerializationTest, CoerceUniquePtr) {
-  std::string str;
+  std::stringstream ss;
   {
-    std::ostringstream os;
     HasOnlyUniquePtrs houp;
     houp.u1 = std::unique_ptr<CountsTotalInstances>(new CountsTotalInstances(23));
     houp.u2 = std::unique_ptr<CountsTotalInstances>(new CountsTotalInstances(244));
-    leap::Serialize(os, houp);
-    str = os.str();
+    leap::Serialize(ss, houp);
   }
 
   // Verify that the short syntax works:
   HasOnlyUniquePtrs houp;
-  leap::Deserialize(std::istringstream(str), houp);
+  leap::Deserialize(ss, houp);
 
   // Now ensure that our unique pointers came back properly:
   ASSERT_EQ(23, houp.u1->value);
@@ -701,7 +696,7 @@ static_assert(!leap::serializer_is_irresponsible<std::vector<int>>::value, "Irre
 static_assert(!leap::serializer_is_irresponsible<std::map<std::string, std::vector<int>>>::value, "Irresponsibility incorrectly inferred in a responsible allocator");
 
 TEST_F(SerializationTest, ComplexMapOfStringToVectorTest) {
-  std::string str;
+  std::stringstream ss;
 
   // Serialize the complex map type first
   {
@@ -710,14 +705,12 @@ TEST_F(SerializationTest, ComplexMapOfStringToVectorTest) {
     mm["b"] = std::vector<int> {4, 5, 6};
     mm["c"] = std::vector<int> {7, 8, 9};
 
-    std::ostringstream ss;
     leap::Serialize(ss, mm);
-    str = ss.str();
   }
 
   // Try to get it back:
   std::map<std::string, std::vector<int>> mm;
-  leap::Deserialize(std::istringstream(str), mm);
+  leap::Deserialize(ss, mm);
 
   ASSERT_EQ(1UL, mm.count("a")) << "Deserialized map was missing an essential member";
   ASSERT_EQ(1UL, mm.count("b")) << "Deserialized map was missing an essential member";
