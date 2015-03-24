@@ -192,6 +192,22 @@ namespace leap {
     }
   };
 
+  template<>
+  struct serial_traits<bool>
+  {
+    static uint64_t size(bool val) {
+      return OArchive::VarintSize(val);
+    }
+
+    static void serialize(OArchive& ar, bool val) {
+      ar.WriteVarint(val ? 1 : 0);
+    }
+
+    static void deserialize(IArchive& ar, bool& val, uint64_t ncb) {
+      val = ar.ReadVarint() ? true : false;
+    }
+  };
+  
   template<typename T, size_t N>
   struct serial_traits<T[N]>
   {

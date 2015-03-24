@@ -689,6 +689,17 @@ TEST_F(SerializationTest, CanSerializeEnumsTest) {
 
   ASSERT_EQ(eMySimpleEnum_Second, hem.member) << "Deserialized enum-type member did not come back correctly";
 }
+TEST_F(SerializationTest, CanSerializeBoolsTest) {
+  for (int i=0; i<10; i++) {
+    bool condition = (i%2) == 0;
+    std::stringstream ss;
+    leap::Serialize(ss, condition);
+    bool outCondition;
+    leap::Deserialize(ss, outCondition);
+    ASSERT_EQ(condition, outCondition);
+  }
+}
+
 static_assert(leap::serializer_is_irresponsible<int*>::value, "Irresponsible allocator was not correctly inferred");
 static_assert(leap::serializer_is_irresponsible<std::vector<int*>>::value, "Irresponsible allocator was not correctly inferred");
 static_assert(leap::serializer_is_irresponsible<std::map<std::string, std::vector<int*>>>::value, "Irresponsible allocator was not correctly inferred");
