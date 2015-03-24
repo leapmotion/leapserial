@@ -851,3 +851,38 @@ TEST_F(SerializationTest, VectorOfSharedPointers) {
   ASSERT_EQ(2UL, ret[5].use_count()) << "Expected two aliases when deserializing";
   ASSERT_EQ(2UL, ret[9].use_count()) << "Expected two aliases when deserializing";
 }
+
+struct SimpleObject {
+  SimpleObject(int val):
+    i(val)
+  {}
+
+  SimpleObject(void){}
+
+  static leap::descriptor GetDescriptor(void) {
+    return {
+      &SimpleObject::i
+    };
+  }
+
+  int i;
+};
+
+TEST_F(SerializationTest, DeserializeToVector) {
+  std::stringstream ss;
+
+  for (int i=0; i<5; i++) {
+    SimpleObject obj(i);
+    leap::Serialize(ss, obj);
+  }
+
+  auto collection = leap::DeserializeToVector<SimpleObject>(ss);
+
+  ASSERT_EQ(5, collection.size()) << "Didn't deserialize the same number of objects that were serialized";
+
+  int counter = 0;
+  for (const SimpleObject& obj : collection) {
+    ASSERT_EQ(counter, obj.i) << "Didn't deserialize correctly";
+    counter++;
+  }
+}

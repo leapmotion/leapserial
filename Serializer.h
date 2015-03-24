@@ -77,4 +77,21 @@ namespace leap {
   void Deserialize(std::istream&& is, T& obj) {
     Deserialize<T>(is, obj);
   }
+
+  // Fill a collection with objects serialized to 'is'
+  // Returns one past the end of the container
+  template<class T>
+  std::vector<T> DeserializeToVector(std::istream& is) {
+    std::vector<T> collection;
+    while (is.peek() != std::char_traits<char>::eof()) {
+      collection.emplace_back();
+      Deserialize<T>(is, collection.back());
+    }
+    return collection;
+  }
+  
+  template<class T>
+  std::vector<T> DeserializeToVector(std::istream&& is) {
+    return DeserializeToVector<T>(is);
+  }
 }
