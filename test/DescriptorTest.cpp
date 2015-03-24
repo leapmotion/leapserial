@@ -568,6 +568,36 @@ TEST_F(SerializationTest, NativeArray) {
   ASSERT_EQ(3, ary[2]);
 }
 
+struct HasEmbeddedArrayOfString {
+public:
+  std::string ary[5];
+
+  static leap::descriptor GetDescriptor(void) {
+    return{&HasEmbeddedArrayOfString::ary};
+  }
+};
+
+TEST_F(SerializationTest, EmbeddedNativeArray) {
+  HasEmbeddedArrayOfString heaos;
+  heaos.ary[0] = "A";
+  heaos.ary[1] = "B";
+  heaos.ary[2] = "C";
+  heaos.ary[3] = "D";
+  heaos.ary[4] = "E";
+
+  std::stringstream ss;
+  leap::Serialize(ss, heaos);
+  
+  HasEmbeddedArrayOfString ret;
+  leap::Deserialize(ss, ret);
+
+  ASSERT_EQ("A", ret.ary[0]);
+  ASSERT_EQ("B", ret.ary[1]);
+  ASSERT_EQ("C", ret.ary[2]);
+  ASSERT_EQ("D", ret.ary[3]);
+  ASSERT_EQ("E", ret.ary[4]);
+}
+
 struct CountsTotalInstances {
   CountsTotalInstances(int value = 299):
     value(value)

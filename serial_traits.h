@@ -212,15 +212,36 @@ namespace leap {
   struct serial_traits<T[N]>
   {
     static uint64_t size(const T* pObj) {
-      return 0;
+      if (internal::is_constant_size<T>::value)
+        // Constant-sized element types have a simple equation to compute total size
+        return sizeof(uint32_t) + N * sizeof(T);
+
+      // More complex types require summation on a per-element basis
+      uint64_t retVal = sizeof(uint32_t);
+      for (size_t i = 0; i < N; i++)
+        retVal += serial_traits<T>::size(pObj[i]);
+      return retVal;
     }
 
     static void serialize(OArchiveRegistry& ar, const T* pObj) {
+      // Write the number of entries first:
+      uint32_t nEntries = static_cast<uint32_t>(N);
+      ar.Write(&nEntries, sizeof(nEntries));
+
+      // Write each entry out, one at a time, using the preferred serializer
       for (size_t i = 0; i < N; i++)
         serial_traits<T>::serialize(ar, pObj[i]);
     }
 
     static void deserialize(IArchiveRegistry& ar, T* pObj, uint64_t ncb) {
+      // Read the number of entries first:
+      uint32_t nEntries;
+      ar.Read(&nEntries, sizeof(nEntries));
+      if (nEntries != N)
+        // We expected to get N entries, but got back some other value.  Something is wrong.
+        throw std::runtime_error("Attempted to deserialize a non-matching number of entries into a fixed-size space");
+
+      // Now loop until we get the desired number of entries from the stream
       for (size_t i = 0; i < N; i++)
         serial_traits<T>::deserialize(ar, pObj[i], 0);
     }
@@ -230,35 +251,15 @@ namespace leap {
   struct serial_traits<std::array<T,N>>
   {
     static uint64_t size(const std::array<T, N>& v) {
-      if (internal::is_constant_size<T>::value)
-        // Constant-sized element types have a simple equation to compute total size
-        return sizeof(uint32_t) + v.size() * sizeof(T);
-      
-      // More complex types require summation on a per-element basis
-      uint64_t retVal = sizeof(uint32_t);
-      for (const auto& cur : v)
-        retVal += serial_traits<T>::size(cur);
-      return retVal;
+      return serial_traits<T[N]>::size(&v.front());
     }
     
     static void serialize(OArchiveRegistry& ar, const std::array<T, N>& v) {
-      // Write the number of entries first:
-      uint32_t nEntries = static_cast<uint32_t>(v.size());
-      ar.Write(&nEntries, sizeof(nEntries));
-      
-      // Write each entry out, one at a time, using the preferred serializer
-      for (const auto& cur : v)
-        serial_traits<T>::serialize(ar, cur);
+      return serial_traits<T[N]>::serialize(ar, &v.front());
     }
     
     static void deserialize(IArchiveRegistry& ar, std::array<T, N>& v, uint64_t ncb) {
-      // Read the number of entries first:
-      uint32_t nEntries;
-      ar.Read(&nEntries, sizeof(nEntries));
-      
-      // Now loop until we get the desired number of entries from the stream
-      for (auto& cur : v)
-        serial_traits<T>::deserialize(ar, cur, 0);
+      return serial_traits<T[N]>::deserialize(ar, &v.front(), ncb);
     }
   };
 
