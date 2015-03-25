@@ -6,6 +6,7 @@
 #include "Descriptor.h"
 #include "field_serializer.h"
 #include <memory>
+#include <istream>
 
 namespace leap {
   struct descriptor;
