@@ -1,7 +1,7 @@
 #pragma once
 #include <iosfwd>
 #include <memory>
-#include <stdint.h>
+#include <cstdint>
 
 namespace leap {
   struct create_delete;
