@@ -17,7 +17,7 @@ set(LeapSerial_SRCS
 )
 
 set(LeapSerialTest_SRCS
-  test/DescriptorTest.cpp
+  test/SerializationTest.cpp
 )
 
 add_pch(LeapSerial_SRCS "stdafx.h" "stdafx.cpp")
