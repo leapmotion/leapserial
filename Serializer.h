@@ -31,7 +31,7 @@ namespace leap {
   }
 
   /// <summary>
-  /// Deserialization routine that returns and std::shared_ptr for memory allocation maintenance
+  /// Deserialization routine that returns an std::shared_ptr for memory allocation maintenance
   /// </summary>
   template<class T, class stream_t>
   std::shared_ptr<T> Deserialize(stream_t&& is) {
@@ -53,7 +53,7 @@ namespace leap {
   }
 
   /// <summary>
-  /// Deserialization routine that returns and std::shared_ptr for memory allocation maintenance
+  /// Deserialization routine that modifies object in place
   /// </summary>
   template<class T>
   void Deserialize(std::istream& is, T& obj) {
