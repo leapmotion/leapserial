@@ -17,7 +17,9 @@ set(LeapSerial_SRCS
 )
 
 set(LeapSerialTest_SRCS
+  test/SerialFormatTest.cpp
   test/SerializationTest.cpp
+  test/TestObject.h
 )
 
 add_pch(LeapSerial_SRCS "stdafx.h" "stdafx.cpp")
@@ -28,8 +30,9 @@ set_property(TARGET LeapSerial PROPERTY FOLDER "Utility")
 
 if(BUILD_TESTING)
   add_pch(LeapSerialTest_SRCS "stdafx.h" "stdafx.cpp")
+
   add_executable(LeapSerialTest ${LeapSerialTest_SRCS} "../gtest-all-guard.cpp")
   target_strip(LeapSerialTest)
-  target_link_libraries(LeapSerialTest LeapSerial Autowiring::AutoTesting)
+  target_link_libraries(LeapSerialTest LeapSerial Autowiring::AutoTesting Protobuf::Protobuf FlatBuffers::FlatBuffers)
   set_property(TARGET LeapSerialTest PROPERTY FOLDER "Utility")
 endif()
