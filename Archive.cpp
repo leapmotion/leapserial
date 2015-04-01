@@ -57,7 +57,8 @@ int64_t IArchive::ReadVarint(void) {
 
   do {
     Read(&ch, 1);
-    retVal |= (ch & 0x7F) << (ncb++ * 7);
+    retVal |= uint64_t(ch & 0x7F) << (ncb * 7);;
+    ++ncb;
   }
   while (ch & 0x80);
   return retVal;
