@@ -17,6 +17,7 @@ set(LeapSerial_SRCS
 )
 
 set(LeapSerialTest_SRCS
+  test/LeapArchiveTest.cpp
   test/SerialFormatTest.cpp
   test/SerializationTest.cpp
   test/TestObject.h
