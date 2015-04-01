@@ -886,3 +886,31 @@ TEST_F(SerializationTest, DeserializeToVector) {
     counter++;
   }
 }
+
+struct ConstMember {
+  ConstMember(){}
+  ConstMember(int* val):
+    value(val)
+  {}
+  
+  static leap::descriptor GetDescriptor(void) {
+    return {
+      &ConstMember::value
+    };
+  }
+  
+  const int* value;
+};
+
+TEST_F(SerializationTest, ConstSerialize) {
+  int value = 42;
+  std::stringstream ss;
+  
+  ConstMember mem(&value);
+  leap::Serialize(ss, mem);
+  
+  ConstMember otherMem;
+  leap::Deserialize(ss, otherMem);
+  
+  ASSERT_EQ(42, *otherMem.value) << "Didn't deserialize const pointer member correctly";
+}
