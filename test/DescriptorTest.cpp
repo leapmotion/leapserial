@@ -909,8 +909,7 @@ TEST_F(SerializationTest, ConstSerialize) {
   ConstMember mem(&value);
   leap::Serialize(ss, mem);
   
-  ConstMember otherMem;
-  leap::Deserialize(ss, otherMem);
+  auto otherMem = leap::Deserialize<ConstMember>(ss);
   
-  ASSERT_EQ(42, *otherMem.value) << "Didn't deserialize const pointer member correctly";
+  ASSERT_EQ(42, *otherMem->value) << "Didn't deserialize const pointer member correctly";
 }
