@@ -192,6 +192,19 @@ namespace leap {
     }
   };
 
+  // Const pointer serialization/deserialization rules are the same as pointer serialization rules,
+  // but we act as though the type itself is non-const for the purpose of deserialization
+  template<typename T>
+  struct serial_traits<const T*>:
+    serial_traits<T*>
+  {
+    static void deserialize(IArchiveRegistry& ar, const T*& pObj, uint64_t ncb) {
+      T* ptr;
+      serial_traits<T*>::deserialize(ar, ptr, ncb);
+      pObj = ptr;
+    }
+  };
+
   template<>
   struct serial_traits<bool>
   {
