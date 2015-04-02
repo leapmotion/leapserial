@@ -66,7 +66,6 @@ namespace leap {
     void* Lookup(const create_delete& cd, const field_serializer& serializer, uint32_t objId) override;
     ReleasedMemory Release(ReleasedMemory(*pfnAlloc)(), const field_serializer& serializer, uint32_t objId) override;
     bool IsReleased(uint32_t objId) override;
-    std::istream& GetStream() const override;
     void Read(void* pBuf, uint64_t ncb) override;
     void Skip(uint64_t ncb) override;
     uint64_t Count(void) const override { return m_count; }

@@ -18,10 +18,10 @@ leap::descriptor::descriptor(const field_descriptor* begin, const field_descript
   }
 }
 
-uint64_t leap::descriptor::size(const void* pObj) const {
+uint64_t leap::descriptor::size(const OArchiveRegistry& ar, const void* pObj) const {
   uint64_t retVal = 0;
   for (const auto& field_descriptor : field_descriptors)
-    retVal += field_descriptor.serializer.size(
+    retVal += field_descriptor.serializer.size(ar,
       static_cast<const char*>(pObj) +field_descriptor.offset
     );
   for (const auto& cur : identified_descriptors) {
@@ -29,14 +29,14 @@ uint64_t leap::descriptor::size(const void* pObj) const {
     // Need the type of the child object and its size proper
     serial_type type = identified_descriptor.serializer.type();
     uint64_t ncbChild = 
-      identified_descriptor.serializer.size(
+      identified_descriptor.serializer.size(ar,
         static_cast<const char*>(pObj) + identified_descriptor.offset
       );
 
     // Add the size required to encode type information and identity information to the
     // size proper of the child object
     retVal +=
-      leap::serial_traits<uint32_t>::size(
+      leap::serial_traits<uint32_t>::size(ar,
         (identified_descriptor.identifier << 3) |
         static_cast<int>(type)
       ) +
@@ -44,7 +44,7 @@ uint64_t leap::descriptor::size(const void* pObj) const {
 
     if (type == serial_type::string)
       // Need to know the size-of-the-size
-      retVal += leap::serial_traits<uint64_t>::size(ncbChild);
+      retVal += leap::serial_traits<uint64_t>::size(ar,ncbChild);
   }
   return retVal;
 }
@@ -64,16 +64,17 @@ void leap::descriptor::serialize(OArchiveRegistry& ar, const void* pObj) const {
 
     // Has identifier, need to write out the ID with the type and then the payload
     auto type = identified_descriptor.serializer.type();
-    ar.WriteVarint(
+    ar.WriteInteger(
       (identified_descriptor.identifier << 3) |
-      static_cast<int>(type)
+      static_cast<int>(type),
+      sizeof(int)
     );
 
     // Decide whether this is a counted sequence or not:
     switch (type) {
     case serial_type::string:
       // Counted string, write the size first
-      ar.WriteVarint(identified_descriptor.serializer.size(pChildObj));
+      ar.WriteInteger((int64_t)identified_descriptor.serializer.size(ar,pChildObj), sizeof(uint64_t));
       break;
     default:
       // Nothing else requires that the size be written

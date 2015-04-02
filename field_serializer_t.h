@@ -43,8 +43,8 @@ namespace leap {
       return serial_type::string;
     }
 
-    uint64_t size(const void* pObj) const override {
-      return serial_traits<T>::size(*static_cast<const T*>(pObj));
+    uint64_t size(const OArchiveRegistry& ar, const void* pObj) const override {
+      return serial_traits<T>::size(ar, *static_cast<const T*>(pObj));
     }
 
     void serialize(OArchiveRegistry& ar, const void* pObj) const override {
@@ -74,7 +74,7 @@ namespace leap {
       return serial_type::ignored;
     }
 
-    uint64_t size(const void* pObj) const override {
+    uint64_t size(const OArchiveRegistry& ar, const void* pObj) const override {
       return 0;
     }
 

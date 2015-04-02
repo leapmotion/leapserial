@@ -23,7 +23,7 @@ namespace leap {
     );
 
     OArchiveImpl ar(os);
-    ar.RegisterObject(
+    ar.WriteObject(
       field_serializer_t<T, void>::GetDescriptor(),
       &obj
     );

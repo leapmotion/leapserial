@@ -60,7 +60,7 @@ namespace leap {
     /// <returns>
     /// The exact number of bytes that will be required in the serialize operation
     /// </returns>
-    virtual uint64_t size(const void* pObj) const = 0;
+    virtual uint64_t size(const OArchiveRegistry& ar, const void* pObj) const = 0;
 
     /// <summary>
     /// Serializes the object into the specified buffer

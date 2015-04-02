@@ -66,10 +66,6 @@ void IArchiveImpl::Skip(uint64_t ncb) {
   is.ignore(ncb);
 }
 
-std::istream& IArchiveImpl::GetStream() const {
-  return is;
-}
-
 void IArchiveImpl::Transfer(internal::AllocationBase& alloc) {
   for (auto& cur : objMap)
     if (cur.second.pfnFree)

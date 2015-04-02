@@ -1,7 +1,8 @@
 #pragma once
+#include <cstdint>
+#include <functional>
 #include <iosfwd>
 #include <memory>
-#include <cstdint>
 
 namespace leap {
   struct create_delete;
@@ -33,30 +34,60 @@ namespace leap {
     virtual ~OArchive(void) {}
 
     /// <summary>
-    /// Get  a stream interface to the archive
+    /// Writes the specified bytes to the output stream, optionally prefixed by the size of the stream.
     /// </summary>
-    virtual std::ostream& GetStream() const = 0;
+    virtual void WriteByteArray(const void* pBuf, uint64_t ncb, bool writeSize = false) = 0;
     
     /// <summary>
-    /// Writes the specified bytes to the output stream
+    /// Writes the specified bytes as a string.
     /// </summary>
-    virtual void Write(const void* pBuf, uint64_t ncb) const = 0;
-
-    /// <returns>
-    /// The number of bytes that would be required to serialize the specified integer with varint encoding
-    /// </returns>
-    static uint16_t VarintSize(int64_t value);
+    /// <param name="charCount"> The number of characters </param>
+    /// <param name="charSize"> The number of bytes per character</param>
+    virtual void WriteString(const void* pBuf, uint64_t charCount, uint8_t charSize) = 0;
 
     /// <summary>
-    /// Writes the specified integer as a varint to the output stream
+    /// Writes the specified boolean value to the output stream
     /// </sumamry>
-    void WriteVarint(int64_t value) const;
+    virtual void WriteBool(bool value) = 0;
+
+    /// <summary>
+    /// Writes the specified integer to the output stream
+    /// </summary>
+    /// <param name="value">The actual integer to be written</param>
+    /// <param name="ncb">
+    /// The number of bytes maximumum that are set in value
+    /// </param>
+    /// <remarks>
+    /// It is an error for (value & ~(1 << (ncb * 8))) to be nonzero.
+    /// </remarks>
+    virtual void WriteInteger(int64_t value, size_t ncb) = 0;
 
     // Convenience overloads:
-    void Write(int32_t value) const { return Write(&value, sizeof(value)); }
-    void Write(uint32_t value) const { return Write(&value, sizeof(value)); }
-    void Write(int64_t value) const { return Write(&value, sizeof(value)); }
-    void Write(uint64_t value) const { return Write(&value, sizeof(value)); }
+    virtual void WriteInteger(int8_t value) { WriteInteger(value, sizeof(value)); }
+    virtual void WriteInteger(uint8_t value) { WriteInteger(value, sizeof(value)); }
+    virtual void WriteInteger(int16_t value) { WriteInteger(value, sizeof(value)); }
+    virtual void WriteInteger(uint16_t value) { WriteInteger(value, sizeof(value)); }
+    virtual void WriteInteger(int32_t value) { WriteInteger(value, sizeof(value)); }
+    virtual void WriteInteger(uint32_t value) { WriteInteger(value, sizeof(value)); }
+    virtual void WriteInteger(int64_t value) { WriteInteger(value, sizeof(value)); }
+    virtual void WriteInteger(uint64_t value) { WriteInteger((int64_t)value, sizeof(value)); }
+    
+    virtual void WriteFloat(float value) { WriteByteArray(&value, sizeof(float)); }
+    virtual void WriteFloat(double value) { WriteByteArray(&value, sizeof(double)); }
+    
+    /// <summary>
+    /// Returns the number of bytes that will be used to write the specified integer
+    /// </summary>
+    virtual size_t SizeInteger(int64_t value, size_t ncb) const = 0;
+    virtual size_t SizeFloat(float value) const = 0;
+    virtual size_t SizeFloat(double value) const = 0;
+    virtual size_t SizeBool(bool value) const = 0;
+    virtual size_t SizeString(const void* pBuf, uint64_t ncb, uint8_t charSize) const = 0;
+
+    template<class T>
+    size_t SizeInteger(T value) {
+      return SizeInteger(value, sizeof(T));
+    }
   };
 
   /// <summary>
@@ -71,7 +102,38 @@ namespace leap {
     /// <summary>
     /// Registers an object for serialization, returning the ID that will be given to the object
     /// </summary>
-    virtual uint32_t RegisterObject(const field_serializer& serializer, const void* pObj) = 0;
+    virtual void WriteObject(const field_serializer& serializer, const void* pObj) = 0;
+    virtual uint64_t SizeObject(const field_serializer& serializer, const void* pObj) const = 0;
+
+    virtual void WriteObjectReference(const field_serializer& serializer, const void* pObj) = 0;
+    virtual uint64_t SizeObjectReference(const field_serializer& serializer, const void* pObj) const = 0;
+
+    /// <summary>
+    /// Writes out an array of entries
+    /// </summary>
+    virtual void WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) = 0;
+    virtual uint64_t SizeArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) const = 0;
+
+    /// <summary>
+    /// Writes out an array of entries
+    /// </summary>
+    virtual void WriteDictionary(
+      uint64_t n,
+      const field_serializer& keyDesc,
+      std::function<const void*()> keyEnumerator,
+      const field_serializer& valueDesc,
+      std::function<const void*()> valueEnumerator
+     ) = 0;
+
+    virtual uint64_t SizeDictionary(
+      uint64_t n,
+      const field_serializer& keyDesc,
+      std::function<const void*()> keyEnumerator,
+      const field_serializer& valueDesc,
+      std::function<const void*()> valueEnumerator
+      ) const = 0;
+
+  
   };
 
   class IArchive {
@@ -80,11 +142,6 @@ namespace leap {
     /// Creates a new output archive based on the specified stream
     /// </summary>
     virtual ~IArchive(void) {}
-
-    /// <summary>
-    /// Get a stream interface to the archive
-    /// </summary>
-    virtual std::istream& GetStream() const = 0;
 
     struct ReleasedMemory {
       ReleasedMemory(void* pObject, std::shared_ptr<void> pContext) :
