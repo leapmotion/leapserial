@@ -110,7 +110,7 @@ namespace leap {
     }
 
     static void deserialize(IArchive& ar, T& obj, uint64_t ncb) {
-      ar.Read(&obj, sizeof(T));
+      ar.ReadFloat(obj);
     }
   };
 
@@ -129,7 +129,7 @@ namespace leap {
     }
 
     static void deserialize(IArchive& ar, T& val, uint64_t ncb) {
-      val = static_cast<T>(ar.ReadVarint());
+      val = static_cast<T>(ar.ReadInteger(sizeof(T)));
     }
   };
 
@@ -146,7 +146,7 @@ namespace leap {
     }
 
     static void deserialize(IArchive& ar, T& val, uint64_t ncb) {
-      val = static_cast<T>(ar.ReadVarint());
+      val = static_cast<T>(ar.ReadInteger(sizeof(T)));
     }
   };
 
@@ -174,19 +174,12 @@ namespace leap {
     }
 
     static void deserialize(IArchiveRegistry& ar, T*& pObj, uint64_t ncb) {
-      // We expect to find an ID in the intput stream
-      uint32_t objId;
-      ar.Read(&objId, sizeof(objId));
-
-      // Now we just perform a lookup into our archive and store the result here
-      pObj = (T*)ar.Lookup(
-        {
-          []() -> void* { return new T; },
-          [](void* ptr) { delete (T*) ptr; }
-        },
-        field_serializer_t<T, void>::GetDescriptor(),
-        objId
-      );
+      create_delete creatorDeletor = {
+        []() -> void* { return new T; },
+        [](void* ptr) { delete (T*) ptr; }
+      };
+      
+      pObj = (T*)ar.ReadObjectReference(creatorDeletor, field_serializer_t<T, void>::GetDescriptor());
     }
   };
 
@@ -215,7 +208,7 @@ namespace leap {
     }
 
     static void deserialize(IArchive& ar, bool& val, uint64_t ncb) {
-      val = ar.ReadVarint() ? true : false;
+      val = ar.ReadBool();
     }
   };
   
@@ -233,16 +226,8 @@ namespace leap {
     }
 
     static void deserialize(IArchiveRegistry& ar, T* pObj, uint64_t ncb) {
-      // Read the number of entries first:
-      uint32_t nEntries;
-      ar.Read(&nEntries, sizeof(nEntries));
-      if (nEntries != N)
-        // We expected to get N entries, but got back some other value.  Something is wrong.
-        throw std::runtime_error("Attempted to deserialize a non-matching number of entries into a fixed-size space");
-
-      // Now loop until we get the desired number of entries from the stream
-      for (size_t i = 0; i < N; i++)
-        serial_traits<T>::deserialize(ar, pObj[i], 0);
+      size_t i = 0;
+      ar.ReadArray(field_serializer_t<T, void>(), N, [&](){ return &pObj[i++]; } );
     }
   };
   
@@ -293,7 +278,7 @@ namespace leap {
     static void deserialize(iarchive& ar, std::vector<T, Alloc>& v, uint64_t ncb) {
       // Read the number of entries first:
       uint32_t nEntries;
-      ar.Read(&nEntries, sizeof(nEntries));
+      ar.ReadByteArray(&nEntries, sizeof(nEntries));
 
       // Now loop until we get the desired number of entries from the stream
       v.resize(nEntries);
@@ -308,19 +293,19 @@ namespace leap {
     typedef std::basic_string<T, std::char_traits<T>, std::allocator<T>> type;
 
     static uint64_t size(const OArchive& ar, const type& pObj) {
-      return ar.SizeString(pObj.data(), pObj.size() * sizeof(T), sizeof(T));
+      return ar.SizeString(pObj.data(), pObj.size(), sizeof(T));
     }
 
     static void serialize(OArchive& ar, const type& obj) {
-      ar.WriteString(obj.data(), obj.size()*sizeof(T), sizeof(T));
+      ar.WriteString(obj.data(), obj.size(), sizeof(T));
     }
 
     static void deserialize(IArchive& ar, type& obj, uint64_t ncb) {
       // Same story--string length, then string proper
-      uint32_t nEntries;
-      ar.Read(&nEntries, sizeof(nEntries));
+      uint32_t nEntries = 0;
+      ar.ReadByteArray(&nEntries, sizeof(nEntries));
       obj.resize(nEntries);
-      ar.Read(&obj[0], nEntries * sizeof(T));
+      ar.ReadByteArray(&obj[0], nEntries * sizeof(T));
     }
   };
 
@@ -347,8 +332,8 @@ namespace leap {
     // Convenience static.  We need to make allocations if either our key or value type
     // needs to make allocations.
     static const bool sc_needsAllocation =
-      serializer_is_irresponsible<typename Container::key_type>::value ||
-      serializer_is_irresponsible<typename Container::mapped_type>::value;
+      serializer_is_irresponsible<key_type>::value ||
+      serializer_is_irresponsible<mapped_type>::value;
 
     // We need to know if either the key type or the mapped type is irresponsible.
     // If it is, we're going to need to ensure we accept the correct input archive
@@ -359,8 +344,8 @@ namespace leap {
       auto iKey = obj.begin();
       auto iValue = obj.begin();
       return ar.SizeDictionary(obj.size(),
-        field_serializer_t<typename Container::key_type, void>(), [&]{ return &(iKey++)->first; },
-        field_serializer_t<typename Container::mapped_type, void>(), [&]{ return &(iValue++)->second; }
+        field_serializer_t<key_type, void>(), [&]{ return &(iKey++)->first; },
+        field_serializer_t<mapped_type, void>(), [&]{ return &(iValue++)->second; }
       );
     }
 
@@ -368,22 +353,21 @@ namespace leap {
       auto iKey = obj.begin();
       auto iValue = obj.begin();
       return ar.WriteDictionary(obj.size(),
-        field_serializer_t<typename Container::key_type, void>(), [&]{ return &((iKey++)->first); },
-        field_serializer_t<typename Container::mapped_type, void>(), [&]{ return &((iValue++)->second); }
+        field_serializer_t<key_type, void>(), [&]{ return &((iKey++)->first); },
+        field_serializer_t<mapped_type, void>(), [&]{ return &((iValue++)->second); }
       );
     }
 
     static void deserialize(iarchive& ar, Container& obj, uint64_t ncb) {
-      // Read the number of entries first:
-      uint32_t nEntries;
-      ar.Read(&nEntries, sizeof(nEntries));
-
-      // Now read in all values:
-      while (nEntries--) {
-        typename Container::key_type key;
-        key_traits::deserialize(ar, key, 0);
-        mapped_traits::deserialize(ar, obj[key], 0);
-      }
+      typename Container::key_type key;
+      typename Container::value_type value;
+      ar.ReadDictionary(field_serializer_t<key_type,void>(), &key,
+                        field_serializer_t<mapped_type,void>(), &value,
+                        [&](const void* keyIn, const void* valueIn) {
+                          obj.emplace(*reinterpret_cast<const key_type*>(keyIn), *reinterpret_cast<const mapped_type*>(valueIn));
+                        }
+      );
+      
     }
   };
   
@@ -414,9 +398,8 @@ namespace leap {
     }
 
     static void deserialize(IArchive& ar, type& obj, uint64_t ncb) {
-      // Object ID, then directed registration:
       uint32_t objId;
-      ar.Read(&objId, sizeof(objId));
+      ar.ReadByteArray(&objId, sizeof(objId));
 
       // Verify no unique pointer aliases:
       if (ar.IsReleased(objId))
@@ -430,6 +413,7 @@ namespace leap {
         field_serializer_t<T, void>::GetDescriptor(),
         objId
       );
+      
       obj.reset(static_cast<T*>(released.pObject));
     }
   };
@@ -452,7 +436,7 @@ namespace leap {
     static void deserialize(IArchive& ar, type& obj, uint64_t ncb) {
       // Object ID, then directed registration:
       uint32_t objId;
-      ar.Read(&objId, sizeof(objId));
+      ar.ReadByteArray(&objId, sizeof(objId));
 
       // We're using the shared pointer directly as our context field
       auto released = ar.Release(

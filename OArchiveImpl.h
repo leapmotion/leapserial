@@ -64,7 +64,7 @@ namespace leap {
     uint64_t SizeArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) const override;
     uint64_t SizeDictionary(uint64_t n, const field_serializer& keyDesc, std::function<const void*()> keyEnumerator, const field_serializer& valueDesc, std::function<const void*()> valueEnumerator) const override;
     
-    size_t SizeString(const void* pBuf, uint64_t ncb, uint8_t) const override  { return (size_t)(sizeof(uint32_t) + ncb); }
+    inline size_t SizeString(const void* pBuf, uint64_t charCount, size_t charSize) const override { return sizeof(uint32_t) + (charCount*charSize); }
     size_t SizeInteger(int64_t value, size_t ncb) const override { return VarintSize(value); }
     size_t SizeFloat(float value) const override { return sizeof(float); }
     size_t SizeFloat(double value) const override { return sizeof(double); }

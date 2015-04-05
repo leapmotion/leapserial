@@ -102,11 +102,11 @@ void leap::descriptor::deserialize(IArchiveRegistry& ar, void* pObj, uint64_t nc
   // Identified fields, read them in
   while (ar.Count() < countLimit) {
     // Ident/type field first
-    uint64_t ident = ar.ReadVarint();
+    uint64_t ident = ar.ReadInteger(sizeof(uint64_t));
     uint64_t ncbChild;
     switch ((serial_type)(ident & 7)) {
     case serial_type::string:
-      ncbChild = ar.ReadVarint();
+      ncbChild = ar.ReadInteger(sizeof(uint64_t));
       break;
     case serial_type::b64:
       ncbChild = 8;
@@ -127,7 +127,7 @@ void leap::descriptor::deserialize(IArchiveRegistry& ar, void* pObj, uint64_t nc
       // Unrecognized field, need to skip
       if (static_cast<serial_type>(ident & 7) == serial_type::varint)
         // Just read a varint in that we discard right away
-        ar.ReadVarint();
+        ar.ReadInteger(sizeof(uint64_t));
       else
         // Skip the requisite number of bytes
         ar.Skip(static_cast<size_t>(ncbChild));

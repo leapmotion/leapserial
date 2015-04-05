@@ -81,7 +81,7 @@ void TestVarint(int64_t testNumber) {
   leap::IArchiveImpl iArch(ss, nullptr);
 
   oArch.WriteInteger(testNumber);
-  auto output = iArch.ReadVarint();
+  auto output = iArch.ReadInteger(8);
   ASSERT_EQ(output, testNumber);
 }
 
@@ -114,7 +114,7 @@ TEST_F(LeapArchiveTest, VarintDoubleCheck) {
   // Read operation should result in the same value
   leap::internal::Allocation<std::string> alloc;
   leap::IArchiveImpl iarch(ss, nullptr);
-  ASSERT_EQ(150, iarch.ReadVarint()) << "Read of a varint didn't return the original value";
+  ASSERT_EQ(150, iarch.ReadInteger(8)) << "Read of a varint didn't return the original value";
 }
 
 TEST_F(LeapArchiveTest, VarintSizeExpectationCheck) {

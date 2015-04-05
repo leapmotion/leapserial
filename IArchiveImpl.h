@@ -62,14 +62,24 @@ namespace leap {
     std::queue<deserialization_task> work;
 
   public:
-    // IArchive overrides:
+    void* ReadObjectReference(const create_delete& cd, const field_serializer& sz) override;
     void* Lookup(const create_delete& cd, const field_serializer& serializer, uint32_t objId) override;
+    // IArchive overrides:
+
     ReleasedMemory Release(ReleasedMemory(*pfnAlloc)(), const field_serializer& serializer, uint32_t objId) override;
     bool IsReleased(uint32_t objId) override;
-    void Read(void* pBuf, uint64_t ncb) override;
     void Skip(uint64_t ncb) override;
     uint64_t Count(void) const override { return m_count; }
+    
+    void ReadArray(const field_serializer& sz, uint64_t n, std::function<void*()> enumerator) override;
+    void ReadDictionary(const field_serializer& keyDesc,
+                        void* key,
+                        const field_serializer& valueDesc,
+                        void* value,
+                        std::function<void(const void* key, const void* value)> insertionFn
+                        ) override;
 
+    
     /// <summary>
     /// Moves ownership of all deletable entities to the specified allocator type
     /// </summary>
@@ -83,6 +93,14 @@ namespace leap {
     /// </remarks>
     /// <returns>The number of objects destroyed</returns>
     size_t ClearObjectTable(void);
+    
+    void ReadByteArray(void* pBuf, uint64_t ncb) override;
+    void ReadString(void* pBuf, size_t charCount, size_t charSize) override;
+    bool ReadBool() override;
+    uint64_t ReadInteger(size_t ncb) override;
+    
+    virtual void ReadFloat(float& value) { ReadByteArray(&value, sizeof(float)); }
+    virtual void ReadFloat(double& value) { ReadByteArray(&value, sizeof(double)); }
 
     /// <summary>
     /// Recursively processes deserialization tasks, starting with the one passed, until none are left

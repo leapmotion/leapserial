@@ -20,6 +20,15 @@ IArchiveImpl::~IArchiveImpl(void) {
   ClearObjectTable();
 }
 
+void* IArchiveImpl::ReadObjectReference(const create_delete& cd,  const leap::field_serializer &sz) {
+    // We expect to find an ID in the intput stream
+  uint32_t objId;
+  ReadByteArray(&objId, sizeof(objId));
+  
+  // Now we just perform a lookup into our archive and store the result here
+  return Lookup(cd, sz, objId);
+}
+
 void* IArchiveImpl::Lookup(const create_delete& cd, const field_serializer& serializer, uint32_t objId) {
   auto q = objMap.find(objId);
   if (q != objMap.end())
@@ -31,6 +40,49 @@ void* IArchiveImpl::Lookup(const create_delete& cd, const field_serializer& seri
   entry.pfnFree = cd.pfnFree;
   work.push(deserialization_task(&serializer, objId, entry.pObject));
   return entry.pObject;
+}
+
+void IArchiveImpl::ReadArray(const leap::field_serializer &sz, uint64_t n, std::function<void*()> enumerator) {
+  // Read the number of entries first:
+  uint32_t nEntries;
+  ReadByteArray(&nEntries, sizeof(nEntries));
+  
+  if (nEntries != n)
+    // We expected to get N entries, but got back some other value.  Something is wrong.
+    throw std::runtime_error("Attempted to deserialize a non-matching number of entries into a fixed-size space");
+  
+    // Now loop until we get the desired number of entries from the stream
+  for (size_t i = 0; i < n; i++)
+    sz.deserialize(*this, enumerator(), 0);
+}
+
+void IArchiveImpl::ReadString(void *pBuf, size_t charCount, size_t charSize) {
+  // Read the number of entries first:
+  uint32_t nEntries;
+  ReadByteArray(&nEntries, sizeof(nEntries));
+  
+  if (nEntries != charCount)
+    // We expected to get N entries, but got back some other value.  Something is wrong.
+    throw std::runtime_error("Attempted to deserialize a non-matching number of entries into a fixed-size space");
+  
+  ReadByteArray(pBuf, charCount * charSize);
+}
+
+void IArchiveImpl::ReadDictionary(const field_serializer& keyDesc, void* key,
+                                  const field_serializer& valueDesc, void* value,
+                                  std::function<void(const void* key, const void* value)> insertionFn)
+{
+  // Read the number of entries first:
+  uint32_t nEntries;
+  ReadByteArray(&nEntries, sizeof(nEntries));
+  
+  // Now read in all values:
+  while (nEntries--) {
+    keyDesc.deserialize(*this, key, 0);
+    valueDesc.deserialize(*this, value, 0);
+    insertionFn(key,value);
+  }
+
 }
 
 IArchive::ReleasedMemory IArchiveImpl::Release(ReleasedMemory(*pfnAlloc)(), const field_serializer& serializer, uint32_t objId) {
@@ -56,7 +108,7 @@ bool IArchiveImpl::IsReleased(uint32_t objId) {
   return q != objMap.end() && !q->second.pfnFree;
 }
 
-void IArchiveImpl::Read(void* pBuf, uint64_t ncb) {
+void IArchiveImpl::ReadByteArray(void* pBuf, uint64_t ncb) {
   if(!is.read((char*) pBuf, ncb))
     throw std::runtime_error("End of file reached prematurely");
   m_count += ncb;
@@ -64,6 +116,7 @@ void IArchiveImpl::Read(void* pBuf, uint64_t ncb) {
 
 void IArchiveImpl::Skip(uint64_t ncb) {
   is.ignore(ncb);
+  //  m_count += ncb;
 }
 
 void IArchiveImpl::Transfer(internal::AllocationBase& alloc) {
@@ -78,6 +131,27 @@ void IArchiveImpl::Transfer(internal::AllocationBase& alloc) {
       );
 
   objMap.clear();
+}
+
+bool IArchiveImpl::ReadBool() {
+  bool b;
+  ReadByteArray(&b, 1);
+  return b;
+}
+
+uint64_t IArchiveImpl::ReadInteger(size_t) {
+  uint8_t ch;
+  uint64_t retVal = 0;
+  size_t ncb = 0;
+    
+  do {
+    ReadByteArray(&ch, 1);
+    retVal |= uint64_t(ch & 0x7F) << (ncb * 7);;
+    ++ncb;
+  }
+  while (ch & 0x80);
+
+  return retVal;
 }
 
 size_t IArchiveImpl::ClearObjectTable(void) {
@@ -104,7 +178,7 @@ void IArchiveImpl::Process(const deserialization_task& task) {
     deserialization_task& task = work.front();
 
     // Identifier/type comes first
-    auto id_type = ReadVarint();
+    auto id_type = ReadInteger(8);
 
     // Then we need the size (if it's available)
     size_t ncb;
@@ -117,7 +191,7 @@ void IArchiveImpl::Process(const deserialization_task& task) {
       break;
     case serial_type::string:
       // Size fits right here
-      ncb = static_cast<size_t>(ReadVarint());
+      ncb = static_cast<size_t>(ReadInteger(sizeof(ncb)));
       break;
     case serial_type::varint:
       // No idea how much, leave it to the consumer

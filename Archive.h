@@ -82,7 +82,7 @@ namespace leap {
     virtual size_t SizeFloat(float value) const = 0;
     virtual size_t SizeFloat(double value) const = 0;
     virtual size_t SizeBool(bool value) const = 0;
-    virtual size_t SizeString(const void* pBuf, uint64_t ncb, uint8_t charSize) const = 0;
+    virtual size_t SizeString(const void* pBuf, uint64_t ncb, size_t charSize) const = 0;
 
     template<class T>
     size_t SizeInteger(T value) {
@@ -175,32 +175,55 @@ namespace leap {
     /// </summary>
     /// <returns>True if the specified object identifier refers to a block of memory that has already been released</returns>
     virtual bool IsReleased(uint32_t objId) = 0;
-
-    /// <summary>
-    /// Reads the specified number of bytes from the input stream
-    /// </summary>
-    virtual void Read(void* pBuf, uint64_t ncb) = 0;
-
-    // Convenience overloads:
-    void Read(int32_t& val) { Read(&val, sizeof(val)); }
-    void Read(uint32_t& val) { Read(&val, sizeof(val)); }
-    void Read(int64_t& val) { Read(&val, sizeof(val)); }
-    void Read(uint64_t& val) { Read(&val, sizeof(val)); }
-
+    
     /// <summary>
     /// Discards the specified number of bytes from the input stream
     /// </summary>
     virtual void Skip(uint64_t ncb) = 0;
-
+    
     /// <returns>
     /// The total number of bytes read so far
     /// </returns>
     virtual uint64_t Count(void) const = 0;
-
+    
     /// <summary>
-    /// Interprets bytes from the output stream as a single varint
+    /// Reads the specified number of bytes from the input stream
+    /// </summary>
+    virtual void ReadByteArray(void* pBuf, uint64_t ncb) = 0;
+    
+    /// <summary>
+    /// Reads out a string into the specified buffer
+    /// </summary>
+    /// <param name="charSize"> The number of bytes per character</param>
+    virtual void ReadString(void* pBuf, size_t charCount, size_t charSize) = 0;
+    
+    /// <summary>
+    /// Reads the specified boolean value to the output stream
     /// </sumamry>
-    int64_t ReadVarint(void);
+    virtual bool ReadBool() = 0;
+    
+    /// <summary>
+    /// Reads the specified integer from the input stream
+    /// </summary>
+    /// <param name="value">The actual integer to be written</param>
+    /// <param name="ncb">
+    /// The number of bytes maximumum that are set in value
+    /// </param>
+    /// <remarks>
+    /// It is an error for (value & ~(1 << (ncb * 8))) to be nonzero.
+    /// </remarks>
+    
+    virtual uint64_t ReadInteger(size_t ncb) = 0;
+    virtual void ReadFloat(float& value) { ReadByteArray(&value, sizeof(float)); }
+    virtual void ReadFloat(double& value) { ReadByteArray(&value, sizeof(double)); }
+    virtual void ReadArray(const field_serializer& sz, uint64_t n, std::function<void*()> enumerator) = 0;
+    virtual void ReadDictionary(const field_serializer& keyDesc,
+                                void* key,
+                                const field_serializer& valueDesc,
+                                void* value,
+                                std::function<void(const void* key, const void* value)> inserter
+                                ) = 0;
+
   };
 
   /// <summary>
@@ -212,10 +235,14 @@ namespace leap {
   public:
     virtual ~IArchiveRegistry(void) {}
 
+    virtual void* ReadObjectReference(const create_delete& cd, const field_serializer& sz) = 0;
+
+
+    
     /// <summary>
     /// Registers an encountered identifier for later deserialization
     /// </summary>
-    /// <param name="pfnAllocate">The allocation routine, to be invoked if the object isn't found</param>
+    /// <param name="cd">The allocation and deletion routine pair, to be invoked if the object isn't found</param>
     /// <param name="desc">The descriptor that will be used to deserialize the object, if needed</param>
     /// <param name="objId">The ID of the object that has been encountered</param>
     /// <returns>A pointer to the object</returns>
