@@ -2,7 +2,6 @@ set(LeapSerial_SRCS
   Allocation.h
   Allocation.cpp
   Archive.h
-  Archive.cpp
   Descriptor.h
   Descriptor.cpp
   field_descriptor.h
