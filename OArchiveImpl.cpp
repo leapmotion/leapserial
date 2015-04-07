@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "LeapArchive.h"
+#include "ProtobufType.h"
 #include "OArchiveImpl.h"
 #include "field_serializer.h"
 #include "Descriptor.h"
@@ -36,7 +36,7 @@ void OArchiveImpl::WriteObject(const field_serializer& serializer, const void* p
   // type, then the length
   WriteInteger(
     (q->second << 3) |
-    static_cast<uint32_t>(LeapArchive::serial_type::string),
+    static_cast<uint32_t>(Protobuf::serial_type::string),
     sizeof(uint32_t)
     );
   WriteInteger(serializer.size(*this, pObj), sizeof(uint32_t));
@@ -76,7 +76,7 @@ void OArchiveImpl::WriteDescriptor(const descriptor& descriptor, const void* pOb
     const void* pChildObj = static_cast<const char*>(pObj)+identified_descriptor.offset;
 
     // Has identifier, need to write out the ID with the type and then the payload
-    auto type = LeapArchive::GetSerialType(identified_descriptor.serializer.type());
+    auto type = Protobuf::GetSerialType(identified_descriptor.serializer.type());
     WriteInteger(
       (identified_descriptor.identifier << 3) |
       static_cast<int>(type),
@@ -85,7 +85,7 @@ void OArchiveImpl::WriteDescriptor(const descriptor& descriptor, const void* pOb
 
     // Decide whether this is a counted sequence or not:
     switch (type) {
-    case LeapArchive::serial_type::string:
+    case Protobuf::serial_type::string:
       // Counted string, write the size first
       WriteInteger((int64_t)identified_descriptor.serializer.size(*this, pChildObj), sizeof(uint64_t));
       break;
@@ -110,7 +110,7 @@ uint64_t OArchiveImpl::SizeDescriptor(const descriptor& descriptor, const void* 
   for (const auto& cur : descriptor.identified_descriptors) {
     const auto& identified_descriptor = cur.second;
     // Need the type of the child object and its size proper
-    const auto type = LeapArchive::GetSerialType(identified_descriptor.serializer.type());
+    const auto type = Protobuf::GetSerialType(identified_descriptor.serializer.type());
     uint64_t ncbChild =
       identified_descriptor.serializer.size(*this,
       static_cast<const char*>(pObj)+identified_descriptor.offset
@@ -125,7 +125,7 @@ uint64_t OArchiveImpl::SizeDescriptor(const descriptor& descriptor, const void* 
       ) +
       ncbChild;
 
-    if (type == LeapArchive::serial_type::string)
+    if (type == Protobuf::serial_type::string)
       // Need to know the size-of-the-size
       retVal += leap::serial_traits<uint64_t>::size(*this, ncbChild);
   }

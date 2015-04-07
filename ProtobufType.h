@@ -2,7 +2,7 @@
 #include "Archive.h"
 
 namespace leap {
-  namespace LeapArchive {
+  namespace Protobuf {
     enum class serial_type {
       // Null type, this type is never serialized
       ignored = -1,

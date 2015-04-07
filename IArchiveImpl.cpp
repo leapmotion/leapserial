@@ -2,7 +2,7 @@
 #include "IArchiveImpl.h"
 #include "field_serializer.h"
 #include "serial_traits.h"
-#include "LeapArchive.h"
+#include "ProtobufType.h"
 #include <iostream>
 #include <sstream>
 
@@ -74,17 +74,17 @@ void IArchiveImpl::ReadDescriptor(const descriptor& descriptor, void* pObj, uint
     // Ident/type field first
     uint64_t ident = ReadInteger(sizeof(uint64_t));
     uint64_t ncbChild;
-    switch ((LeapArchive::serial_type)(ident & 7)) {
-    case LeapArchive::serial_type::string:
+    switch ((Protobuf::serial_type)(ident & 7)) {
+    case Protobuf::serial_type::string:
       ncbChild = ReadInteger(sizeof(uint64_t));
       break;
-    case LeapArchive::serial_type::b64:
+    case Protobuf::serial_type::b64:
       ncbChild = 8;
       break;
-    case LeapArchive::serial_type::b32:
+    case Protobuf::serial_type::b32:
       ncbChild = 4;
       break;
-    case LeapArchive::serial_type::varint:
+    case Protobuf::serial_type::varint:
       ncbChild = 0;
       break;
     default:
@@ -95,7 +95,7 @@ void IArchiveImpl::ReadDescriptor(const descriptor& descriptor, void* pObj, uint
     auto q = descriptor.identified_descriptors.find(ident >> 3);
     if (q == descriptor.identified_descriptors.end())
       // Unrecognized field, need to skip
-      if (static_cast<LeapArchive::serial_type>(ident & 7) == LeapArchive::serial_type::varint)
+      if (static_cast<Protobuf::serial_type>(ident & 7) == Protobuf::serial_type::varint)
         // Just read a varint in that we discard right away
         ReadInteger(sizeof(uint64_t));
       else
@@ -257,22 +257,22 @@ void IArchiveImpl::Process(const deserialization_task& task) {
 
     // Then we need the size (if it's available)
     size_t ncb;
-    switch (static_cast<LeapArchive::serial_type>(id_type & 7)) {
-    case LeapArchive::serial_type::b32:
+    switch (static_cast<Protobuf::serial_type>(id_type & 7)) {
+    case Protobuf::serial_type::b32:
       ncb = 4;
       break;
-    case LeapArchive::serial_type::b64:
+    case Protobuf::serial_type::b64:
       ncb = 8;
       break;
-    case LeapArchive::serial_type::string:
+    case Protobuf::serial_type::string:
       // Size fits right here
       ncb = static_cast<size_t>(ReadInteger(sizeof(ncb)));
       break;
-    case LeapArchive::serial_type::varint:
+    case Protobuf::serial_type::varint:
       // No idea how much, leave it to the consumer
       ncb = 0;
       break;
-    case LeapArchive::serial_type::ignored:
+    case Protobuf::serial_type::ignored:
       // Shold never happen, but if it does, then read no bytes
       ncb = 0;
       break;
