@@ -114,8 +114,7 @@ namespace leap {
     }
   };
 
-  // Specialization for anything that is integral.  This is already platform-independent and
-  // makes use of the varint facility in the Archive type.
+  // Specialization for anything that is integral.
   template<typename T>
   struct primitive_serial_traits<T, typename std::enable_if<std::is_integral<T>::value>::type>
   {
@@ -360,7 +359,7 @@ namespace leap {
 
     static void deserialize(iarchive& ar, Container& obj, uint64_t ncb) {
       typename Container::key_type key;
-      typename Container::value_type value;
+      typename Container::mapped_type value;
       ar.ReadDictionary(field_serializer_t<key_type,void>(), &key,
                         field_serializer_t<mapped_type,void>(), &value,
                         [&](const void* keyIn, const void* valueIn) {
@@ -398,20 +397,12 @@ namespace leap {
     }
 
     static void deserialize(IArchive& ar, type& obj, uint64_t ncb) {
-      uint32_t objId;
-      ar.ReadByteArray(&objId, sizeof(objId));
-
-      // Verify no unique pointer aliases:
-      if (ar.IsReleased(objId))
-        throw std::runtime_error("Attempted to map the same object into two distinct unique pointers");
-
-      // Now we just perform a lookup into our archive and store the result here
-      auto released = ar.Release(
+      auto released = ar.ReadObjectReferenceResponsible(
         [] {
           return IArchive::ReleasedMemory{new T, nullptr};
         },
         field_serializer_t<T, void>::GetDescriptor(),
-        objId
+        true
       );
       
       obj.reset(static_cast<T*>(released.pObject));
@@ -434,19 +425,15 @@ namespace leap {
     }
 
     static void deserialize(IArchive& ar, type& obj, uint64_t ncb) {
-      // Object ID, then directed registration:
-      uint32_t objId;
-      ar.ReadByteArray(&objId, sizeof(objId));
-
-      // We're using the shared pointer directly as our context field
-      auto released = ar.Release(
+      auto released = ar.ReadObjectReferenceResponsible(
         [] {
           std::shared_ptr<T> retVal = std::make_shared<T>();
-          return IArchive::ReleasedMemory{retVal.get(), retVal};
+          return IArchive::ReleasedMemory{ retVal.get(), retVal };
         },
         field_serializer_t<T, void>::GetDescriptor(),
-        objId
+        false
       );
+
       obj = std::static_pointer_cast<T>(released.pContext);
     }
   };

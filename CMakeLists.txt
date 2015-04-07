@@ -7,6 +7,7 @@ set(LeapSerial_SRCS
   field_descriptor.h
   field_serializer.h
   field_serializer_t.h
+  LeapArchive.h
   IArchiveImpl.h
   IArchiveImpl.cpp
   OArchiveImpl.h

@@ -2,7 +2,9 @@
 #include "IArchiveImpl.h"
 #include "field_serializer.h"
 #include "serial_traits.h"
+#include "LeapArchive.h"
 #include <iostream>
+#include <sstream>
 
 using namespace leap;
 
@@ -29,6 +31,18 @@ void* IArchiveImpl::ReadObjectReference(const create_delete& cd,  const leap::fi
   return Lookup(cd, sz, objId);
 }
 
+IArchive::ReleasedMemory IArchiveImpl::ReadObjectReferenceResponsible(ReleasedMemory(*pfnAlloc)(), const field_serializer& sz, bool isUnique) {
+  // Object ID, then directed registration:
+  uint32_t objId;
+  ReadByteArray(&objId, sizeof(objId));
+  
+  // Verify no unique pointer aliases:
+  if (isUnique && IsReleased(objId))
+    throw std::runtime_error("Attempted to map the same object into two distinct unique pointers");
+
+  return Release(pfnAlloc, sz, objId);
+}
+
 void* IArchiveImpl::Lookup(const create_delete& cd, const field_serializer& serializer, uint32_t objId) {
   auto q = objMap.find(objId);
   if (q != objMap.end())
@@ -40,6 +54,67 @@ void* IArchiveImpl::Lookup(const create_delete& cd, const field_serializer& seri
   entry.pfnFree = cd.pfnFree;
   work.push(deserialization_task(&serializer, objId, entry.pObject));
   return entry.pObject;
+}
+
+void IArchiveImpl::ReadDescriptor(const descriptor& descriptor, void* pObj, uint64_t ncb) {
+  uint64_t countLimit = Count() + ncb;
+  for (const auto& field_descriptor : descriptor.field_descriptors)
+    field_descriptor.serializer.deserialize(
+    *this,
+    static_cast<char*>(pObj)+field_descriptor.offset,
+    0
+    );
+
+  if (!ncb)
+    // Impossible for there to be more fields, we don't have a sizer
+    return;
+
+  // Identified fields, read them in
+  while (Count() < countLimit) {
+    // Ident/type field first
+    uint64_t ident = ReadInteger(sizeof(uint64_t));
+    uint64_t ncbChild;
+    switch ((LeapArchive::serial_type)(ident & 7)) {
+    case LeapArchive::serial_type::string:
+      ncbChild = ReadInteger(sizeof(uint64_t));
+      break;
+    case LeapArchive::serial_type::b64:
+      ncbChild = 8;
+      break;
+    case LeapArchive::serial_type::b32:
+      ncbChild = 4;
+      break;
+    case LeapArchive::serial_type::varint:
+      ncbChild = 0;
+      break;
+    default:
+      throw std::runtime_error("Unexpected type field encountered");
+    }
+
+    // See if we can find the descriptor for this field:
+    auto q = descriptor.identified_descriptors.find(ident >> 3);
+    if (q == descriptor.identified_descriptors.end())
+      // Unrecognized field, need to skip
+      if (static_cast<LeapArchive::serial_type>(ident & 7) == LeapArchive::serial_type::varint)
+        // Just read a varint in that we discard right away
+        ReadInteger(sizeof(uint64_t));
+      else
+        // Skip the requisite number of bytes
+        Skip(static_cast<size_t>(ncbChild));
+    else
+      // Hand off to child class
+      q->second.serializer.deserialize(
+      *this,
+      static_cast<char*>(pObj)+q->second.offset,
+      static_cast<size_t>(ncbChild)
+      );
+  }
+
+  if (Count() > countLimit) {
+    std::ostringstream os;
+    os << "Deserialization error, read " << (Count() - countLimit + ncb) << " bytes and expected to read " << ncb << " bytes";
+    throw std::runtime_error(os.str());
+  }
 }
 
 void IArchiveImpl::ReadArray(const leap::field_serializer &sz, uint64_t n, std::function<void*()> enumerator) {
@@ -182,22 +257,22 @@ void IArchiveImpl::Process(const deserialization_task& task) {
 
     // Then we need the size (if it's available)
     size_t ncb;
-    switch (static_cast<serial_type>(id_type & 7)) {
-    case serial_type::b32:
+    switch (static_cast<LeapArchive::serial_type>(id_type & 7)) {
+    case LeapArchive::serial_type::b32:
       ncb = 4;
       break;
-    case serial_type::b64:
+    case LeapArchive::serial_type::b64:
       ncb = 8;
       break;
-    case serial_type::string:
+    case LeapArchive::serial_type::string:
       // Size fits right here
       ncb = static_cast<size_t>(ReadInteger(sizeof(ncb)));
       break;
-    case serial_type::varint:
+    case LeapArchive::serial_type::varint:
       // No idea how much, leave it to the consumer
       ncb = 0;
       break;
-    case serial_type::ignored:
+    case LeapArchive::serial_type::ignored:
       // Shold never happen, but if it does, then read no bytes
       ncb = 0;
       break;

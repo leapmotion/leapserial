@@ -1,6 +1,8 @@
 #include "stdafx.h"
+#include "LeapArchive.h"
 #include "OArchiveImpl.h"
 #include "field_serializer.h"
+#include "Descriptor.h"
 #include <iostream>
 
 using namespace leap;
@@ -34,7 +36,7 @@ void OArchiveImpl::WriteObject(const field_serializer& serializer, const void* p
   // type, then the length
   WriteInteger(
     (q->second << 3) |
-    static_cast<uint32_t>(serial_type::string),
+    static_cast<uint32_t>(LeapArchive::serial_type::string),
     sizeof(uint32_t)
     );
   WriteInteger(serializer.size(*this, pObj), sizeof(uint32_t));
@@ -60,8 +62,74 @@ void OArchiveImpl::WriteObjectReference(const field_serializer& serializer, cons
   WriteSize(q->second);
 }
 
-uint64_t OArchiveImpl::SizeObject(const field_serializer& serializer, const void*pObj) const {
-  return serializer.size(*this, pObj);
+void OArchiveImpl::WriteDescriptor(const descriptor& descriptor, const void* pObj) {
+  // Stationary descriptors first:
+  for (const auto& field_descriptor : descriptor.field_descriptors)
+    field_descriptor.serializer.serialize(
+    *this,
+    static_cast<const char*>(pObj)+field_descriptor.offset
+    );
+
+  // Then variable descriptors:
+  for (const auto& cur : descriptor.identified_descriptors) {
+    const auto& identified_descriptor = cur.second;
+    const void* pChildObj = static_cast<const char*>(pObj)+identified_descriptor.offset;
+
+    // Has identifier, need to write out the ID with the type and then the payload
+    auto type = LeapArchive::GetSerialType(identified_descriptor.serializer.type());
+    WriteInteger(
+      (identified_descriptor.identifier << 3) |
+      static_cast<int>(type),
+      sizeof(int)
+      );
+
+    // Decide whether this is a counted sequence or not:
+    switch (type) {
+    case LeapArchive::serial_type::string:
+      // Counted string, write the size first
+      WriteInteger((int64_t)identified_descriptor.serializer.size(*this, pChildObj), sizeof(uint64_t));
+      break;
+    default:
+      // Nothing else requires that the size be written
+      break;
+    }
+    
+    // Now handoff to serialization proper
+    identified_descriptor.serializer.serialize(*this, pChildObj);
+  }
+}
+
+uint64_t OArchiveImpl::SizeDescriptor(const descriptor& descriptor, const void* pObj) const {
+  uint64_t retVal = 0;
+  for (const auto& field_descriptor : descriptor.field_descriptors) {
+    retVal += field_descriptor.serializer.size(*this,
+      static_cast<const char*>(pObj)+field_descriptor.offset
+      );
+  }
+
+  for (const auto& cur : descriptor.identified_descriptors) {
+    const auto& identified_descriptor = cur.second;
+    // Need the type of the child object and its size proper
+    const auto type = LeapArchive::GetSerialType(identified_descriptor.serializer.type());
+    uint64_t ncbChild =
+      identified_descriptor.serializer.size(*this,
+      static_cast<const char*>(pObj)+identified_descriptor.offset
+      );
+
+    // Add the size required to encode type information and identity information to the
+    // size proper of the child object
+    retVal +=
+      leap::serial_traits<uint32_t>::size(*this,
+      (identified_descriptor.identifier << 3) |
+      static_cast<int>(type)
+      ) +
+      ncbChild;
+
+    if (type == LeapArchive::serial_type::string)
+      // Need to know the size-of-the-size
+      retVal += leap::serial_traits<uint64_t>::size(*this, ncbChild);
+  }
+  return retVal;
 }
 
 void OArchiveImpl::WriteByteArray(const void* pBuf, uint64_t ncb, bool writeSize) {
@@ -134,7 +202,7 @@ uint64_t OArchiveImpl::SizeDictionary(uint64_t n,
   return retVal;
 }
 
-uint16_t OArchiveImpl::VarintSize(int64_t value) {
+size_t OArchiveImpl::SizeInteger(int64_t value, size_t) const {
   // Number of bits of significant data
   unsigned long n;
   uint64_t x = value;
@@ -159,7 +227,7 @@ uint16_t OArchiveImpl::VarintSize(int64_t value) {
 #endif
 
   // Round up value divided by 7, that's the number of bytes we need to output
-  return static_cast<uint16_t>((n + 6) / 7);
+  return static_cast<size_t>((n + 6) / 7);
 }
 
 void OArchiveImpl::Process(void) {

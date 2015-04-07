@@ -36,7 +36,7 @@ namespace leap {
 
     // field_serializer overrides:
     bool allocates(void) const { return m_allocates; }
-    serial_type type(void) const override { return serial_type::string; }
+    serial_primitive type(void) const override { return serial_primitive::map; }
     uint64_t size(const OArchiveRegistry& ar, const void* pObj) const override;
     void serialize(OArchiveRegistry& ar, const void* pObj) const override;
     void deserialize(IArchiveRegistry& ar, void* pObj, uint64_t ncb) const override;

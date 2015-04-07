@@ -51,6 +51,7 @@ namespace leap {
     // OArchive overrides:
     void WriteObject(const field_serializer& serializer, const void* pObj) override;
     void WriteObjectReference(const field_serializer& serializer, const void* pObj) override;
+    void WriteDescriptor(const descriptor& descriptor, const void* pObj) override;
 
     void WriteByteArray(const void* pBuf, uint64_t ncb, bool writeSize = false) override;
     void WriteString(const void* pbuf, uint64_t charCount, uint8_t charSize) override;
@@ -59,21 +60,16 @@ namespace leap {
     void WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) override;
     void WriteDictionary(uint64_t n, const field_serializer& keyDesc, std::function<const void*()> keyEnumerator, const field_serializer& valueDesc, std::function<const void*()> valueEnumerator) override;
     
-    uint64_t SizeObject(const field_serializer& serializer, const void* pObj) const override;
+    uint64_t SizeDescriptor(const descriptor& desc, const void* pObj) const override;
     uint64_t SizeObjectReference(const field_serializer&, const void*) const override { return sizeof(uint32_t); }
     uint64_t SizeArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) const override;
     uint64_t SizeDictionary(uint64_t n, const field_serializer& keyDesc, std::function<const void*()> keyEnumerator, const field_serializer& valueDesc, std::function<const void*()> valueEnumerator) const override;
     
-    inline size_t SizeString(const void* pBuf, uint64_t charCount, size_t charSize) const override { return sizeof(uint32_t) + (charCount*charSize); }
-    size_t SizeInteger(int64_t value, size_t ncb) const override { return VarintSize(value); }
+    inline size_t SizeString(const void* pBuf, uint64_t charCount, size_t charSize) const override { return (size_t)(sizeof(uint32_t) + (charCount*charSize)); }
+    size_t SizeInteger(int64_t value, size_t ncb) const override;
     size_t SizeFloat(float value) const override { return sizeof(float); }
     size_t SizeFloat(double value) const override { return sizeof(double); }
     size_t SizeBool(bool) const override { return 1; }
-
-    /// <returns>
-    /// The number of bytes that would be required to serialize the specified integer with varint encoding
-    /// </returns>
-    static uint16_t VarintSize(int64_t value);
 
     /// <summary>
     /// Processes objects on the internal queue until the queue is empty

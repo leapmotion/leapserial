@@ -23,24 +23,37 @@ namespace leap {
       return serializer_is_irresponsible<T>::value;
     }
 
-    serial_type type(void) const override {
-      if (std::is_integral<T>::value)
-        // Integral types can be written as varint
-        return serial_type::varint;
+    serial_primitive type(void) const override {
+      if (std::is_same<T, bool>::value)
+        return serial_primitive::boolean;
 
-      if (std::is_floating_point<T>::value)
+      if (std::is_integral<T>::value) {
+        switch (sizeof(T)) {
+        case 1:
+          return serial_primitive::i8;
+        case 2:
+          return serial_primitive::i16;
+        case 4:
+          return serial_primitive::i32;
+        case 8:
+          return serial_primitive::i64;
+        default:
+          break;
+        }
+      }
+      else if (std::is_floating_point<T>::value)
         // Floating-point numbers are bit-width fields
         switch (sizeof(T)) {
-        case 8:
-          return serial_type::b64;
         case 4:
-          return serial_type::b32;
+          return serial_primitive::f32; 
+        case 8:
+          return serial_primitive::f64;
         default:
           break;
       }
 
       // Default type will be a counted string
-      return serial_type::string;
+      return serial_primitive::array;
     }
 
     uint64_t size(const OArchiveRegistry& ar, const void* pObj) const override {
@@ -69,9 +82,8 @@ namespace leap {
 
     bool allocates(void) const override { return false; }
 
-    serial_type type(void) const override {
-      // Default type will be a counted string
-      return serial_type::ignored;
+    serial_primitive type(void) const override {
+      return serial_primitive::ignored;
     }
 
     uint64_t size(const OArchiveRegistry& ar, const void* pObj) const override {

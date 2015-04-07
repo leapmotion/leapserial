@@ -13,14 +13,20 @@ namespace leap {
   class OArchive;
   class OArchiveRegistry;
 
-  enum class serial_type {
-    // Null type, this type is never serialized
+  //This type is part of the interface, so is subject to change and therefore
+  //should never be serialized directly.
+  enum class serial_primitive {
     ignored = -1,
-
-    varint = 0,
-    b64 = 1,
-    string = 2,
-    b32 = 5
+    boolean = 0,
+    i8,
+    i16,
+    i32,
+    i64,
+    f32,
+    f64,
+    array,
+    string,
+    map
   };
 
   /// <summary>
@@ -98,15 +104,23 @@ namespace leap {
   {
   public:
     virtual ~OArchiveRegistry(void) {}
-
+    
     /// <summary>
     /// Registers an object for serialization, returning the ID that will be given to the object
     /// </summary>
-    virtual void WriteObject(const field_serializer& serializer, const void* pObj) = 0;
-    virtual uint64_t SizeObject(const field_serializer& serializer, const void* pObj) const = 0;
-
     virtual void WriteObjectReference(const field_serializer& serializer, const void* pObj) = 0;
     virtual uint64_t SizeObjectReference(const field_serializer& serializer, const void* pObj) const = 0;
+
+    /// <summary>
+    /// Writes an object directly to the stream - used as the root call to serialize an object.
+    /// </summary>
+    virtual void WriteObject(const field_serializer& serializer, const void* pObj) = 0;
+    
+    /// <summary>
+    /// Writes a descriptor to the stream
+    /// </summary>
+    virtual void WriteDescriptor(const descriptor& descriptor, const void* pObj) = 0;
+    virtual uint64_t SizeDescriptor(const descriptor& descriptor, const void* pObj) const = 0;
 
     /// <summary>
     /// Writes out an array of entries
@@ -171,6 +185,11 @@ namespace leap {
     virtual ReleasedMemory Release(ReleasedMemory(*pfnAlloc)(), const field_serializer& serializer, uint32_t objId) = 0;
 
     /// <summary>
+    /// Identical to ReadObjectReference, but does not claim responsiblity for cleaning up the allocated memory.
+    /// </summary>
+    virtual ReleasedMemory ReadObjectReferenceResponsible(ReleasedMemory(*pfnAlloc)(), const field_serializer& sz, bool isUnique) = 0;
+
+    /// <summary>
     /// Corrolary routine to Release
     /// </summary>
     /// <returns>True if the specified object identifier refers to a block of memory that has already been released</returns>
@@ -186,6 +205,11 @@ namespace leap {
     /// </returns>
     virtual uint64_t Count(void) const = 0;
     
+    /// <summary>
+    /// Reads a described object from the stream.
+    /// </summary>
+    virtual void ReadDescriptor(const descriptor& descriptor, void* pObj, uint64_t ncb) = 0;
+
     /// <summary>
     /// Reads the specified number of bytes from the input stream
     /// </summary>
@@ -237,8 +261,6 @@ namespace leap {
 
     virtual void* ReadObjectReference(const create_delete& cd, const field_serializer& sz) = 0;
 
-
-    
     /// <summary>
     /// Registers an encountered identifier for later deserialization
     /// </summary>

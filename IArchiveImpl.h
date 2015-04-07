@@ -62,15 +62,19 @@ namespace leap {
     std::queue<deserialization_task> work;
 
   public:
-    void* ReadObjectReference(const create_delete& cd, const field_serializer& sz) override;
-    void* Lookup(const create_delete& cd, const field_serializer& serializer, uint32_t objId) override;
     // IArchive overrides:
+    void* ReadObjectReference(const create_delete& cd, const field_serializer& sz) override;
+    
+    ReleasedMemory ReadObjectReferenceResponsible(ReleasedMemory(*pfnAlloc)(), const field_serializer& sz, bool isUnique) override;
+
+    void* Lookup(const create_delete& cd, const field_serializer& serializer, uint32_t objId) override;
 
     ReleasedMemory Release(ReleasedMemory(*pfnAlloc)(), const field_serializer& serializer, uint32_t objId) override;
     bool IsReleased(uint32_t objId) override;
     void Skip(uint64_t ncb) override;
     uint64_t Count(void) const override { return m_count; }
     
+    void ReadDescriptor(const descriptor& descriptor, void* pObj, uint64_t ncb) override;
     void ReadArray(const field_serializer& sz, uint64_t n, std::function<void*()> enumerator) override;
     void ReadDictionary(const field_serializer& keyDesc,
                         void* key,
