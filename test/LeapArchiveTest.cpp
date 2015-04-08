@@ -130,10 +130,16 @@ TEST_F(LeapArchiveTest, VarintSizeExpectationCheck) {
 #endif
   std::stringstream ss;
   leap::OArchiveImpl oarch(ss);
+
   ASSERT_EQ(
     10,
     oarch.SizeInteger(-1)
     ) << "-1 should have maxed out the varint size requirement";
+
+  ASSERT_EQ(
+    1,
+    oarch.SizeInteger(0)
+    ) << "Boundary case failure";
 
   ASSERT_EQ(
     2,

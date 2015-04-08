@@ -203,6 +203,10 @@ uint64_t OArchiveImpl::SizeDictionary(uint64_t n,
 }
 
 size_t OArchiveImpl::SizeInteger(int64_t value, size_t) const {
+  //Bitscan and clz11 do not work with the null case.
+  if (value == 0)
+    return 1;
+
   // Number of bits of significant data
   unsigned long n;
   uint64_t x = value;
