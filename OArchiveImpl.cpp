@@ -148,7 +148,7 @@ void OArchiveImpl::WriteBool(bool value) {
   WriteInteger(value, sizeof(bool));
 }
 
-void OArchiveImpl::WriteInteger(int64_t value, size_t) {
+void OArchiveImpl::WriteInteger(int64_t value, uint8_t) {
   uint8_t varint[10];
 
   // Serialize out
@@ -202,7 +202,7 @@ uint64_t OArchiveImpl::SizeDictionary(uint64_t n,
   return retVal;
 }
 
-size_t OArchiveImpl::SizeInteger(int64_t value, size_t) const {
+uint64_t OArchiveImpl::SizeInteger(int64_t value, uint8_t) const {
   //Bitscan and clz11 do not work with the null case.
   if (value == 0)
     return 1;
@@ -231,7 +231,7 @@ size_t OArchiveImpl::SizeInteger(int64_t value, size_t) const {
 #endif
 
   // Round up value divided by 7, that's the number of bytes we need to output
-  return static_cast<size_t>((n + 6) / 7);
+  return static_cast<uint64_t>((n + 6) / 7);
 }
 
 void OArchiveImpl::Process(void) {

@@ -131,7 +131,7 @@ void IArchiveImpl::ReadArray(const leap::field_serializer &sz, uint64_t n, std::
     sz.deserialize(*this, enumerator(), 0);
 }
 
-void IArchiveImpl::ReadString(void *pBuf, size_t charCount, size_t charSize) {
+void IArchiveImpl::ReadString(void *pBuf, uint64_t charCount, uint8_t charSize) {
   // Read the number of entries first:
   uint32_t nEntries;
   ReadByteArray(&nEntries, sizeof(nEntries));
@@ -214,7 +214,7 @@ bool IArchiveImpl::ReadBool() {
   return b;
 }
 
-uint64_t IArchiveImpl::ReadInteger(size_t) {
+uint64_t IArchiveImpl::ReadInteger(uint8_t) {
   uint8_t ch;
   uint64_t retVal = 0;
   size_t ncb = 0;
@@ -256,7 +256,7 @@ void IArchiveImpl::Process(const deserialization_task& task) {
     auto id_type = ReadInteger(8);
 
     // Then we need the size (if it's available)
-    size_t ncb;
+    uint64_t ncb;
     switch (static_cast<Protobuf::serial_type>(id_type & 7)) {
     case Protobuf::serial_type::b32:
       ncb = 4;
@@ -266,7 +266,7 @@ void IArchiveImpl::Process(const deserialization_task& task) {
       break;
     case Protobuf::serial_type::string:
       // Size fits right here
-      ncb = static_cast<size_t>(ReadInteger(sizeof(ncb)));
+      ncb = ReadInteger(sizeof(ncb));
       break;
     case Protobuf::serial_type::varint:
       // No idea how much, leave it to the consumer

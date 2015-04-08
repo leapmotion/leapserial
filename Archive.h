@@ -66,7 +66,7 @@ namespace leap {
     /// <remarks>
     /// It is an error for (value & ~(1 << (ncb * 8))) to be nonzero.
     /// </remarks>
-    virtual void WriteInteger(int64_t value, size_t ncb) = 0;
+    virtual void WriteInteger(int64_t value, uint8_t ncb) = 0;
 
     // Convenience overloads:
     virtual void WriteInteger(int8_t value) { WriteInteger(value, sizeof(value)); }
@@ -81,17 +81,14 @@ namespace leap {
     virtual void WriteFloat(float value) { WriteByteArray(&value, sizeof(float)); }
     virtual void WriteFloat(double value) { WriteByteArray(&value, sizeof(double)); }
     
-    /// <summary>
-    /// Returns the number of bytes that will be used to write the specified integer
-    /// </summary>
-    virtual size_t SizeInteger(int64_t value, size_t ncb) const = 0;
-    virtual size_t SizeFloat(float value) const = 0;
-    virtual size_t SizeFloat(double value) const = 0;
-    virtual size_t SizeBool(bool value) const = 0;
-    virtual size_t SizeString(const void* pBuf, uint64_t ncb, size_t charSize) const = 0;
+    virtual uint64_t SizeInteger(int64_t value, uint8_t ncb) const = 0;
+    virtual uint64_t SizeFloat(float value) const = 0;
+    virtual uint64_t SizeFloat(double value) const = 0;
+    virtual uint64_t SizeBool(bool value) const = 0;
+    virtual uint64_t SizeString(const void* pBuf, uint64_t ncb, uint8_t charSize) const = 0;
 
     template<class T>
-    size_t SizeInteger(T value) {
+    uint64_t SizeInteger(T value) {
       return SizeInteger(value, sizeof(T));
     }
   };
@@ -172,7 +169,7 @@ namespace leap {
     };
 
     /// <summary>
-    /// Identical to IArchiveRegistry::Lookup, except this prevents the IArchive from delegating delete responsibilities to the allocation
+    /// Identical to IArchiveRegistry::ReadObjectReference, except this prevents the IArchive from delegating delete responsibilities to the allocation
     /// </summary>
     /// <param name="pfnAlloc">The routine to be used for allocation</param>
     /// <param name="serializer">The descriptor to use to deserialize this object, if necessary</param>
@@ -182,19 +179,8 @@ namespace leap {
     /// for the proffered object, and in fact can allow the IArchive to abdicate responsibility for a type for which it
     /// may have been formerly responsible.
     /// </remarks>
-    virtual ReleasedMemory Release(ReleasedMemory(*pfnAlloc)(), const field_serializer& serializer, uint32_t objId) = 0;
-
-    /// <summary>
-    /// Identical to ReadObjectReference, but does not claim responsiblity for cleaning up the allocated memory.
-    /// </summary>
     virtual ReleasedMemory ReadObjectReferenceResponsible(ReleasedMemory(*pfnAlloc)(), const field_serializer& sz, bool isUnique) = 0;
 
-    /// <summary>
-    /// Corrolary routine to Release
-    /// </summary>
-    /// <returns>True if the specified object identifier refers to a block of memory that has already been released</returns>
-    virtual bool IsReleased(uint32_t objId) = 0;
-    
     /// <summary>
     /// Discards the specified number of bytes from the input stream
     /// </summary>
@@ -219,7 +205,7 @@ namespace leap {
     /// Reads out a string into the specified buffer
     /// </summary>
     /// <param name="charSize"> The number of bytes per character</param>
-    virtual void ReadString(void* pBuf, size_t charCount, size_t charSize) = 0;
+    virtual void ReadString(void* pBuf, uint64_t charCount, uint8_t charSize) = 0;
     
     /// <summary>
     /// Reads the specified boolean value to the output stream
@@ -236,8 +222,7 @@ namespace leap {
     /// <remarks>
     /// It is an error for (value & ~(1 << (ncb * 8))) to be nonzero.
     /// </remarks>
-    
-    virtual uint64_t ReadInteger(size_t ncb) = 0;
+    virtual uint64_t ReadInteger(uint8_t ncb) = 0;
     virtual void ReadFloat(float& value) { ReadByteArray(&value, sizeof(float)); }
     virtual void ReadFloat(double& value) { ReadByteArray(&value, sizeof(double)); }
     virtual void ReadArray(const field_serializer& sz, uint64_t n, std::function<void*()> enumerator) = 0;
@@ -259,19 +244,16 @@ namespace leap {
   public:
     virtual ~IArchiveRegistry(void) {}
 
-    virtual void* ReadObjectReference(const create_delete& cd, const field_serializer& sz) = 0;
-
     /// <summary>
     /// Registers an encountered identifier for later deserialization
     /// </summary>
     /// <param name="cd">The allocation and deletion routine pair, to be invoked if the object isn't found</param>
     /// <param name="desc">The descriptor that will be used to deserialize the object, if needed</param>
-    /// <param name="objId">The ID of the object that has been encountered</param>
     /// <returns>A pointer to the object</returns>
     /// <remarks>
     /// While this method does always return a valid pointer, and the pointed-to object is guaranteed to
     /// be at a minimum default constructed, the returned object may nevertheless have yet to be deserialized.
     /// </remarks>
-    virtual void* Lookup(const create_delete& cd, const field_serializer& serializer, uint32_t objId) = 0;
+    virtual void* ReadObjectReference(const create_delete& cd, const field_serializer& desc) = 0;
   };
 }
