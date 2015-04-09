@@ -13,6 +13,10 @@ namespace leap {
   class OArchive;
   class OArchiveRegistry;
 
+  namespace internal {
+    class AllocationBase;
+  }
+
   //This type is part of the interface, so is subject to change and therefore
   //should never be serialized directly.
   enum class serial_primitive {
@@ -150,7 +154,7 @@ namespace leap {
   class IArchive {
   public:
     /// <summary>
-    /// Creates a new output archive based on the specified stream
+    /// Creates a new input archive based on the specified stream
     /// </summary>
     virtual ~IArchive(void) {}
 
@@ -168,6 +172,9 @@ namespace leap {
       std::shared_ptr<void> pContext;
     };
 
+    /// <summary>
+    /// Reads an object into the specificed memory
+    virtual void ReadObject(const field_serializer& sz, void* pObj, internal::AllocationBase* pOwner) = 0;
     /// <summary>
     /// Identical to IArchiveRegistry::ReadObjectReference, except this prevents the IArchive from delegating delete responsibilities to the allocation
     /// </summary>

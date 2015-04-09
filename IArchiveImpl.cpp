@@ -22,6 +22,27 @@ IArchiveImpl::~IArchiveImpl(void) {
   ClearObjectTable();
 }
 
+void IArchiveImpl::ReadObject(const field_serializer& sz, void* pObj, internal::AllocationBase* pOwner) {
+  Process(
+    deserialization_task(
+      &sz,
+      0,
+      pObj
+    )
+  );
+
+  // If objects exist that require transferrence, then we have an error
+  if (!pOwner) {
+    if (ClearObjectTable())
+      throw std::runtime_error(
+        "Attempted to perform an allocator-free deserialization on a stream whose types are not completely responsible for their own cleanup"
+      );
+  }
+  else {
+    Transfer(*pOwner);
+  }
+}
+
 void* IArchiveImpl::ReadObjectReference(const create_delete& cd,  const leap::field_serializer &sz) {
     // We expect to find an ID in the intput stream
   uint32_t objId;

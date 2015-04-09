@@ -39,15 +39,8 @@ namespace leap {
     
     // Initialize the archive with work to be done:
     IArchiveImpl ar(is, pObj);
-    ar.Process(
-      IArchiveImpl::deserialization_task(
-        &field_serializer_t<T, void>::GetDescriptor(),
-        0,
-        pObj
-      )
-    );
-
-    ar.Transfer(*retVal);
+    ar.ReadObject(field_serializer_t<T, void>::GetDescriptor(), pObj, retVal.get() );
+    
     return retVal;
   }
 
@@ -58,19 +51,7 @@ namespace leap {
   void Deserialize(std::istream& is, T& obj) {
     // Initialize the archive with work to be done:
     IArchiveImpl ar(is, &obj);
-    ar.Process(
-      IArchiveImpl::deserialization_task(
-        &field_serializer_t<T, void>::GetDescriptor(),
-        0,
-        &obj
-      )
-    );
-
-    // If objects exist that require transferrence, then we have an error
-    if (ar.ClearObjectTable())
-      throw std::runtime_error(
-        "Attempted to perform an allocator-free deserialization on a stream whose types are not completely responsible for their own cleanup"
-      );
+    ar.ReadObject(field_serializer_t<T, void>::GetDescriptor(), &obj, nullptr);
   }
 
   template<class T>

@@ -65,12 +65,34 @@ namespace leap {
     void* Lookup(const create_delete& cd, const field_serializer& serializer, uint32_t objId);
 
     bool IsReleased(uint32_t objId);
+
+    /// <summary>
+    /// Moves ownership of all deletable entities to the specified allocator type
+    /// </summary>
+    /// <remarks>
+    /// The internal object map is cleared as a result of this operation
+    /// </remarks>
+    void Transfer(internal::AllocationBase& alloc);
+
+    /// <remarks>
+    /// Destroys all objects that define deleters and clears the object map
+    /// </remarks>
+    /// <returns>The number of objects destroyed</returns>
+    size_t ClearObjectTable(void);
+
+    /// <summary>
+    /// Recursively processes deserialization tasks, starting with the one passed, until none are left
+    /// </summary>
+    void Process(const deserialization_task& task);
   public:
+    
     void* ReadObjectReference(const create_delete& cd, const field_serializer& sz) override;
     
     // IArchive overrides:
     void Skip(uint64_t ncb) override;
     uint64_t Count(void) const override { return m_count; }
+
+    void ReadObject(const field_serializer& sz, void* pObj, internal::AllocationBase* pOwner) override;
 
     ReleasedMemory ReadObjectReferenceResponsible(ReleasedMemory(*pfnAlloc)(), const field_serializer& sz, bool isUnique) override;
     void ReadByteArray(void* pBuf, uint64_t ncb) override;
@@ -91,23 +113,5 @@ namespace leap {
     
 
 
-    /// <summary>
-    /// Moves ownership of all deletable entities to the specified allocator type
-    /// </summary>
-    /// <remarks>
-    /// The internal object map is cleared as a result of this operation
-    /// </remarks>
-    void Transfer(internal::AllocationBase& alloc);
-
-    /// <remarks>
-    /// Destroys all objects that define deleters and clears the object map
-    /// </remarks>
-    /// <returns>The number of objects destroyed</returns>
-    size_t ClearObjectTable(void);
-
-    /// <summary>
-    /// Recursively processes deserialization tasks, starting with the one passed, until none are left
-    /// </summary>
-    void Process(const deserialization_task& task);
   };
 }
