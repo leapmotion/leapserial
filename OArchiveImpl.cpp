@@ -21,32 +21,7 @@ void OArchiveImpl::WriteSize(uint32_t sz) {
   os.write((const char*) &sz,sizeof(uint32_t));
 }
 
-void OArchiveImpl::WriteObject(const field_serializer& serializer, const void* pObj)
-{
-  auto q = objMap.find(pObj);
-  if (q == objMap.end()) {
-    // Obtain a new identifier
-    ++lastID;
-
-    // Now set the ID that we will be returning to the user and tracking later
-    q = objMap.emplace(pObj, lastID).first;
-  }
-
-  // Write the expected size first in a string-type field.  Identifier first, string
-  // type, then the length
-  WriteInteger(
-    (q->second << 3) |
-    static_cast<uint32_t>(Protobuf::serial_type::string),
-    sizeof(uint32_t)
-    );
-  WriteInteger(serializer.size(*this, pObj), sizeof(uint32_t));
-
-  // Now hand off to this type's serialization behavior
-  serializer.serialize(*this, pObj);
-}
-
-void OArchiveImpl::WriteObjectReference(const field_serializer& serializer, const void* pObj)
-{
+uint32_t OArchiveImpl::RegisterObject(const field_serializer& serializer, const void*pObj) {
   auto q = objMap.find(pObj);
   if (q == objMap.end()) {
     // Obtain a new identifier
@@ -58,8 +33,17 @@ void OArchiveImpl::WriteObjectReference(const field_serializer& serializer, cons
     // Now set the ID that we will be returning to the user and tracking later
     q = objMap.emplace(pObj, lastID).first;
   }
+  return q->second;
+}
 
-  WriteSize(q->second);
+void OArchiveImpl::WriteObject(const field_serializer& serializer, const void* pObj) {
+  RegisterObject(serializer, pObj);
+  Process(); //Write the newly registered object immediately
+}
+
+void OArchiveImpl::WriteObjectReference(const field_serializer& serializer, const void* pObj) {
+  auto objId = RegisterObject(serializer, pObj);
+  WriteSize(objId); //Write the object ID for later reference.
 }
 
 void OArchiveImpl::WriteDescriptor(const descriptor& descriptor, const void* pObj) {
@@ -238,6 +222,16 @@ void OArchiveImpl::Process(void) {
   for (; !deferred.empty(); deferred.pop()) {
     work& w = deferred.front();
 
-    WriteObject(*w.serializer, w.pObj);
+    // Write the expected size first in a string-type field.  Identifier first, string
+    // type, then the length
+    WriteInteger(
+      (w.id << 3) |
+      static_cast<uint32_t>(Protobuf::serial_type::string),
+      sizeof(uint32_t)
+      );
+    WriteInteger(w.serializer->size(*this, w.pObj), sizeof(uint32_t));
+
+    // Now hand off to this type's serialization behavior
+    w.serializer->serialize(*this, w.pObj);
   }
 }

@@ -44,6 +44,18 @@ namespace leap {
     std::queue<work> deferred;
 
     void WriteSize(uint32_t sz);
+
+    /// <summary>
+    /// Translates from an object pointer to an object ID, and registers the pointer
+    /// for later deserialization by Process() if it has not been encountered before
+    /// </summary>
+    uint32_t RegisterObject(const field_serializer& serializer, const void* pObj);
+
+    /// <summary>
+    /// Processes objects on the internal queue until the queue is empty
+    /// </summary>
+    void Process(void);
+
   public:
     using OArchive::WriteInteger;
     using OArchive::SizeInteger;
@@ -71,9 +83,6 @@ namespace leap {
     uint64_t SizeFloat(double value) const override { return sizeof(double); }
     uint64_t SizeBool(bool) const override { return 1; }
 
-    /// <summary>
-    /// Processes objects on the internal queue until the queue is empty
-    /// </summary>
-    void Process(void);
+  
   };
 }

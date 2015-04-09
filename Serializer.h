@@ -27,7 +27,6 @@ namespace leap {
       field_serializer_t<T, void>::GetDescriptor(),
       &obj
     );
-    ar.Process();
   }
 
   /// <summary>
