@@ -102,7 +102,7 @@ void IArchiveFlatbuffer::ReadByteArray(void* pBuf, uint64_t ncb) {
   throw not_implemented_exception();
 }
 
-void IArchiveFlatbuffer::ReadString(void* pBuf, uint64_t charCount, uint8_t charSize) {
+void IArchiveFlatbuffer::ReadString(std::function<void*(uint64_t)> getBufferFn, uint8_t charSize, uint64_t ncb) {
   throw not_implemented_exception();
 }
 

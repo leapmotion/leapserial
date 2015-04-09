@@ -300,11 +300,10 @@ namespace leap {
     }
 
     static void deserialize(IArchive& ar, type& obj, uint64_t ncb) {
-      // Same story--string length, then string proper
-      uint32_t nEntries = 0;
-      ar.ReadByteArray(&nEntries, sizeof(nEntries));
-      obj.resize(nEntries);
-      ar.ReadByteArray(&obj[0], nEntries * sizeof(T));
+      ar.ReadString([&](uint64_t count) {
+        obj.resize((uint32_t)count);
+        return &obj[0];
+      }, sizeof(T), ncb);
     }
   };
 

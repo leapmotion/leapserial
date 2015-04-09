@@ -205,8 +205,9 @@ namespace leap {
     /// <summary>
     /// Reads out a string into the specified buffer
     /// </summary>
-    /// <param name="charSize"> The number of bytes per character</param>
-    virtual void ReadString(void* pBuf, uint64_t charCount, uint8_t charSize) = 0;
+    /// <param name="charSize"> The number of bytes per character </param>
+    /// <param name="getBufferFn"> Function to get the buffer to write to, takes the size of the string as an argument </param>
+    virtual void ReadString(std::function<void*(uint64_t)> getBufferFn, uint8_t charSize, uint64_t ncb) = 0;
     
     /// <summary>
     /// Reads the specified boolean value to the output stream

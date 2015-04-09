@@ -149,16 +149,14 @@ void IArchiveImpl::ReadArray(const leap::field_serializer &sz, uint64_t n, std::
     sz.deserialize(*this, enumerator(), 0);
 }
 
-void IArchiveImpl::ReadString(void *pBuf, uint64_t charCount, uint8_t charSize) {
+void IArchiveImpl::ReadString(std::function<void*(uint64_t)> getBufferFn, uint8_t charSize, uint64_t ncb) {
   // Read the number of entries first:
   uint32_t nEntries;
   ReadByteArray(&nEntries, sizeof(nEntries));
+
+  auto* pBuf = getBufferFn(nEntries);
   
-  if (nEntries != charCount)
-    // We expected to get N entries, but got back some other value.  Something is wrong.
-    throw std::runtime_error("Attempted to deserialize a non-matching number of entries into a fixed-size space");
-  
-  ReadByteArray(pBuf, charCount * charSize);
+  ReadByteArray(pBuf, nEntries * charSize);
 }
 
 void IArchiveImpl::ReadDictionary(const field_serializer& keyDesc, void* key,

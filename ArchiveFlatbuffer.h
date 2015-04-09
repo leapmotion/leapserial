@@ -27,7 +27,7 @@ namespace leap {
 
     void ReadDescriptor(const descriptor& descriptor, void* pObj, uint64_t ncb) override;
     void ReadByteArray(void* pBuf, uint64_t ncb) override;
-    void ReadString(void* pBuf, uint64_t charCount, uint8_t charSize) override;
+    void ReadString(std::function<void*(uint64_t)> getBufferFn, uint8_t charSize, uint64_t ncb) override;
     bool ReadBool() override;
     uint64_t ReadInteger(uint8_t ncb) override;
     void ReadFloat(float& value) override;
