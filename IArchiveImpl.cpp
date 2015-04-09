@@ -8,14 +8,11 @@
 
 using namespace leap;
 
-IArchiveImpl::IArchiveImpl(std::istream& is, void* pRootObj) :
-  is(is)
+IArchiveImpl::IArchiveImpl(std::istream& is) :
+is(is)
 {
   // This sentry addition means we never have to test objId against zero
   objMap[0] = {nullptr, nullptr};
-
-  // Object ID #1 is the root object
-  objMap[1] = {pRootObj, nullptr};
 }
 
 IArchiveImpl::~IArchiveImpl(void) {

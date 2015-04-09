@@ -38,9 +38,6 @@ namespace leap {
   /// </summary>
   class OArchive {
   public:
-    /// <summary>
-    /// Creates a new output archive based on the specified stream
-    /// </summary>
     virtual ~OArchive(void) {}
 
     /// <summary>
@@ -153,9 +150,6 @@ namespace leap {
 
   class IArchive {
   public:
-    /// <summary>
-    /// Creates a new input archive based on the specified stream
-    /// </summary>
     virtual ~IArchive(void) {}
 
     struct ReleasedMemory {

@@ -15,8 +15,7 @@ namespace leap {
     /// Constructs an archive implementation around the specified stream operator
     /// </summary>
     /// <param name="is">The underlying input stream</param>
-    /// <param name="pRootObj">The root object about which deserialization takes place</param>
-    IArchiveImpl(std::istream& is, void* pRootObj);
+    IArchiveImpl(std::istream& is);
     ~IArchiveImpl(void);
 
     struct deserialization_task {

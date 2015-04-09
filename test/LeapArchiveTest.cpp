@@ -78,7 +78,7 @@ TEST_F(LeapArchiveTest, ExpectedByteCount) {
 void TestVarint(int64_t testNumber) {
   std::stringstream ss(std::ios::in | std::ios::out | std::ios::binary);
   leap::OArchiveImpl oArch(ss);
-  leap::IArchiveImpl iArch(ss, nullptr);
+  leap::IArchiveImpl iArch(ss);
 
   oArch.WriteInteger(testNumber);
   auto output = iArch.ReadInteger(8);
@@ -87,10 +87,8 @@ void TestVarint(int64_t testNumber) {
 
 TEST_F(LeapArchiveTest, VarintTest) {
   std::stringstream ss(std::ios::in | std::ios::out | std::ios::binary);
-  int64_t number;
 
   leap::OArchiveImpl oArch(ss);
-  leap::IArchiveImpl iArch(ss, &number);
 
   ASSERT_EQ(10, oArch.SizeInteger(-43));
 
@@ -113,7 +111,7 @@ TEST_F(LeapArchiveTest, VarintDoubleCheck) {
 
   // Read operation should result in the same value
   leap::internal::Allocation<std::string> alloc;
-  leap::IArchiveImpl iarch(ss, nullptr);
+  leap::IArchiveImpl iarch(ss);
   ASSERT_EQ(150, iarch.ReadInteger(8)) << "Read of a varint didn't return the original value";
 }
 
