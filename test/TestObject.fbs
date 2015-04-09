@@ -1,0 +1,18 @@
+namespace Test.Flatbuffer;
+
+enum TestEnum : short {
+  VALUE_ONE = 32,
+  VALUE_TWO,
+  VALUE_THREE
+}
+
+//Flatbuffers does not suppport fields being declared out of order
+table TestObject {
+  a:bool;
+  g:TestEnum = VALUE_ONE;
+  b:byte;
+  c:int;
+  d:ulong;
+  e:string;
+  f:[string];
+}

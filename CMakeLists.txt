@@ -2,6 +2,8 @@ set(LeapSerial_SRCS
   Allocation.h
   Allocation.cpp
   Archive.h
+  ArchiveFlatbuffer.h
+  ArchiveFlatbuffer.cpp
   Descriptor.h
   Descriptor.cpp
   field_descriptor.h
@@ -17,10 +19,13 @@ set(LeapSerial_SRCS
 )
 
 set(LeapSerialTest_SRCS
+  test/ArchiveFlatbufferTest.cpp
   test/LeapArchiveTest.cpp
   test/SerialFormatTest.cpp
   test/SerializationTest.cpp
   test/TestObject.h
+  test/TestObject.fbs
+  test/TestObject_generated.h
 )
 
 add_pch(LeapSerial_SRCS "stdafx.h" "stdafx.cpp")
@@ -31,6 +36,13 @@ set_property(TARGET LeapSerial PROPERTY FOLDER "Utility")
 
 if(BUILD_TESTING)
   add_pch(LeapSerialTest_SRCS "stdafx.h" "stdafx.cpp")
+
+  
+  add_custom_command( OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/test/TestObject_generated.h
+                    COMMAND FlatBuffers::flatc -c -I ${CMAKE_CURRENT_SOURCE_DIR} -o ${CMAKE_CURRENT_SOURCE_DIR}/ ${CMAKE_CURRENT_SOURCE_DIR}/test/TestObject.fbs
+                    MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/test/TestObject.fbs
+                    COMMENT "Generating TestObject_generated.h"
+                    VERBATIM )
 
   add_executable(LeapSerialTest ${LeapSerialTest_SRCS} "../gtest-all-guard.cpp")
   target_strip(LeapSerialTest)

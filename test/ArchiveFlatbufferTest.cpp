@@ -1,0 +1,61 @@
+#include "stdafx.h"
+#include <gtest/gtest.h>
+
+#include "ArchiveFlatbuffer.h"
+#include "Serializer.h"
+#include "TestObject.h"
+#include "TestObject_generated.h"
+
+#include "flatbuffers/flatbuffers.h"
+#include <sstream>
+
+class ArchiveFlatbufferTest :
+  public testing::Test 
+{};
+
+using namespace Test;
+TEST_F(ArchiveFlatbufferTest, ReadFromFlatbufferMessage) {
+
+  //Generate the flatbuffer message
+  flatbuffers::FlatBufferBuilder fbb;
+
+  auto strOffset = fbb.CreateString("I am the queen of France");
+  flatbuffers::Offset<flatbuffers::String> strings[3];
+  strings[0] = fbb.CreateString("I wanna drink goat's blood!");
+  strings[1] = fbb.CreateString("But Timmy, it's only Tuesday");
+  strings[3] = fbb.CreateString("Awww....");
+  auto vecOffset = fbb.CreateVector(strings, 3);
+
+  auto testObj = Flatbuffer::CreateTestObject(fbb,
+    true,
+    Flatbuffer::TestEnum_VALUE_THREE,
+    'x',
+    -42,
+    std::numeric_limits<uint64_t>::max() - 42,
+    strOffset,
+    vecOffset
+    );
+
+  fbb.Finish(testObj);
+  
+  std::string fbString;
+  auto bufferPointer = (const char*)fbb.GetBufferPointer();
+  fbString.assign(bufferPointer, bufferPointer + fbb.GetSize());
+
+  std::stringstream ss(fbString, std::ios::in | std::ios::out | std::ios::binary);
+
+  Native::TestObject parsedObj;
+
+  leap::Deserialize<leap::IArchiveFlatbuffer>(ss, parsedObj);
+
+  ASSERT_TRUE(parsedObj.unserialized.empty());
+  ASSERT_EQ(parsedObj.a, true);
+  ASSERT_EQ(parsedObj.b, 'x');
+  ASSERT_EQ(parsedObj.c, -42);
+  ASSERT_EQ(parsedObj.d, std::numeric_limits<uint64_t>::max() - 42);
+  ASSERT_EQ(parsedObj.e, "I am the queen of France");
+  ASSERT_EQ(parsedObj.f[0], "I wanna drink goat's blood!");
+  ASSERT_EQ(parsedObj.f[1], "But Timmy, it's only Tuesday");
+  ASSERT_EQ(parsedObj.f[2], "Awww....");
+  ASSERT_EQ(parsedObj.g, Native::VALUE_THREE);
+}

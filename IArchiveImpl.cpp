@@ -209,7 +209,6 @@ void IArchiveImpl::ReadByteArray(void* pBuf, uint64_t ncb) {
 
 void IArchiveImpl::Skip(uint64_t ncb) {
   is.ignore(ncb);
-  //  m_count += ncb;
 }
 
 void IArchiveImpl::Transfer(internal::AllocationBase& alloc) {

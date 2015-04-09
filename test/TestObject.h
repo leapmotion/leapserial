@@ -9,7 +9,7 @@
 namespace Test {
 namespace Native {
 
-  enum TestEnum {
+  enum TestEnum : short {
     VALUE_ONE = 32,
     VALUE_TWO,
     VALUE_THREE
@@ -30,12 +30,12 @@ namespace Native {
     static leap::descriptor GetDescriptor(void) {
       return{
         &TestObject::a,
-        { 3, &TestObject::b },
-        { 4, &TestObject::c },
-        { 5, &TestObject::d },
-        { 6, &TestObject::e },
-        { 7, &TestObject::f },
-        { 2, &TestObject::g },
+        { 2, &TestObject::b },
+        { 3, &TestObject::c },
+        { 4, &TestObject::d },
+        { 5, &TestObject::e },
+        { 6, &TestObject::f },
+        { 1, &TestObject::g },
       };
     }
   };
