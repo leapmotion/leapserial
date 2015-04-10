@@ -59,3 +59,32 @@ TEST_F(ArchiveFlatbufferTest, ReadFromFlatbufferMessage) {
   ASSERT_EQ(parsedObj.f[2], "Awww....");
   ASSERT_EQ(parsedObj.g, Native::VALUE_THREE);
 }
+
+TEST_F(ArchiveFlatbufferTest, WriteFlatbufferMessage) {
+  Native::TestObject nativeObj = {
+    "Wankel Rotary Engine",
+    false,
+    'x',
+    -42,
+    std::numeric_limits<uint64_t>::max() - 42,
+    "I am the queen of France",
+    { "I wanna drink goat's blood!", "But Timmy, It's only Tuesday", "Awww...." },
+    Native::VALUE_TWO
+  };
+
+  std::stringstream ss(std::ios::in | std::ios::out | std::ios::binary);
+  leap::Serialize<leap::OArchiveFlatbuffer>(ss, nativeObj);
+
+  auto bufferString = ss.str();
+  auto fbObj = Flatbuffer::GetTestObject(bufferString.data());
+
+  ASSERT_EQ(fbObj->a(), true);
+  ASSERT_EQ(fbObj->b(), 'x');
+  ASSERT_EQ(fbObj->c(), -42);
+  ASSERT_EQ(fbObj->d(), std::numeric_limits<uint64_t>::max() - 42);
+  ASSERT_EQ(fbObj->e(), "I am the queen of France");
+  ASSERT_EQ(fbObj->f()->Get(0), "I wanna drink goat's blood!");
+  ASSERT_EQ(fbObj->f()->Get(1), "But Timmy, it's only Tuesday");
+  ASSERT_EQ(fbObj->f()->Get(2), "Awww....");
+  ASSERT_EQ(fbObj->g(), Native::VALUE_THREE);
+}

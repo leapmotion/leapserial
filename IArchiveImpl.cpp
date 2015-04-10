@@ -9,7 +9,7 @@
 using namespace leap;
 
 IArchiveImpl::IArchiveImpl(std::istream& is) :
-is(is)
+  is(is)
 {
   // This sentry addition means we never have to test objId against zero
   objMap[0] = {nullptr, nullptr};

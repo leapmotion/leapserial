@@ -73,9 +73,9 @@ namespace leap {
     /// </remarks>
     void Transfer(internal::AllocationBase& alloc);
 
-    /// <remarks>
+    /// <summary>
     /// Destroys all objects that define deleters and clears the object map
-    /// </remarks>
+    /// </summary>
     /// <returns>The number of objects destroyed</returns>
     size_t ClearObjectTable(void);
 
