@@ -16,3 +16,5 @@ table TestObject {
   e:string;
   f:[string];
 }
+
+root_type TestObject;

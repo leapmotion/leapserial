@@ -41,6 +41,27 @@ public:
   not_implemented_exception() : std::runtime_error("This function is not yet implemented!") {}
 };
 
+//Returns the size of the element as stored in a Table or VTable
+uint8_t GetFieldSize(leap::serial_primitive p) {
+  switch (p) {
+  case leap::serial_primitive::boolean:
+  case leap::serial_primitive::i8:
+    return 1;
+  case leap::serial_primitive::i16:
+    return 2;
+  case leap::serial_primitive::i32:
+    return 4;
+  case leap::serial_primitive::i64:
+    return 8;
+  case leap::serial_primitive::array:
+  case leap::serial_primitive::string:
+  case leap::serial_primitive::map:
+    return 4; //stored as 32 bit offsets
+  default:
+    throw std::runtime_error("Unsupported type detected");
+  }
+}
+
 IArchiveFlatbuffer::IArchiveFlatbuffer(std::istream& is) {
   is.clear();
   is.seekg(0, std::ios::end);
@@ -55,15 +76,14 @@ IArchiveFlatbuffer::~IArchiveFlatbuffer() {
 }
 
 void IArchiveFlatbuffer::Skip(uint64_t ncb) {
-  m_count += ncb;
+  throw not_implemented_exception();
 }
 
 void IArchiveFlatbuffer::ReadObject(const field_serializer& sz, void* pObj, internal::AllocationBase* pOwner) {
-  m_currentTableOffset.push(GetValue<uint32_t>(0));
-  m_currentVTableOffset.push(m_currentTableOffset.top() - GetValue<int32_t>(m_currentTableOffset.top()));
-  m_currentVTableSize.push(GetValue<uint16_t>(m_currentTableOffset.top()));
-  m_currentObjectSize.push(GetValue<uint16_t>(m_currentTableOffset.top() + sizeof(uint16_t)));
+  const auto tableOffset = GetValue<uint32_t>(0);
+  
 
+  m_offset = tableOffset;
   sz.deserialize(*this, pObj, 0);
 }
 
@@ -88,14 +108,24 @@ void IArchiveFlatbuffer::ReadDescriptor(const descriptor& descriptor, void* pObj
     orderedDescriptors.push_back(&(found->second));
   }
 
+  const auto tableOffset = m_offset;
+  const auto vTableOffset = tableOffset - GetValue<int32_t>(m_offset);
+  //const auto vTableSize = GetValue<uint16_t>(vTableOffset);
+  //const auto objectSize = GetValue<uint16_t>(vTableOffset + sizeof(uint16_t));
+
+  uint8_t vTableEntry = 0;
+
   for (const auto& field_descriptor : orderedDescriptors) {
+    const auto fieldOffset = GetValue<uint16_t>(vTableOffset + 4 + (vTableEntry * sizeof(uint16_t)));
+    m_offset = tableOffset + fieldOffset;
+
     field_descriptor->serializer.deserialize(*this,
       static_cast<char*>(pObj)+field_descriptor->offset,
       0
     );
-    m_currentVTableEntry++;
-  }
 
+    vTableEntry++;
+  }
 }
 
 void IArchiveFlatbuffer::ReadByteArray(void* pBuf, uint64_t ncb) {
@@ -103,38 +133,56 @@ void IArchiveFlatbuffer::ReadByteArray(void* pBuf, uint64_t ncb) {
 }
 
 void IArchiveFlatbuffer::ReadString(std::function<void*(uint64_t)> getBufferFn, uint8_t charSize, uint64_t ncb) {
-  throw not_implemented_exception();
+  const auto baseOffset = m_offset;
+  const auto stringOffset = baseOffset + GetValue<uint32_t>(baseOffset);
+  
+  const auto size = GetValue<uint32_t>(stringOffset);
+
+  auto* dstString = getBufferFn(size);
+
+  memcpy(dstString, &m_data[stringOffset + sizeof(uint32_t)], size);
 }
 
 bool IArchiveFlatbuffer::ReadBool() { 
-  return !!GetCurrentTableValue<uint8_t>();
+  return !!GetValue<uint8_t>(m_offset);
 }
 
 uint64_t IArchiveFlatbuffer::ReadInteger(uint8_t ncb) {
   switch (ncb) {
   case 1:
-    return GetCurrentTableValue<uint8_t>();
+    return GetValue<uint8_t>(m_offset);
   case 2:
-    return GetCurrentTableValue<uint16_t>();
+    return GetValue<uint16_t>(m_offset);
   case 4:
-    return GetCurrentTableValue<uint32_t>();
+    return GetValue<uint32_t>(m_offset);
   case 8:
-    return GetCurrentTableValue<uint64_t>();
+    return GetValue<uint64_t>(m_offset);
   default:
     throw std::runtime_error("Cannot read non power of 2 sized integer");
   }
 }
 
 void IArchiveFlatbuffer::ReadFloat(float& value) { 
-  throw not_implemented_exception();
+  value = GetValue<float>(m_offset);
 }
 
 void IArchiveFlatbuffer::ReadFloat(double& value) {
-  throw not_implemented_exception();
+  value = GetValue<double>(m_offset);
 }
 
-void IArchiveFlatbuffer::ReadArray(const field_serializer& sz, uint64_t n, std::function<void*()> enumerator) {
-  throw not_implemented_exception();
+void IArchiveFlatbuffer::ReadArray(std::function<void(uint64_t)> sizeBufferFn, const field_serializer& t_serializer, std::function<void*()> enumerator, uint64_t expectedEntries) {
+  const auto baseOffset = m_offset;
+  const auto arrayOffset = baseOffset + GetValue<uint32_t>(baseOffset);
+
+  const auto size = GetValue<uint32_t>(arrayOffset);
+
+  sizeBufferFn(size);
+
+  const auto step = GetFieldSize(t_serializer.type());
+  for (uint32_t i = 0 ; i < size; ++i) {
+    m_offset = arrayOffset + sizeof(uint32_t) + (i * step);
+    t_serializer.deserialize(*this, enumerator(), 0);
+  }
 }
 
 void IArchiveFlatbuffer::ReadDictionary(const field_serializer& keyDesc, void* key, const field_serializer& valueDesc, void* value, std::function<void(const void* key, const void* value)> inserter) {

@@ -23,7 +23,7 @@ TEST_F(ArchiveFlatbufferTest, ReadFromFlatbufferMessage) {
   flatbuffers::Offset<flatbuffers::String> strings[3];
   strings[0] = fbb.CreateString("I wanna drink goat's blood!");
   strings[1] = fbb.CreateString("But Timmy, it's only Tuesday");
-  strings[3] = fbb.CreateString("Awww....");
+  strings[2] = fbb.CreateString("Awww....");
   auto vecOffset = fbb.CreateVector(strings, 3);
 
   auto testObj = Flatbuffer::CreateTestObject(fbb,

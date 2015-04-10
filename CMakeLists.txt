@@ -39,7 +39,7 @@ if(BUILD_TESTING)
 
   
   add_custom_command( OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/test/TestObject_generated.h
-                    COMMAND FlatBuffers::flatc -c -I ${CMAKE_CURRENT_SOURCE_DIR} -o ${CMAKE_CURRENT_SOURCE_DIR}/ ${CMAKE_CURRENT_SOURCE_DIR}/test/TestObject.fbs
+                    COMMAND FlatBuffers::flatc -c -I ${CMAKE_CURRENT_SOURCE_DIR} -o ${CMAKE_CURRENT_SOURCE_DIR}/test ${CMAKE_CURRENT_SOURCE_DIR}/test/TestObject.fbs
                     MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/test/TestObject.fbs
                     COMMENT "Generating TestObject_generated.h"
                     VERBATIM )
