@@ -79,7 +79,7 @@ namespace leap {
   ///I/OArchiveImpl defaulted versions:
   template<class stream_t, class T>
   void Serialize(stream_t&& os, const T& obj) {
-    Serialize<OArchiveImpl, stream_t, T>(std::move(os), obj);
+    Serialize<OArchiveImpl, stream_t, T>(std::forward<stream_t&&>(os), obj);
   }
 
   template<class T, class stream_t>
