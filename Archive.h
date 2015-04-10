@@ -210,6 +210,11 @@ namespace leap {
     virtual void ReadString(std::function<void*(uint64_t)> getBufferFn, uint8_t charSize, uint64_t ncb) = 0;
     
     /// <summary>
+    /// Reads out a length delimited array of an arbitrary type into the specified buffer.
+    /// </summary>
+    virtual void ReadArray(std::function<void(uint64_t)> sizeBufferFn, const field_serializer& t_serializer, std::function<void*()> enumerator, uint64_t n) = 0;
+
+    /// <summary>
     /// Reads the specified boolean value to the output stream
     /// </sumamry>
     virtual bool ReadBool() = 0;
@@ -227,7 +232,6 @@ namespace leap {
     virtual uint64_t ReadInteger(uint8_t ncb) = 0;
     virtual void ReadFloat(float& value) { ReadByteArray(&value, sizeof(float)); }
     virtual void ReadFloat(double& value) { ReadByteArray(&value, sizeof(double)); }
-    virtual void ReadArray(const field_serializer& sz, uint64_t n, std::function<void*()> enumerator) = 0;
     virtual void ReadDictionary(const field_serializer& keyDesc,
                                 void* key,
                                 const field_serializer& valueDesc,

@@ -226,7 +226,7 @@ namespace leap {
 
     static void deserialize(IArchiveRegistry& ar, T* pObj, uint64_t ncb) {
       size_t i = 0;
-      ar.ReadArray(field_serializer_t<T, void>(), N, [&](){ return &pObj[i++]; } );
+      ar.ReadArray([](uint64_t){},field_serializer_t<T, void>(), [&](){ return &pObj[i++]; }, N);
     }
   };
   
@@ -275,14 +275,14 @@ namespace leap {
     }
 
     static void deserialize(iarchive& ar, std::vector<T, Alloc>& v, uint64_t ncb) {
-      // Read the number of entries first:
-      uint32_t nEntries;
-      ar.ReadByteArray(&nEntries, sizeof(nEntries));
+      size_t i = 0;
+      ar.ReadArray(
+        [&](uint64_t sz){ v.resize((uint32_t)sz); },
+        field_serializer_t<T, void>(),
+        [&] { return &v[i++]; },
+        0
+      );
 
-      // Now loop until we get the desired number of entries from the stream
-      v.resize(nEntries);
-      for (auto& cur : v)
-        serial_traits<T>::deserialize(ar, cur, 0);
     }
   };
 
