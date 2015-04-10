@@ -8,7 +8,61 @@ namespace leap {
   class OArchiveFlatbuffer :
     public OArchiveRegistry
   {
-    
+  public:
+    OArchiveFlatbuffer(std::ostream& os);
+
+    // Finishes writing, since this is a buffered system. Mostly used for testing.
+    void Finish();
+
+    // OArchiveRegistry overrides
+    void WriteByteArray(const void* pBuf, uint64_t ncb, bool writeSize = false) override;
+    void WriteString(const void* pBuf, uint64_t charCount, uint8_t charSize) override;
+    void WriteBool(bool value) override;
+    void WriteInteger(int64_t value, uint8_t ncb) override;
+    using OArchive::WriteInteger;
+    void WriteFloat(float value) override;
+    void WriteFloat(double value) override;
+    void WriteObjectReference(const field_serializer& serializer, const void* pObj) override;
+    void WriteObject(const field_serializer& serializer, const void* pObj) override;
+    void WriteDescriptor(const descriptor& descriptor, const void* pObj) override;
+    void WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator, const void* pObj) override;
+    void WriteDictionary(
+      uint64_t n,
+      const field_serializer& keyDesc,
+      std::function<const void*()> keyEnumerator,
+      const field_serializer& valueDesc,
+      std::function<const void*()> valueEnumerator
+      ) override;
+
+    uint64_t SizeInteger(int64_t value, uint8_t ncb) const override;
+    uint64_t SizeFloat(float value) const override;
+    uint64_t SizeFloat(double value) const override;
+    uint64_t SizeBool(bool value) const override;
+    uint64_t SizeString(const void* pBuf, uint64_t ncb, uint8_t charSize) const override;
+    uint64_t SizeObjectReference(const field_serializer& serializer, const void* pObj) const override;
+    uint64_t SizeDescriptor(const descriptor& descriptor, const void* pObj) const override;
+    uint64_t SizeArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) const override;
+    uint64_t SizeDictionary(
+      uint64_t n,
+      const field_serializer& keyDesc,
+      std::function<const void*()> keyEnumerator,
+      const field_serializer& valueDesc,
+      std::function<const void*()> valueEnumerator
+      ) const override;
+
+  private:
+    std::ostream& os;
+
+    //Flatbuffer messages are most easily built backwards, so we'll write into this,
+    //Then dump it into os when we're done with the message.
+    std::vector<uint8_t> m_builder;
+
+    std::map<const void*, uint32_t> m_offsets;
+    uint8_t m_largestAligned = 1;
+
+    void WriteRelativeOffset(const void* pObj);
+    void Align(uint8_t boundary);
+    void PreAlign(uint32_t len, uint8_t alignment);
   };
 
   class IArchiveFlatbuffer : 

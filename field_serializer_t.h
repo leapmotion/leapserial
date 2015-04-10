@@ -27,7 +27,7 @@ namespace leap {
       if (std::is_same<T, bool>::value)
         return serial_primitive::boolean;
 
-      if (std::is_integral<T>::value) {
+      if (std::is_integral<T>::value || std::is_enum<T>::value) {
         switch (sizeof(T)) {
         case 1:
           return serial_primitive::i8;

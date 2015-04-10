@@ -60,6 +60,34 @@ TEST_F(ArchiveFlatbufferTest, ReadFromFlatbufferMessage) {
   ASSERT_EQ(parsedObj.g, Native::VALUE_THREE);
 }
 
+TEST_F(ArchiveFlatbufferTest, WriteAlignment) {
+  std::stringstream ss(std::ios::in | std::ios::out | std::ios::binary);
+
+  flatbuffers::FlatBufferBuilder fbb;
+
+  auto off1 = fbb.PushElement((uint8_t)1);
+  auto off2 = fbb.PushElement((uint32_t)20);
+  auto off3 = fbb.PushElement((uint64_t)123);
+  auto off4 = fbb.PushElement((uint16_t)3);
+  auto off5 = fbb.PushElement((uint32_t)22);
+
+  std::string fbString;
+  auto bufferPointer = (const char*)fbb.GetBufferPointer();
+  fbString.assign(bufferPointer, bufferPointer + fbb.GetSize());
+
+  leap::OArchiveFlatbuffer oarchive(ss);
+  oarchive.WriteInteger(1, 1);
+  oarchive.WriteInteger(20, 4);
+  oarchive.WriteInteger(123, 8);
+  oarchive.WriteInteger(3, 2);
+  oarchive.WriteInteger(22, 4);
+  oarchive.Finish();
+
+  const auto string = ss.str();
+
+  ASSERT_EQ(string, fbString);
+}
+
 TEST_F(ArchiveFlatbufferTest, WriteFlatbufferMessage) {
   Native::TestObject nativeObj = {
     "Wankel Rotary Engine",
@@ -78,13 +106,13 @@ TEST_F(ArchiveFlatbufferTest, WriteFlatbufferMessage) {
   auto bufferString = ss.str();
   auto fbObj = Flatbuffer::GetTestObject(bufferString.data());
 
-  ASSERT_EQ(fbObj->a(), true);
+  ASSERT_EQ(!!fbObj->a(), false);
   ASSERT_EQ(fbObj->b(), 'x');
   ASSERT_EQ(fbObj->c(), -42);
   ASSERT_EQ(fbObj->d(), std::numeric_limits<uint64_t>::max() - 42);
-  ASSERT_EQ(fbObj->e(), "I am the queen of France");
-  ASSERT_EQ(fbObj->f()->Get(0), "I wanna drink goat's blood!");
-  ASSERT_EQ(fbObj->f()->Get(1), "But Timmy, it's only Tuesday");
-  ASSERT_EQ(fbObj->f()->Get(2), "Awww....");
-  ASSERT_EQ(fbObj->g(), Native::VALUE_THREE);
+  ASSERT_STREQ(fbObj->e()->c_str(), "I am the queen of France");
+  ASSERT_STREQ(fbObj->f()->Get(0)->c_str(), "I wanna drink goat's blood!");
+  ASSERT_STREQ(fbObj->f()->Get(1)->c_str(), "But Timmy, It's only Tuesday");
+  ASSERT_STREQ(fbObj->f()->Get(2)->c_str(), "Awww....");
+  ASSERT_EQ(fbObj->g(), Native::VALUE_TWO);
 }

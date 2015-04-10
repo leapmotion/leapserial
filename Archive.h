@@ -107,7 +107,6 @@ namespace leap {
     /// Registers an object for serialization, returning the ID that will be given to the object
     /// </summary>
     virtual void WriteObjectReference(const field_serializer& serializer, const void* pObj) = 0;
-    virtual uint64_t SizeObjectReference(const field_serializer& serializer, const void* pObj) const = 0;
 
     /// <summary>
     /// Writes an object directly to the stream - used as the root call to serialize an object.
@@ -118,16 +117,14 @@ namespace leap {
     /// Writes a descriptor to the stream
     /// </summary>
     virtual void WriteDescriptor(const descriptor& descriptor, const void* pObj) = 0;
-    virtual uint64_t SizeDescriptor(const descriptor& descriptor, const void* pObj) const = 0;
-
+    
     /// <summary>
     /// Writes out an array of entries
     /// </summary>
-    virtual void WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) = 0;
-    virtual uint64_t SizeArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) const = 0;
-
+    virtual void WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator, const void* pObj) = 0;
+    
     /// <summary>
-    /// Writes out an array of entries
+    /// Writes out a dictionary of entries
     /// </summary>
     virtual void WriteDictionary(
       uint64_t n,
@@ -137,6 +134,9 @@ namespace leap {
       std::function<const void*()> valueEnumerator
      ) = 0;
 
+    virtual uint64_t SizeObjectReference(const field_serializer& serializer, const void* pObj) const = 0;
+    virtual uint64_t SizeDescriptor(const descriptor& descriptor, const void* pObj) const = 0;
+    virtual uint64_t SizeArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) const = 0;
     virtual uint64_t SizeDictionary(
       uint64_t n,
       const field_serializer& keyDesc,
@@ -144,8 +144,6 @@ namespace leap {
       const field_serializer& valueDesc,
       std::function<const void*()> valueEnumerator
       ) const = 0;
-
-  
   };
 
   class IArchive {

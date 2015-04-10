@@ -69,7 +69,7 @@ namespace leap {
     void WriteString(const void* pbuf, uint64_t charCount, uint8_t charSize) override;
     void WriteBool(bool value) override;
     void WriteInteger(int64_t value, uint8_t ncb) override;
-    void WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) override;
+    void WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator, const void* pObj) override;
     void WriteDictionary(uint64_t n, const field_serializer& keyDesc, std::function<const void*()> keyEnumerator, const field_serializer& valueDesc, std::function<const void*()> valueEnumerator) override;
     
     uint64_t SizeDescriptor(const descriptor& desc, const void* pObj) const override;
@@ -83,6 +83,5 @@ namespace leap {
     uint64_t SizeFloat(double value) const override { return sizeof(double); }
     uint64_t SizeBool(bool) const override { return 1; }
 
-  
   };
 }
