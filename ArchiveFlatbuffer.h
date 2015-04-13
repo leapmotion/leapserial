@@ -2,6 +2,7 @@
 #include "Archive.h"
 #include <vector>
 #include <stack>
+#include <map>
 
 namespace leap {
 
