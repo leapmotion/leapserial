@@ -65,11 +65,11 @@ TEST_F(ArchiveFlatbufferTest, WriteAlignment) {
 
   flatbuffers::FlatBufferBuilder fbb;
 
-  auto off1 = fbb.PushElement((uint8_t)1);
-  auto off2 = fbb.PushElement((uint32_t)20);
-  auto off3 = fbb.PushElement((uint64_t)123);
-  auto off4 = fbb.PushElement((uint16_t)3);
-  auto off5 = fbb.PushElement((uint32_t)22);
+  fbb.PushElement((uint8_t)1);
+  fbb.PushElement((uint32_t)20);
+  fbb.PushElement((uint64_t)123);
+  fbb.PushElement((uint16_t)3);
+  fbb.PushElement((uint32_t)22);
 
   std::string fbString;
   auto bufferPointer = (const char*)fbb.GetBufferPointer();
