@@ -6,6 +6,8 @@
 
 namespace leap {
 
+  //Note: Multiple objects with the same vtable are currently not well supported, as all complex types
+  //will always have their vtables written.
   class OArchiveFlatbuffer :
     public OArchiveRegistry
   {

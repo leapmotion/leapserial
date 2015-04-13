@@ -127,7 +127,7 @@ void OArchiveFlatbuffer::WriteString(const void* pBuf, uint64_t charCount, uint8
   }
 
   WriteInteger((uint32_t)(charCount));
-  m_offsets[pBuf] = m_builder.size();
+  m_offsets[pBuf] = (uint32_t)m_builder.size();
 }
 
 void OArchiveFlatbuffer::WriteBool(bool value) { 
@@ -189,13 +189,13 @@ void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const voi
     if (WillStoreAsOffset(descriptor.serializer.type())) {
       const void* pChildObj = static_cast<const char*>(pObj)+descriptor.offset;
       descriptor.serializer.serialize(*this, pChildObj);
-      m_offsets[pChildObj] = m_builder.size(); //save the offset of the object.
+      m_offsets[pChildObj] = (uint32_t)m_builder.size(); //save the offset of the object.
     }
   }
 
   //Now write the table, in order
   std::vector<uint16_t> fieldOffsets;
-  const uint32_t tableEnd = m_builder.size();
+  const uint32_t tableEnd = (uint32_t)m_builder.size();
   for (auto field_iter = orderedDescriptors.rbegin(); field_iter != orderedDescriptors.rend(); field_iter++) {
     const auto& descriptor = **field_iter;
     const void* pChildObj = static_cast<const char*>(pObj)+descriptor.offset;
@@ -206,16 +206,16 @@ void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const voi
     else {
       descriptor.serializer.serialize(*this, pChildObj);
     }
-    fieldOffsets.push_back(m_builder.size() - tableEnd);
+    fieldOffsets.push_back((uint32_t)m_builder.size() - tableEnd);
   }
   
   //Write what the offset of the vtable will be...
-  const uint16_t vTableSize = (2 + orderedDescriptors.size()) * sizeof(uint16_t);
-  WriteInteger((int32_t)(vTableSize));
+  const uint16_t vTableSize = (uint16_t)((2 + orderedDescriptors.size()) * sizeof(uint16_t));
+  WriteInteger((int32_t)(vTableSize)); //write as a signed integer for the table's vtable entry
 
-  const auto tableSize = m_builder.size() - tableEnd;
+  const uint32_t tableSize = (uint32_t)m_builder.size() - tableEnd;
   //Save the offset of the table...
-  m_offsets[pObj] = m_builder.size();
+  m_offsets[pObj] = (uint32_t)m_builder.size();
 
   const uint16_t tableBaseOffset = tableSize;
   //Now write the vtable entries...
@@ -236,7 +236,7 @@ void OArchiveFlatbuffer::WriteArray(const field_serializer& desc, uint64_t n, st
 
   for (auto i = elements.rbegin(); i != elements.rend(); i++) {
     desc.serialize(*this, *i);
-    m_offsets[*i] = m_builder.size(); //the string & other serializers aren't passed the base pointer, so make sure we save it here too..
+    m_offsets[*i] = (uint32_t)m_builder.size(); //the string & other serializers aren't passed the base pointer, so make sure we save it here too..
   }
 
   //If this is an array of a type that is stored by offset, store the offsets...
@@ -247,7 +247,7 @@ void OArchiveFlatbuffer::WriteArray(const field_serializer& desc, uint64_t n, st
   }
 
   WriteInteger((uint32_t)n);
-  m_offsets[pObj] = m_builder.size();
+  m_offsets[pObj] = (uint32_t)m_builder.size();
 }
 
 void OArchiveFlatbuffer::WriteDictionary(
