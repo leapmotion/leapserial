@@ -171,6 +171,24 @@ void OArchiveFlatbuffer::WriteObject(const field_serializer& serializer, const v
 }
 
 void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const void* pObj) { 
+
+  //If we only have unidentified fields, treat this as a struct and just write it all inline
+  if (descriptor.identified_descriptors.empty()) {
+    for (auto field_iter = descriptor.field_descriptors.rbegin(); field_iter != descriptor.field_descriptors.rend(); ++field_iter) {
+      const auto& field_descriptor = *field_iter;
+      const void* pChildObj = static_cast<const char*>(pObj)+field_descriptor.offset;
+      if (WillStoreAsOffset(field_descriptor.serializer.type())) {
+        const void* pChildObj = static_cast<const char*>(pObj)+field_descriptor.offset;
+        WriteRelativeOffset(pChildObj);
+      }
+      else {
+        field_descriptor.serializer.serialize(*this, pChildObj);
+      }
+    }
+
+    return;
+  }
+  
   //First we need an ordered list of the descriptors.
   std::vector<const field_descriptor*> orderedDescriptors;
   for (const auto& field_descriptor : descriptor.field_descriptors)
@@ -185,10 +203,10 @@ void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const voi
 
   //Write all the children that will be stored as offsets first
   for (auto field_iter = orderedDescriptors.rbegin(); field_iter != orderedDescriptors.rend(); field_iter++) {
-    const auto& descriptor = **field_iter;
-    if (WillStoreAsOffset(descriptor.serializer.type())) {
-      const void* pChildObj = static_cast<const char*>(pObj)+descriptor.offset;
-      descriptor.serializer.serialize(*this, pChildObj);
+    const auto& field_descriptor = **field_iter;
+    if (WillStoreAsOffset(field_descriptor.serializer.type())) {
+      const void* pChildObj = static_cast<const char*>(pObj)+field_descriptor.offset;
+      field_descriptor.serializer.serialize(*this, pChildObj);
       m_offsets[pChildObj] = (uint32_t)m_builder.size(); //save the offset of the object.
     }
   }
@@ -330,6 +348,20 @@ void* IArchiveFlatbuffer::ReadObjectReference(const create_delete& cd, const fie
 }
 
 void IArchiveFlatbuffer::ReadDescriptor(const descriptor& descriptor, void* pObj, uint64_t ncb) {
+  const auto tableOffset = m_offset;
+
+  //If there are only unidentified (non-id type) descriptors, then we're a struct, and don't
+  //need to do any vtable lookup or field sorting.
+  if (descriptor.identified_descriptors.empty()) {
+    for (const auto& field_descriptor : descriptor.field_descriptors) {
+      field_descriptor.serializer.deserialize(*this, 
+        static_cast<char*>(pObj)+field_descriptor.offset, 0);
+
+      m_offset += GetFieldSize(field_descriptor.serializer.type());
+    }
+    return;
+  }
+
   std::vector<const field_descriptor*> orderedDescriptors;
 
   for (const auto& field_descriptor : descriptor.field_descriptors)
@@ -342,7 +374,6 @@ void IArchiveFlatbuffer::ReadDescriptor(const descriptor& descriptor, void* pObj
     orderedDescriptors.push_back(&(found->second));
   }
 
-  const auto tableOffset = m_offset;
   const auto vTableOffset = tableOffset - GetValue<int32_t>(m_offset);
   //const auto vTableSize = GetValue<uint16_t>(vTableOffset);
   //const auto objectSize = GetValue<uint16_t>(vTableOffset + sizeof(uint16_t));
