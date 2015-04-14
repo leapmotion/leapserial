@@ -57,7 +57,7 @@ TEST_F(ArchiveFlatbufferTest, ReadFromFlatbufferMessage) {
   ASSERT_EQ(parsedObj.f[0], "I wanna drink goat's blood!");
   ASSERT_EQ(parsedObj.f[1], "But Timmy, it's only Tuesday");
   ASSERT_EQ(parsedObj.f[2], "Awww....");
-  ASSERT_EQ(parsedObj.g, Native::VALUE_THREE);
+  ASSERT_EQ(static_cast<Native::TestEnum>(parsedObj.g), Native::VALUE_THREE);
 }
 
 TEST_F(ArchiveFlatbufferTest, WriteAlignment) {
@@ -114,5 +114,4 @@ TEST_F(ArchiveFlatbufferTest, WriteFlatbufferMessage) {
   ASSERT_STREQ(fbObj->f()->Get(0)->c_str(), "I wanna drink goat's blood!");
   ASSERT_STREQ(fbObj->f()->Get(1)->c_str(), "But Timmy, It's only Tuesday");
   ASSERT_STREQ(fbObj->f()->Get(2)->c_str(), "Awww....");
-  ASSERT_EQ(fbObj->g(), Native::VALUE_TWO);
-}
+  ASSERT_EQ(fbObj->g(), static_cast<Flatbuffer::TestEnum>(Native::VALUE_TWO)); }
