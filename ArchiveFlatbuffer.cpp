@@ -231,7 +231,7 @@ void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const voi
 void OArchiveFlatbuffer::WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator, const void* pObj) { 
   //We need to write these twice in somce cases, so store the pointers & go back through in reverse
   std::vector<const void*> elements;
-  for (int i = 0; i < n; i++)
+  for (uint64_t i = 0; i < n; i++)
     elements.push_back(enumerator());
 
   for (auto i = elements.rbegin(); i != elements.rend(); i++) {
