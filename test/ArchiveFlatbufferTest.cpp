@@ -101,7 +101,8 @@ TEST_F(ArchiveFlatbufferTest, WriteFlatbufferMessage) {
     std::numeric_limits<uint64_t>::max() - 42,
     "I am the queen of France",
     { "I wanna drink goat's blood!", "But Timmy, It's only Tuesday", "Awww...." },
-    Native::VALUE_TWO
+    Native::VALUE_TWO,
+    {10,-10}
   };
 
   std::stringstream ss(std::ios::in | std::ios::out | std::ios::binary);
@@ -118,4 +119,7 @@ TEST_F(ArchiveFlatbufferTest, WriteFlatbufferMessage) {
   ASSERT_STREQ(fbObj->f()->Get(0)->c_str(), "I wanna drink goat's blood!");
   ASSERT_STREQ(fbObj->f()->Get(1)->c_str(), "But Timmy, It's only Tuesday");
   ASSERT_STREQ(fbObj->f()->Get(2)->c_str(), "Awww....");
-  ASSERT_EQ(fbObj->g(), static_cast<Flatbuffer::TestEnum>(Native::VALUE_TWO)); }
+  ASSERT_EQ(fbObj->g(), Flatbuffer::TestEnum_VALUE_TWO);
+  ASSERT_EQ(fbObj->h()->x(), 10);
+  ASSERT_EQ(fbObj->h()->y(), -10);
+}
