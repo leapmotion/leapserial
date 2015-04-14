@@ -6,6 +6,11 @@ enum TestEnum : short {
   VALUE_THREE
 }
 
+struct TestStructure {
+  x:int;
+  y:int;
+}
+
 //Flatbuffers does not suppport fields being declared out of order
 table TestObject {
   a:bool;
@@ -15,6 +20,7 @@ table TestObject {
   d:ulong;
   e:string;
   f:[string];
+  h:TestStructure;
 }
 
 root_type TestObject;

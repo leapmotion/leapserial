@@ -25,6 +25,7 @@ TEST_F(ArchiveFlatbufferTest, ReadFromFlatbufferMessage) {
   strings[1] = fbb.CreateString("But Timmy, it's only Tuesday");
   strings[2] = fbb.CreateString("Awww....");
   auto vecOffset = fbb.CreateVector(strings, 3);
+  Flatbuffer::TestStructure pos(10, -10);
 
   auto testObj = Flatbuffer::CreateTestObject(fbb,
     true,
@@ -33,7 +34,8 @@ TEST_F(ArchiveFlatbufferTest, ReadFromFlatbufferMessage) {
     -42,
     std::numeric_limits<uint64_t>::max() - 42,
     strOffset,
-    vecOffset
+    vecOffset,
+    &pos
     );
 
   fbb.Finish(testObj);
@@ -58,6 +60,8 @@ TEST_F(ArchiveFlatbufferTest, ReadFromFlatbufferMessage) {
   ASSERT_EQ(parsedObj.f[1], "But Timmy, it's only Tuesday");
   ASSERT_EQ(parsedObj.f[2], "Awww....");
   ASSERT_EQ(static_cast<Native::TestEnum>(parsedObj.g), Native::VALUE_THREE);
+  ASSERT_EQ(parsedObj.h.x, 10);
+  ASSERT_EQ(parsedObj.h.y, -10);
 }
 
 TEST_F(ArchiveFlatbufferTest, WriteAlignment) {

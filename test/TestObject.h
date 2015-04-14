@@ -15,6 +15,17 @@ namespace Native {
     VALUE_THREE
   };
 
+  struct TestStructure {
+    int x;
+    int y;
+    static leap::descriptor GetDescriptor(){
+      return{
+        { &TestStructure::x },
+        { &TestStructure::y }
+      };
+    }
+  };
+
   class TestObject {
   public:
     std::string unserialized;
@@ -26,6 +37,7 @@ namespace Native {
     std::string e;
     std::vector<std::string> f;
     TestEnum g;
+    TestStructure h;
 
     static leap::descriptor GetDescriptor(void) {
       return{
@@ -36,6 +48,7 @@ namespace Native {
         { 5, &TestObject::e },
         { 6, &TestObject::f },
         { 1, &TestObject::g },
+        { 7, &TestObject::h }
       };
     }
   };
