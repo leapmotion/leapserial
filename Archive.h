@@ -28,9 +28,12 @@ namespace leap {
     i64,
     f32,
     f64,
+    reference,
     array,
     string,
-    descriptor //A combination type
+    map,
+    descriptor, //A combination type
+    finalized_descriptor //a combination type which may never change
   };
 
   /// <summary>

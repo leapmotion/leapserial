@@ -50,6 +50,10 @@ namespace leap {
   template<typename T>
   struct primitive_serial_traits<T, typename std::enable_if<internal::has_getdescriptor<T>::value>::type>
   {
+    static ::leap::serial_primitive type() {
+      return GetDescriptor().type();
+    }
+
     // Trivial serialization/deserialization operations
     static uint64_t size(const OArchiveRegistry& ar, const T& obj) {
       return GetDescriptor().size(ar, &obj);
@@ -76,6 +80,13 @@ namespace leap {
   template<typename T>
   struct primitive_serial_traits<T, typename std::enable_if<std::is_floating_point<T>::value>::type>
   {
+    static ::leap::serial_primitive type() {
+      if (sizeof(T) == sizeof(float))
+        return ::leap::serial_primitive::f32;
+      else if (sizeof(T) == sizeof(double))
+        return ::leap::serial_primitive::f64;
+    }
+
     // Trivial serialization/deserialization operations
     static uint64_t size(const OArchive& ar, T val) {
       return ar.SizeFloat(val);
@@ -92,25 +103,26 @@ namespace leap {
 
   // Specialization for anything that is integral.
   template<typename T>
-  struct primitive_serial_traits<T, typename std::enable_if<std::is_integral<T>::value>::type>
+  struct primitive_serial_traits<T, typename std::enable_if<std::is_integral<T>::value || std::is_enum<T>::value>::type>
   {
-    // Trivial serialization/deserialization operations
-    static uint64_t size(const OArchive& ar, T val) {
-      return ar.SizeInteger(val, sizeof(T));
+    static ::leap::serial_primitive type() {
+      if (std::is_same<T, bool>::value)
+        return ::leap::serial_primitive::boolean;
+
+      switch (sizeof(T)) {
+      case 1:
+        return ::leap::serial_primitive::i8;
+      case 2:
+        return ::leap::serial_primitive::i16;
+      case 4:
+        return ::leap::serial_primitive::i32;
+      case 8:
+        return ::leap::serial_primitive::i64;
+      default:
+        return ::leap::serial_primitive::ignored;
+      }
     }
 
-    static void serialize(OArchive& ar, T val) {
-      ar.WriteInteger(val, sizeof(T));
-    }
-
-    static void deserialize(IArchive& ar, T& val, uint64_t ncb) {
-      val = static_cast<T>(ar.ReadInteger(sizeof(T)));
-    }
-  };
-
-  template<typename T>
-  struct primitive_serial_traits<T, typename std::enable_if<std::is_enum<T>::value>::type>
-  {
     // Trivial serialization/deserialization operations
     static uint64_t size(const OArchive& ar, T val) {
       return ar.SizeInteger(val, sizeof(T));
@@ -136,6 +148,10 @@ namespace leap {
   template<typename T>
   struct serial_traits<T*>
   {
+    static ::leap::serial_primitive type(){
+      return ::leap::serial_primitive::reference;
+    }
+
     static uint64_t size(const OArchiveRegistry& ar, const T*const pObj) { 
       return ar.SizeObjectReference(field_serializer_t<T, void>(), pObj);
     }
@@ -173,6 +189,10 @@ namespace leap {
   template<>
   struct serial_traits<bool>
   {
+    static ::leap::serial_primitive type() {
+      return ::leap::serial_primitive::boolean;
+    }
+
     static uint64_t size(const OArchive& ar, bool val) {
       return ar.SizeBool(val);
     }
@@ -189,6 +209,10 @@ namespace leap {
   template<typename T, size_t N>
   struct serial_traits<T[N]>
   {
+    static ::leap::serial_primitive type() {
+      return ::leap::serial_primitive::array;
+    }
+
     static uint64_t size(const OArchiveRegistry& ar, const T* pObj) {
       size_t i = 0;
       return ar.SizeArray(field_serializer_t<T,void>(), N, [&] {return &pObj[i++]; });
@@ -208,6 +232,10 @@ namespace leap {
   template<typename T, size_t N>
   struct serial_traits<std::array<T,N>>
   {
+    static ::leap::serial_primitive type() {
+      return ::leap::serial_primitive::array;
+    }
+
     static uint64_t size(const OArchiveRegistry& ar, const std::array<T, N>& v) {
       return serial_traits<T[N]>::size(ar, &v.front());
     }
@@ -225,6 +253,10 @@ namespace leap {
   template<typename T, typename Alloc>
   struct serial_traits<std::vector<T, Alloc>>
   {
+    static ::leap::serial_primitive type() {
+      return ::leap::serial_primitive::array;
+    }
+
     static_assert(
       !std::is_base_of<std::false_type, serial_traits<T>>::value,
       "Attempted to serialize a vector of type T, but T is not serializable"
@@ -265,17 +297,21 @@ namespace leap {
   template<typename T>
   struct serial_traits<std::basic_string<T, std::char_traits<T>, std::allocator<T>>>
   {
-    typedef std::basic_string<T, std::char_traits<T>, std::allocator<T>> type;
+    typedef std::basic_string<T, std::char_traits<T>, std::allocator<T>> string_t;
 
-    static uint64_t size(const OArchive& ar, const type& pObj) {
+    static ::leap::serial_primitive type() {
+      return ::leap::serial_primitive::string;
+    }
+
+    static uint64_t size(const OArchive& ar, const string_t& pObj) {
       return ar.SizeString(pObj.data(), pObj.size(), sizeof(T));
     }
 
-    static void serialize(OArchive& ar, const type& obj) {
+    static void serialize(OArchive& ar, const string_t& obj) {
       ar.WriteString(obj.data(), obj.size(), sizeof(T));
     }
 
-    static void deserialize(IArchive& ar, type& obj, uint64_t ncb) {
+    static void deserialize(IArchive& ar, string_t& obj, uint64_t ncb) {
       ar.ReadString([&](uint64_t count) {
         obj.resize((uint32_t)count);
         return &obj[0];
@@ -313,6 +349,10 @@ namespace leap {
     // If it is, we're going to need to ensure we accept the correct input archive
     // type in order to ensure values are correctly propagated.
     typedef typename std::conditional<sc_needsAllocation, IArchiveRegistry, IArchive>::type iarchive;
+
+    static ::leap::serial_primitive type() {
+      return ::leap::serial_primitive::map;
+    }
 
     static uint64_t size(const OArchiveRegistry& ar, const Container& obj) {
       auto iKey = obj.begin();
@@ -358,20 +398,24 @@ namespace leap {
 
   template<typename T>
   struct serial_traits<std::unique_ptr<T>> {
-    typedef std::unique_ptr<T> type;
+    typedef std::unique_ptr<T> ptr_t;
 
-    static uint64_t size(const OArchiveRegistry& ar, const type& pObj) {
+    static ::leap::serial_primitive type() {
+      return ::leap::serial_primitive::reference;
+    }
+
+    static uint64_t size(const OArchiveRegistry& ar, const ptr_t& pObj) {
       return ar.SizeObjectReference(field_serializer_t<T,void>(), pObj.get());
     }
 
-    static void serialize(OArchiveRegistry& ar, const type& obj) {
+    static void serialize(OArchiveRegistry& ar, const ptr_t& obj) {
       ar.WriteObjectReference(
         field_serializer_t<T, void>::GetDescriptor(),
         obj.get()
       );
     }
 
-    static void deserialize(IArchive& ar, type& obj, uint64_t ncb) {
+    static void deserialize(IArchive& ar, ptr_t& obj, uint64_t ncb) {
       auto released = ar.ReadObjectReferenceResponsible(
         [] {
           return IArchive::ReleasedMemory{new T, nullptr};
@@ -386,20 +430,24 @@ namespace leap {
 
   template<typename T>
   struct serial_traits<std::shared_ptr<T>> {
-    typedef std::shared_ptr<T> type;
+    typedef std::shared_ptr<T> ptr_t;
 
-    static uint64_t size(const OArchiveRegistry& ar, const type& pObj) {
+    static ::leap::serial_primitive type() {
+      return ::leap::serial_primitive::reference;
+    }
+
+    static uint64_t size(const OArchiveRegistry& ar, const ptr_t& pObj) {
       return ar.SizeObjectReference(field_serializer_t<T,void>(), pObj.get());
     }
 
-    static void serialize(OArchiveRegistry& ar, const type& obj) {
+    static void serialize(OArchiveRegistry& ar, const ptr_t& obj) {
       ar.WriteObjectReference(
         field_serializer_t<T, void>::GetDescriptor(),
         obj.get()
       );
     }
 
-    static void deserialize(IArchive& ar, type& obj, uint64_t ncb) {
+    static void deserialize(IArchive& ar, ptr_t& obj, uint64_t ncb) {
       auto released = ar.ReadObjectReferenceResponsible(
         [] {
           std::shared_ptr<T> retVal = std::make_shared<T>();
@@ -412,6 +460,4 @@ namespace leap {
       obj = std::static_pointer_cast<T>(released.pContext);
     }
   };
-
-  
 }

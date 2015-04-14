@@ -13,7 +13,7 @@ namespace leap {
       b32 = 5
     };
     
-    inline serial_type GetSerialType(leap::serial_primitive prim) {
+    inline serial_type GetSerialType(::leap::serial_primitive prim) {
       switch(prim) {
         case serial_primitive::ignored:
           return serial_type::ignored;

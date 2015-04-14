@@ -67,9 +67,8 @@ bool WillStoreAsOffset(const OArchiveFlatbuffer& arch, const leap::field_seriali
   switch (sz.type()) {
   case leap::serial_primitive::array:
   case leap::serial_primitive::string:
-    return true;
   case leap::serial_primitive::descriptor:
-    return !reinterpret_cast<const leap::descriptor&>(sz).identified_descriptors.empty();
+    return true;
   default:
     return false;
   }
