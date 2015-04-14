@@ -56,19 +56,20 @@ uint8_t GetFieldSize(leap::serial_primitive p) {
     return 8;
   case leap::serial_primitive::array:
   case leap::serial_primitive::string:
-  case leap::serial_primitive::map:
+  case leap::serial_primitive::descriptor:
     return 4; //stored as 32 bit offsets
   default:
     throw std::runtime_error("Unsupported type detected");
   }
 }
 
-bool WillStoreAsOffset(leap::serial_primitive p) {
-  switch (p) {
+bool WillStoreAsOffset(const OArchiveFlatbuffer& arch, const leap::field_serializer& sz, const void* pObj) {
+  switch (sz.type()) {
   case leap::serial_primitive::array:
   case leap::serial_primitive::string:
-  case leap::serial_primitive::map:
     return true;
+  case leap::serial_primitive::descriptor:
+    return !reinterpret_cast<const leap::descriptor&>(sz).identified_descriptors.empty();
   default:
     return false;
   }
@@ -177,8 +178,7 @@ void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const voi
     for (auto field_iter = descriptor.field_descriptors.rbegin(); field_iter != descriptor.field_descriptors.rend(); ++field_iter) {
       const auto& field_descriptor = *field_iter;
       const void* pChildObj = static_cast<const char*>(pObj)+field_descriptor.offset;
-      if (WillStoreAsOffset(field_descriptor.serializer.type())) {
-        const void* pChildObj = static_cast<const char*>(pObj)+field_descriptor.offset;
+      if (WillStoreAsOffset(*this, field_descriptor.serializer, pChildObj)) {
         WriteRelativeOffset(pChildObj);
       }
       else {
@@ -204,8 +204,8 @@ void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const voi
   //Write all the children that will be stored as offsets first
   for (auto field_iter = orderedDescriptors.rbegin(); field_iter != orderedDescriptors.rend(); field_iter++) {
     const auto& field_descriptor = **field_iter;
-    if (WillStoreAsOffset(field_descriptor.serializer.type())) {
-      const void* pChildObj = static_cast<const char*>(pObj)+field_descriptor.offset;
+    const void* pChildObj = static_cast<const char*>(pObj)+field_descriptor.offset;
+    if (WillStoreAsOffset(*this, field_descriptor.serializer, pChildObj)) {
       field_descriptor.serializer.serialize(*this, pChildObj);
       m_offsets[pChildObj] = (uint32_t)m_builder.size(); //save the offset of the object.
     }
@@ -215,14 +215,13 @@ void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const voi
   std::vector<uint16_t> fieldOffsets;
   const uint32_t tableEnd = (uint32_t)m_builder.size();
   for (auto field_iter = orderedDescriptors.rbegin(); field_iter != orderedDescriptors.rend(); field_iter++) {
-    const auto& descriptor = **field_iter;
-    const void* pChildObj = static_cast<const char*>(pObj)+descriptor.offset;
-    if (WillStoreAsOffset(descriptor.serializer.type())) {
-      const void* pChildObj = static_cast<const char*>(pObj)+descriptor.offset;
+    const auto& field_descriptor = **field_iter;
+    const void* pChildObj = static_cast<const char*>(pObj)+field_descriptor.offset;
+    if (WillStoreAsOffset(*this, field_descriptor.serializer, pChildObj)) {
       WriteRelativeOffset(pChildObj);
     }
     else {
-      descriptor.serializer.serialize(*this, pChildObj);
+      field_descriptor.serializer.serialize(*this, pChildObj);
     }
     fieldOffsets.push_back((uint32_t)m_builder.size() - tableEnd);
   }
@@ -258,7 +257,7 @@ void OArchiveFlatbuffer::WriteArray(const field_serializer& desc, uint64_t n, st
   }
 
   //If this is an array of a type that is stored by offset, store the offsets...
-  if (WillStoreAsOffset(desc.type())) {
+  if (WillStoreAsOffset(*this, desc, elements[0])) {
     for (auto i = elements.rbegin(); i != elements.rend(); i++) {
       WriteRelativeOffset(*i);
     }
@@ -280,29 +279,40 @@ void OArchiveFlatbuffer::WriteDictionary(
 }
 
 uint64_t OArchiveFlatbuffer::SizeInteger(int64_t value, uint8_t ncb) const { 
-  throw not_implemented_exception();
+  return ncb;
 }
 uint64_t OArchiveFlatbuffer::SizeFloat(float value) const { 
-  throw not_implemented_exception();
+  return sizeof(float);
 }
 uint64_t OArchiveFlatbuffer::SizeFloat(double value) const { 
-  throw not_implemented_exception();
+  return sizeof(double);
 }
 uint64_t OArchiveFlatbuffer::SizeBool(bool value) const { 
-  throw not_implemented_exception();
+  return sizeof(bool);
 }
 uint64_t OArchiveFlatbuffer::SizeString(const void* pBuf, uint64_t ncb, uint8_t charSize) const { 
-  throw not_implemented_exception();
+  return sizeof(uint32_t);
 }
 uint64_t OArchiveFlatbuffer::SizeObjectReference(const field_serializer& serializer, const void* pObj) const { 
-  throw not_implemented_exception();
+  return sizeof(uint32_t);
 }
 uint64_t OArchiveFlatbuffer::SizeDescriptor(const descriptor& descriptor, const void* pObj) const { 
-  throw not_implemented_exception();
+  // If stored as a struct, return the size of the struct
+  if (descriptor.identified_descriptors.empty()) {
+    uint64_t size = 0;
+    for (const auto& field_descriptor : descriptor.field_descriptors)
+      size += field_descriptor.serializer.size(*this, pObj);
+    return size;
+  }
+  
+  // If stored as a table, return the offset size.
+  return sizeof(uint32_t);
 }
+
 uint64_t OArchiveFlatbuffer::SizeArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) const { 
-  throw not_implemented_exception();
+  return sizeof(uint32_t);
 }
+
 uint64_t OArchiveFlatbuffer::SizeDictionary(
   uint64_t n,
   const field_serializer& keyDesc,
@@ -334,7 +344,6 @@ void IArchiveFlatbuffer::Skip(uint64_t ncb) {
 void IArchiveFlatbuffer::ReadObject(const field_serializer& sz, void* pObj, internal::AllocationBase* pOwner) {
   const auto tableOffset = GetValue<uint32_t>(0);
   
-
   m_offset = tableOffset;
   sz.deserialize(*this, pObj, 0);
 }
@@ -356,8 +365,6 @@ void IArchiveFlatbuffer::ReadDescriptor(const descriptor& descriptor, void* pObj
     for (const auto& field_descriptor : descriptor.field_descriptors) {
       field_descriptor.serializer.deserialize(*this, 
         static_cast<char*>(pObj)+field_descriptor.offset, 0);
-
-      m_offset += GetFieldSize(field_descriptor.serializer.type());
     }
     return;
   }
@@ -376,13 +383,13 @@ void IArchiveFlatbuffer::ReadDescriptor(const descriptor& descriptor, void* pObj
 
   const auto vTableOffset = tableOffset - GetValue<int32_t>(m_offset);
   //const auto vTableSize = GetValue<uint16_t>(vTableOffset);
-  //const auto objectSize = GetValue<uint16_t>(vTableOffset + sizeof(uint16_t));
+  const auto tableSize = GetValue<uint16_t>(vTableOffset + sizeof(uint16_t));
 
   uint8_t vTableEntry = 0;
 
   for (const auto& field_descriptor : orderedDescriptors) {
     const auto fieldOffset = GetValue<uint16_t>(vTableOffset + 4 + (vTableEntry * sizeof(uint16_t)));
-    m_offset = tableOffset + fieldOffset;
+    m_offset = tableOffset + fieldOffset; //can't rely on automatic m_offset iteration since fields may be in any order.
 
     field_descriptor->serializer.deserialize(*this,
       static_cast<char*>(pObj)+field_descriptor->offset,
@@ -391,6 +398,8 @@ void IArchiveFlatbuffer::ReadDescriptor(const descriptor& descriptor, void* pObj
 
     vTableEntry++;
   }
+
+  m_offset = tableOffset + tableSize;
 }
 
 void IArchiveFlatbuffer::ReadByteArray(void* pBuf, uint64_t ncb) {
@@ -406,33 +415,41 @@ void IArchiveFlatbuffer::ReadString(std::function<void*(uint64_t)> getBufferFn, 
   auto* dstString = getBufferFn(size);
 
   memcpy(dstString, &m_data[stringOffset + sizeof(uint32_t)], size);
+
+  m_offset = baseOffset + sizeof(uint32_t);
 }
 
 bool IArchiveFlatbuffer::ReadBool() { 
-  return !!GetValue<uint8_t>(m_offset);
+  const auto offset = m_offset;
+  m_offset += sizeof(uint8_t); 
+  return !!GetValue<uint8_t>(offset);
 }
 
 uint64_t IArchiveFlatbuffer::ReadInteger(uint8_t ncb) {
+  const auto offset = m_offset;
+  m_offset += ncb;
   switch (ncb) {
   case 1:
-    return GetValue<uint8_t>(m_offset);
+    return GetValue<uint8_t>(offset);
   case 2:
-    return GetValue<uint16_t>(m_offset);
+    return GetValue<uint16_t>(offset);
   case 4:
-    return GetValue<uint32_t>(m_offset);
+    return GetValue<uint32_t>(offset);
   case 8:
-    return GetValue<uint64_t>(m_offset);
+    return GetValue<uint64_t>(offset);
   default:
     throw std::runtime_error("Cannot read non power of 2 sized integer");
   }
 }
 
-void IArchiveFlatbuffer::ReadFloat(float& value) { 
+void IArchiveFlatbuffer::ReadFloat(float& value) {
   value = GetValue<float>(m_offset);
+  m_offset += sizeof(float);
 }
 
 void IArchiveFlatbuffer::ReadFloat(double& value) {
   value = GetValue<double>(m_offset);
+  m_offset += sizeof(float);
 }
 
 void IArchiveFlatbuffer::ReadArray(std::function<void(uint64_t)> sizeBufferFn, const field_serializer& t_serializer, std::function<void*()> enumerator, uint64_t expectedEntries) {
@@ -443,11 +460,14 @@ void IArchiveFlatbuffer::ReadArray(std::function<void(uint64_t)> sizeBufferFn, c
 
   sizeBufferFn(size);
 
+  m_offset = arrayOffset + sizeof(uint32_t);
   const auto step = GetFieldSize(t_serializer.type());
   for (uint32_t i = 0 ; i < size; ++i) {
-    m_offset = arrayOffset + sizeof(uint32_t) + (i * step);
+    assert(m_offset == arrayOffset + sizeof(uint32_t) + (i * step));
     t_serializer.deserialize(*this, enumerator(), 0);
   }
+
+  m_offset = baseOffset + sizeof(uint32_t);
 }
 
 void IArchiveFlatbuffer::ReadDictionary(const field_serializer& keyDesc, void* key, const field_serializer& valueDesc, void* value, std::function<void(const void* key, const void* value)> inserter) {

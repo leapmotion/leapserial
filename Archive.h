@@ -30,7 +30,7 @@ namespace leap {
     f64,
     array,
     string,
-    map
+    descriptor //A combination type
   };
 
   /// <summary>

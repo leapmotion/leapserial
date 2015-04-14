@@ -37,6 +37,8 @@ namespace leap {
       std::function<const void*()> valueEnumerator
       ) override;
 
+    //Size query functions.  Note that these do not return the total size of the object,
+    //but rather the size they take up in a table (sizeof(uint32_t) for objects stored by reference).
     uint64_t SizeInteger(int64_t value, uint8_t ncb) const override;
     uint64_t SizeFloat(float value) const override;
     uint64_t SizeFloat(double value) const override;
@@ -103,6 +105,8 @@ namespace leap {
   private:
     std::vector<uint8_t> m_data;
     
+    //The offset into m_data to read from - set to the end of the last read object after
+    //every read operation, causing it to automatically advance through fields
     uint32_t m_offset = 0;
 
     //data read helpers:
