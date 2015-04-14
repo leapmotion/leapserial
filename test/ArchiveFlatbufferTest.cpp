@@ -27,6 +27,8 @@ TEST_F(ArchiveFlatbufferTest, ReadFromFlatbufferMessage) {
   auto vecOffset = fbb.CreateVector(strings, 3);
   Flatbuffer::TestStructure pos(10, -10);
 
+  auto sub1Offset = Flatbuffer::CreateSubTable(fbb,'n');
+  auto sub2Offset = Flatbuffer::CreateSubTable(fbb,'o');
   auto testObj = Flatbuffer::CreateTestObject(fbb,
     true,
     Flatbuffer::TestEnum_VALUE_THREE,
@@ -35,7 +37,9 @@ TEST_F(ArchiveFlatbufferTest, ReadFromFlatbufferMessage) {
     std::numeric_limits<uint64_t>::max() - 42,
     strOffset,
     vecOffset,
-    &pos
+    &pos,
+    sub1Offset,
+    sub2Offset
     );
 
   fbb.Finish(testObj);
@@ -62,6 +66,8 @@ TEST_F(ArchiveFlatbufferTest, ReadFromFlatbufferMessage) {
   ASSERT_EQ(static_cast<Native::TestEnum>(parsedObj.g), Native::VALUE_THREE);
   ASSERT_EQ(parsedObj.h.x, 10);
   ASSERT_EQ(parsedObj.h.y, -10);
+  ASSERT_EQ(parsedObj.i.value, 'n');
+  ASSERT_EQ(parsedObj.j.value, 'o');
 }
 
 TEST_F(ArchiveFlatbufferTest, WriteAlignment) {
@@ -102,7 +108,9 @@ TEST_F(ArchiveFlatbufferTest, WriteFlatbufferMessage) {
     "I am the queen of France",
     { "I wanna drink goat's blood!", "But Timmy, It's only Tuesday", "Awww...." },
     Native::VALUE_TWO,
-    {10,-10}
+    {10,-10},
+    { 'n' },
+    { 'o' }
   };
 
   std::stringstream ss(std::ios::in | std::ios::out | std::ios::binary);
@@ -122,4 +130,6 @@ TEST_F(ArchiveFlatbufferTest, WriteFlatbufferMessage) {
   ASSERT_EQ(fbObj->g(), Flatbuffer::TestEnum_VALUE_TWO);
   ASSERT_EQ(fbObj->h()->x(), 10);
   ASSERT_EQ(fbObj->h()->y(), -10);
+  ASSERT_EQ(fbObj->i()->value(), 'n');
+  ASSERT_EQ(fbObj->j()->value(), 'o');
 }

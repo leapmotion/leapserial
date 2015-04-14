@@ -11,6 +11,10 @@ struct TestStructure {
   y:int;
 }
 
+table SubTable {
+  value:byte;
+}
+
 //Flatbuffers does not suppport fields being declared out of order
 table TestObject {
   a:bool;
@@ -21,6 +25,8 @@ table TestObject {
   e:string;
   f:[string];
   h:TestStructure;
+  i:SubTable;
+  j:SubTable;
 }
 
 root_type TestObject;

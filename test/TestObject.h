@@ -26,6 +26,13 @@ namespace Native {
     }
   };
 
+  struct SubObject {
+    char value;
+    static leap::descriptor GetDescriptor() {
+      return{ { 1, &SubObject::value } };
+    }
+  };
+
   class TestObject {
   public:
     std::string unserialized;
@@ -38,6 +45,8 @@ namespace Native {
     std::vector<std::string> f;
     TestEnum g;
     TestStructure h;
+    SubObject i;
+    SubObject j;
 
     static leap::descriptor GetDescriptor(void) {
       return{
@@ -48,7 +57,9 @@ namespace Native {
         { 5, &TestObject::e },
         { 6, &TestObject::f },
         { 1, &TestObject::g },
-        { 7, &TestObject::h }
+        { 7, &TestObject::h },
+        { 8, &TestObject::i },
+        { 9, &TestObject::j }
       };
     }
   };
