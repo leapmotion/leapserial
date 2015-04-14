@@ -44,28 +44,6 @@ namespace leap {
 
       static const bool value = decltype(select<T>(nullptr))::value;
     };
-
-    /// <summary>
-    /// Holds true if the type "T" will always serialize to the same size
-    /// </summary>
-    /// <remarks>
-    /// This method consults the serial traits for the specified type in order to come to its conclusion.
-    /// For a given type T, if serial_traits<T>::constant_size is defined and nonzero, the corresponding
-    /// type is inferred to have a constant size.
-    /// </remarks>
-    template<typename T, typename = void>
-    struct is_constant_size:
-      std::false_type
-    {
-      static const size_t size = ~0;
-    };
-
-    template<typename T>
-    struct is_constant_size<T, typename std::enable_if<T::constant_size>::type>:
-      std::true_type
-    {
-      static const size_t size = T::constant_size;
-    };
   }
 
   // Embedded object types should use their corresponding descriptors
@@ -98,8 +76,6 @@ namespace leap {
   template<typename T>
   struct primitive_serial_traits<T, typename std::enable_if<std::is_floating_point<T>::value>::type>
   {
-    static const size_t constant_size = sizeof(T);
-
     // Trivial serialization/deserialization operations
     static uint64_t size(const OArchive& ar, T val) {
       return ar.SizeFloat(val);
@@ -160,7 +136,6 @@ namespace leap {
   template<typename T>
   struct serial_traits<T*>
   {
-    static const size_t constant_size = sizeof(uint32_t);
     static uint64_t size(const OArchiveRegistry& ar, const T*const pObj) { 
       return ar.SizeObjectReference(field_serializer_t<T, void>(), pObj);
     }
