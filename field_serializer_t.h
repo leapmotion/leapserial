@@ -23,7 +23,7 @@ namespace leap {
       return serializer_is_irresponsible<T>::value;
     }
 
-    serial_primitive type(void) const override {
+    serial_atom type(void) const override {
       return serial_traits<T>::type();
     }
 
@@ -53,8 +53,8 @@ namespace leap {
 
     bool allocates(void) const override { return false; }
 
-    serial_primitive type(void) const override {
-      return serial_primitive::ignored;
+    serial_atom type(void) const override {
+      return serial_atom::ignored;
     }
 
     uint64_t size(const OArchiveRegistry& ar, const void* pObj) const override {

@@ -55,7 +55,7 @@ namespace leap {
     /// <returns>
     /// The field type, used for serial operations
     /// </returns>
-    virtual serial_primitive type(void) const = 0;
+    virtual serial_atom type(void) const = 0;
 
     /// <returns>
     /// The exact number of bytes that will be required in the serialize operation

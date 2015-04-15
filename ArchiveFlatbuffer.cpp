@@ -43,20 +43,20 @@ public:
 };
 
 //Returns the size of the element as stored in a Table or VTable
-uint8_t GetFieldSize(leap::serial_primitive p) {
+uint8_t GetFieldSize(leap::serial_atom p) {
   switch (p) {
-  case leap::serial_primitive::boolean:
-  case leap::serial_primitive::i8:
+  case leap::serial_atom::boolean:
+  case leap::serial_atom::i8:
     return 1;
-  case leap::serial_primitive::i16:
+  case leap::serial_atom::i16:
     return 2;
-  case leap::serial_primitive::i32:
+  case leap::serial_atom::i32:
     return 4;
-  case leap::serial_primitive::i64:
+  case leap::serial_atom::i64:
     return 8;
-  case leap::serial_primitive::array:
-  case leap::serial_primitive::string:
-  case leap::serial_primitive::descriptor:
+  case leap::serial_atom::array:
+  case leap::serial_atom::string:
+  case leap::serial_atom::descriptor:
     return 4; //stored as 32 bit offsets
   default:
     throw std::runtime_error("Unsupported type detected");
@@ -65,9 +65,9 @@ uint8_t GetFieldSize(leap::serial_primitive p) {
 
 bool WillStoreAsOffset(const OArchiveFlatbuffer& arch, const leap::field_serializer& sz, const void* pObj) {
   switch (sz.type()) {
-  case leap::serial_primitive::array:
-  case leap::serial_primitive::string:
-  case leap::serial_primitive::descriptor:
+  case leap::serial_atom::array:
+  case leap::serial_atom::string:
+  case leap::serial_atom::descriptor:
     return true;
   default:
     return false;

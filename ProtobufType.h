@@ -13,19 +13,19 @@ namespace leap {
       b32 = 5
     };
     
-    inline serial_type GetSerialType(::leap::serial_primitive prim) {
+    inline serial_type GetSerialType(::leap::serial_atom prim) {
       switch(prim) {
-        case serial_primitive::ignored:
+        case serial_atom::ignored:
           return serial_type::ignored;
-        case serial_primitive::boolean:
-        case serial_primitive::i8:
-        case serial_primitive::i16:
-        case serial_primitive::i32:
-        case serial_primitive::i64:
+        case serial_atom::boolean:
+        case serial_atom::i8:
+        case serial_atom::i16:
+        case serial_atom::i32:
+        case serial_atom::i64:
           return serial_type::varint;
-        case serial_primitive::f32:
+        case serial_atom::f32:
           return serial_type::b32;
-        case serial_primitive::f64:
+        case serial_atom::f64:
           return serial_type::b64;
         default:
           return serial_type::string;

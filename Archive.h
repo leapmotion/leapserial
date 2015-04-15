@@ -17,9 +17,17 @@ namespace leap {
     class AllocationBase;
   }
 
-  //This type is part of the interface, so is subject to change and therefore
-  //should never be serialized directly.
-  enum class serial_primitive {
+  /// <summary>
+  /// An enumeration of the different basic types that are handled directly by the archiver
+  /// <summary>
+  /// <remarks>
+  /// 'Atom' refers to a basic unit of serializablity.  Most are straightforward, but some 
+  /// require documentation.
+  /// Reference - Any type of pointer to another object
+  /// Descriptor - A combination of one or more other atoms.  Has a degree of support for adding fields
+  /// Finalized Descriptor - A descriptor with a fixed and un-changable set of fields.
+  /// </remarks>
+  enum class serial_atom {
     ignored = -1,
     boolean = 0,
     i8,

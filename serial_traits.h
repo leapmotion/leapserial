@@ -50,7 +50,7 @@ namespace leap {
   template<typename T>
   struct primitive_serial_traits<T, typename std::enable_if<internal::has_getdescriptor<T>::value>::type>
   {
-    static ::leap::serial_primitive type() {
+    static ::leap::serial_atom type() {
       return GetDescriptor().type();
     }
 
@@ -80,11 +80,11 @@ namespace leap {
   template<typename T>
   struct primitive_serial_traits<T, typename std::enable_if<std::is_floating_point<T>::value>::type>
   {
-    static ::leap::serial_primitive type() {
+    static ::leap::serial_atom type() {
       if (sizeof(T) == sizeof(float))
-        return ::leap::serial_primitive::f32;
+        return ::leap::serial_atom::f32;
       else if (sizeof(T) == sizeof(double))
-        return ::leap::serial_primitive::f64;
+        return ::leap::serial_atom::f64;
     }
 
     // Trivial serialization/deserialization operations
@@ -105,21 +105,21 @@ namespace leap {
   template<typename T>
   struct primitive_serial_traits<T, typename std::enable_if<std::is_integral<T>::value || std::is_enum<T>::value>::type>
   {
-    static ::leap::serial_primitive type() {
+    static ::leap::serial_atom type() {
       if (std::is_same<T, bool>::value)
-        return ::leap::serial_primitive::boolean;
+        return ::leap::serial_atom::boolean;
 
       switch (sizeof(T)) {
       case 1:
-        return ::leap::serial_primitive::i8;
+        return ::leap::serial_atom::i8;
       case 2:
-        return ::leap::serial_primitive::i16;
+        return ::leap::serial_atom::i16;
       case 4:
-        return ::leap::serial_primitive::i32;
+        return ::leap::serial_atom::i32;
       case 8:
-        return ::leap::serial_primitive::i64;
+        return ::leap::serial_atom::i64;
       default:
-        return ::leap::serial_primitive::ignored;
+        return ::leap::serial_atom::ignored;
       }
     }
 
@@ -148,8 +148,8 @@ namespace leap {
   template<typename T>
   struct serial_traits<T*>
   {
-    static ::leap::serial_primitive type(){
-      return ::leap::serial_primitive::reference;
+    static ::leap::serial_atom type(){
+      return ::leap::serial_atom::reference;
     }
 
     static uint64_t size(const OArchiveRegistry& ar, const T*const pObj) { 
@@ -189,8 +189,8 @@ namespace leap {
   template<>
   struct serial_traits<bool>
   {
-    static ::leap::serial_primitive type() {
-      return ::leap::serial_primitive::boolean;
+    static ::leap::serial_atom type() {
+      return ::leap::serial_atom::boolean;
     }
 
     static uint64_t size(const OArchive& ar, bool val) {
@@ -209,8 +209,8 @@ namespace leap {
   template<typename T, size_t N>
   struct serial_traits<T[N]>
   {
-    static ::leap::serial_primitive type() {
-      return ::leap::serial_primitive::array;
+    static ::leap::serial_atom type() {
+      return ::leap::serial_atom::array;
     }
 
     static uint64_t size(const OArchiveRegistry& ar, const T* pObj) {
@@ -232,8 +232,8 @@ namespace leap {
   template<typename T, size_t N>
   struct serial_traits<std::array<T,N>>
   {
-    static ::leap::serial_primitive type() {
-      return ::leap::serial_primitive::array;
+    static ::leap::serial_atom type() {
+      return ::leap::serial_atom::array;
     }
 
     static uint64_t size(const OArchiveRegistry& ar, const std::array<T, N>& v) {
@@ -253,8 +253,8 @@ namespace leap {
   template<typename T, typename Alloc>
   struct serial_traits<std::vector<T, Alloc>>
   {
-    static ::leap::serial_primitive type() {
-      return ::leap::serial_primitive::array;
+    static ::leap::serial_atom type() {
+      return ::leap::serial_atom::array;
     }
 
     static_assert(
@@ -299,8 +299,8 @@ namespace leap {
   {
     typedef std::basic_string<T, std::char_traits<T>, std::allocator<T>> string_t;
 
-    static ::leap::serial_primitive type() {
-      return ::leap::serial_primitive::string;
+    static ::leap::serial_atom type() {
+      return ::leap::serial_atom::string;
     }
 
     static uint64_t size(const OArchive& ar, const string_t& pObj) {
@@ -350,8 +350,8 @@ namespace leap {
     // type in order to ensure values are correctly propagated.
     typedef typename std::conditional<sc_needsAllocation, IArchiveRegistry, IArchive>::type iarchive;
 
-    static ::leap::serial_primitive type() {
-      return ::leap::serial_primitive::map;
+    static ::leap::serial_atom type() {
+      return ::leap::serial_atom::map;
     }
 
     static uint64_t size(const OArchiveRegistry& ar, const Container& obj) {
@@ -400,8 +400,8 @@ namespace leap {
   struct serial_traits<std::unique_ptr<T>> {
     typedef std::unique_ptr<T> ptr_t;
 
-    static ::leap::serial_primitive type() {
-      return ::leap::serial_primitive::reference;
+    static ::leap::serial_atom type() {
+      return ::leap::serial_atom::reference;
     }
 
     static uint64_t size(const OArchiveRegistry& ar, const ptr_t& pObj) {
@@ -432,8 +432,8 @@ namespace leap {
   struct serial_traits<std::shared_ptr<T>> {
     typedef std::shared_ptr<T> ptr_t;
 
-    static ::leap::serial_primitive type() {
-      return ::leap::serial_primitive::reference;
+    static ::leap::serial_atom type() {
+      return ::leap::serial_atom::reference;
     }
 
     static uint64_t size(const OArchiveRegistry& ar, const ptr_t& pObj) {
