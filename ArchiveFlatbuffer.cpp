@@ -74,6 +74,21 @@ bool WillStoreAsOffset(const OArchiveFlatbuffer& arch, const leap::field_seriali
   }
 }
 
+std::vector<const field_descriptor*> SortFields(const descriptor& descriptor) {
+  std::vector<const field_descriptor*> orderedDescriptors;
+  for (const auto& field_descriptor : descriptor.field_descriptors)
+    orderedDescriptors.push_back(&field_descriptor);
+
+  for (uint32_t i = 1; i <= descriptor.identified_descriptors.size(); i++) {
+    auto found = descriptor.identified_descriptors.find(i);
+    if (found == descriptor.identified_descriptors.end())
+      throw std::runtime_error("Missing an identifier, behavior unhandled by IArchiveFlatbuffer");
+    orderedDescriptors.push_back(&(found->second));
+  }
+
+  return orderedDescriptors;
+}
+
 OArchiveFlatbuffer::OArchiveFlatbuffer(std::ostream& os) : os(os) {}
 
 void OArchiveFlatbuffer::Finish() {
@@ -172,33 +187,7 @@ void OArchiveFlatbuffer::WriteObject(const field_serializer& serializer, const v
 
 void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const void* pObj) { 
 
-  //If we only have unidentified fields, treat this as a struct and just write it all inline
-  if (descriptor.identified_descriptors.empty()) {
-    for (auto field_iter = descriptor.field_descriptors.rbegin(); field_iter != descriptor.field_descriptors.rend(); ++field_iter) {
-      const auto& field_descriptor = *field_iter;
-      const void* pChildObj = static_cast<const char*>(pObj)+field_descriptor.offset;
-      if (WillStoreAsOffset(*this, field_descriptor.serializer, pChildObj)) {
-        WriteRelativeOffset(pChildObj);
-      }
-      else {
-        field_descriptor.serializer.serialize(*this, pChildObj);
-      }
-    }
-
-    return;
-  }
-  
-  //First we need an ordered list of the descriptors.
-  std::vector<const field_descriptor*> orderedDescriptors;
-  for (const auto& field_descriptor : descriptor.field_descriptors)
-    orderedDescriptors.push_back(&field_descriptor);
-
-  for (uint32_t i = 1; i <= descriptor.identified_descriptors.size(); i++) {
-    auto found = descriptor.identified_descriptors.find(i);
-    if (found == descriptor.identified_descriptors.end())
-      throw std::runtime_error("Missing an identifier, behavior unhandled by IArchiveFlatbuffer");
-    orderedDescriptors.push_back(&(found->second));
-  }
+  const auto orderedDescriptors = SortFields(descriptor);
 
   //Write all the children that will be stored as offsets first
   for (auto field_iter = orderedDescriptors.rbegin(); field_iter != orderedDescriptors.rend(); field_iter++) {
@@ -225,6 +214,10 @@ void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const voi
     fieldOffsets.push_back((uint32_t)m_builder.size() - tableEnd);
   }
   
+  //If there are no identified descriptors, then we are a struct and do not care about vtable stuff.
+  if (descriptor.identified_descriptors.empty())
+    return;
+
   //Write what the offset of the vtable will be...
   const uint16_t vTableSize = (uint16_t)((2 + orderedDescriptors.size()) * sizeof(uint16_t));
   WriteInteger((int32_t)(vTableSize)); //write as a signed integer for the table's vtable entry
@@ -356,36 +349,23 @@ void* IArchiveFlatbuffer::ReadObjectReference(const create_delete& cd, const fie
 }
 
 void IArchiveFlatbuffer::ReadDescriptor(const descriptor& descriptor, void* pObj, uint64_t ncb) {
-  const auto tableOffset = m_offset;
-
-  //If there are only unidentified (non-id type) descriptors, then we're a struct, and don't
+  //If there are only unidentified (non-id type) descriptors, then we're a struct and don't
   //need to do any vtable lookup or field sorting.
   if (descriptor.identified_descriptors.empty()) {
     for (const auto& field_descriptor : descriptor.field_descriptors) {
-      field_descriptor.serializer.deserialize(*this, 
+      field_descriptor.serializer.deserialize(*this,
         static_cast<char*>(pObj)+field_descriptor.offset, 0);
     }
     return;
   }
 
-  std::vector<const field_descriptor*> orderedDescriptors;
-
-  for (const auto& field_descriptor : descriptor.field_descriptors)
-    orderedDescriptors.push_back(&field_descriptor);
-
-  for (uint32_t i = 1; i <= descriptor.identified_descriptors.size(); i++) {
-    auto found = descriptor.identified_descriptors.find(i);
-    if (found == descriptor.identified_descriptors.end())
-      throw std::runtime_error("Missing an identifier, behavior unhandled by IArchiveFlatbuffer");
-    orderedDescriptors.push_back(&(found->second));
-  }
-
+  const auto tableOffset = m_offset;
+  const auto orderedDescriptors = SortFields(descriptor);
   const auto vTableOffset = tableOffset - GetValue<int32_t>(m_offset);
   //const auto vTableSize = GetValue<uint16_t>(vTableOffset);
   const auto tableSize = GetValue<uint16_t>(vTableOffset + sizeof(uint16_t));
 
   uint8_t vTableEntry = 0;
-
   for (const auto& field_descriptor : orderedDescriptors) {
     const auto fieldOffset = GetValue<uint16_t>(vTableOffset + 4 + (vTableEntry * sizeof(uint16_t)));
     m_offset = tableOffset + fieldOffset; //can't rely on automatic m_offset iteration since fields may be in any order.
