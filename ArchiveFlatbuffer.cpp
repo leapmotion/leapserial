@@ -460,9 +460,9 @@ void IArchiveFlatbuffer::ReadArray(std::function<void(uint64_t)> sizeBufferFn, c
   sizeBufferFn(size);
 
   m_offset = arrayOffset + sizeof(uint32_t);
-  const auto step = GetFieldSize(t_serializer.type());
+  //const auto step = GetFieldSize(t_serializer.type());
   for (uint32_t i = 0 ; i < size; ++i) {
-    assert(m_offset == arrayOffset + sizeof(uint32_t) + (i * step));
+    //assert(m_offset == arrayOffset + sizeof(uint32_t) + (i * step));
     t_serializer.deserialize(*this, enumerator(), 0);
   }
 
