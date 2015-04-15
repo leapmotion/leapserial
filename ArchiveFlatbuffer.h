@@ -3,8 +3,26 @@
 #include <vector>
 #include <stack>
 #include <map>
+#include <set>
 
 namespace leap {
+
+  struct VTable {
+    uint32_t offset;
+    uint16_t size;
+    uint16_t tableSize;
+    std::vector<uint16_t> offsets;
+
+    std::tuple<uint16_t, uint16_t, std::vector<uint16_t>> make_tuple() const { return std::make_tuple(size, tableSize, offsets); }
+
+    bool operator==(const VTable& other) const {
+      return make_tuple() == other.make_tuple();
+    }
+    bool operator<(const VTable& other) const {
+      return make_tuple() < other.make_tuple();
+    }
+    
+  };
 
   //Note: Multiple objects with the same vtable are currently not well supported, as all complex types
   //will always have their vtables written.
@@ -62,6 +80,8 @@ namespace leap {
     //Then dump it into os when we're done with the message.
     std::vector<uint8_t> m_builder;
 
+    std::set<VTable> m_vTables;
+
     std::map<const void*, uint32_t> m_offsets;
     uint8_t m_largestAligned = 1;
 
@@ -100,7 +120,6 @@ namespace leap {
       ) override;
 
     void* ReadObjectReference(const create_delete& cd, const field_serializer& desc) override;
-
 
   private:
     std::vector<uint8_t> m_data;
