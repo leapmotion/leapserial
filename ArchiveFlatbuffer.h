@@ -46,7 +46,7 @@ namespace leap {
     void WriteObjectReference(const field_serializer& serializer, const void* pObj) override;
     void WriteObject(const field_serializer& serializer, const void* pObj) override;
     void WriteDescriptor(const descriptor& descriptor, const void* pObj) override;
-    void WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator, const void* pObj) override;
+    void WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) override;
     void WriteDictionary(
       uint64_t n,
       const field_serializer& keyDesc,

@@ -132,7 +132,7 @@ namespace leap {
     /// <summary>
     /// Writes out an array of entries
     /// </summary>
-    virtual void WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator, const void* pObj) = 0;
+    virtual void WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) = 0;
     
     /// <summary>
     /// Writes out a dictionary of entries

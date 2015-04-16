@@ -148,7 +148,7 @@ void OArchiveImpl::WriteInteger(int64_t value, uint8_t) {
     WriteByteArray(&ncb, 1);
 }
 
-void OArchiveImpl::WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator, const void* pObj) {
+void OArchiveImpl::WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) {
   WriteSize((uint32_t)n);
   
   while (n--)

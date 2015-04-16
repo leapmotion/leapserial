@@ -220,7 +220,7 @@ namespace leap {
 
     static void serialize(OArchiveRegistry& ar, const T* pObj) {
       size_t i = 0;
-      ar.WriteArray(field_serializer_t<T,void>(), N, [&]{ return &pObj[i++]; }, pObj);
+      ar.WriteArray(field_serializer_t<T,void>(), N, [&]{ return &pObj[i++]; });
     }
 
     static void deserialize(IArchiveRegistry& ar, T* pObj, uint64_t ncb) {
@@ -277,8 +277,7 @@ namespace leap {
       size_t i = 0;
       ar.WriteArray(field_serializer_t<T,void>(),
         static_cast<uint64_t>(v.size()),
-        [&] { return &v[i++]; },
-        &v
+        [&] { return &v[i++]; }
       );
     }
 
