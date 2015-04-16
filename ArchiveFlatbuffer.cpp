@@ -199,8 +199,9 @@ void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const voi
     }
   }
 
-  //Now write the table, in order
-  std::vector<uint16_t> fieldOffsets;
+  //Now write the table(or struct), in order.  We will also store the inverse offsets of the fields in reverse
+  //order.  The vTable will also be saved and queried in this format
+  VTable vTable;
   const uint32_t tableEnd = (uint32_t)m_builder.size();
   for (auto field_iter = orderedDescriptors.rbegin(); field_iter != orderedDescriptors.rend(); field_iter++) {
     const auto& field_descriptor = **field_iter;
@@ -211,30 +212,37 @@ void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const voi
     else {
       field_descriptor.serializer.serialize(*this, pChildObj);
     }
-    fieldOffsets.push_back((uint32_t)m_builder.size() - tableEnd);
+    vTable.offsets.push_back((uint32_t)m_builder.size() - tableEnd);
   }
   
   //If there are no identified descriptors, then we are a struct and do not care about vtable stuff.
   if (descriptor.identified_descriptors.empty())
     return;
 
-  //Write what the offset of the vtable will be...
-  const uint16_t vTableSize = (uint16_t)((2 + orderedDescriptors.size()) * sizeof(uint16_t));
-  WriteInteger((int32_t)(vTableSize)); //write as a signed integer for the table's vtable entry
   const uint32_t tableStart = m_builder.size() + sizeof(int32_t) + PaddingBytes(m_builder.size(), sizeof(int32_t));
   SaveOffset(pObj, tableStart);
 
-  const uint32_t tableSize = (uint32_t)m_builder.size() - tableEnd;
+  //Save the offset of the table (we've yet to write the vtable offset, so add the space it'll take)
+  vTable.size = (uint16_t)((2 + orderedDescriptors.size()) * sizeof(uint16_t));
+  vTable.tableSize = (uint16_t)(tableStart - tableEnd);
+  vTable.offset = tableStart + vTable.size;
 
-  const uint16_t tableBaseOffset = tableSize;
-  //Now write the vtable entries...
-  for (const uint16_t fieldOffset : fieldOffsets) {
+  auto insertionResult = m_vTables.insert(vTable);
+  
+  //Final entry for the table
+  WriteInteger((int32_t)(insertionResult.first->offset - tableStart));
+
+  //If a matching vtable exists already, we're done
+  if (!insertionResult.second)
+    return;
+
+  const uint16_t tableBaseOffset = vTable.tableSize;
+  for (const uint16_t fieldOffset : vTable.offsets) {
     WriteInteger((uint16_t)(tableBaseOffset - fieldOffset));
   }
 
-  //Finally the size fields of the vtable
-  WriteInteger((uint16_t)tableSize);
-  WriteInteger(vTableSize);
+  WriteInteger(vTable.tableSize);
+  WriteInteger(vTable.size);
 }
 
 void OArchiveFlatbuffer::WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) { 
