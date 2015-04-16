@@ -142,7 +142,7 @@ void OArchiveFlatbuffer::WriteString(const void* pBuf, uint64_t charCount, uint8
   }
 
   WriteInteger((uint32_t)(charCount));
-  m_offsets[pBuf] = (uint32_t)m_builder.size();
+  SaveOffset(m_currentFieldPtr, (uint32_t)m_builder.size());
 }
 
 void OArchiveFlatbuffer::WriteBool(bool value) { 
@@ -194,8 +194,8 @@ void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const voi
     const auto& field_descriptor = **field_iter;
     const void* pChildObj = static_cast<const char*>(pObj)+field_descriptor.offset;
     if (WillStoreAsOffset(*this, field_descriptor.serializer, pChildObj)) {
+      m_currentFieldPtr = pChildObj;
       field_descriptor.serializer.serialize(*this, pChildObj);
-      m_offsets[pChildObj] = (uint32_t)m_builder.size(); //save the offset of the object.
     }
   }
 
@@ -221,10 +221,10 @@ void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const voi
   //Write what the offset of the vtable will be...
   const uint16_t vTableSize = (uint16_t)((2 + orderedDescriptors.size()) * sizeof(uint16_t));
   WriteInteger((int32_t)(vTableSize)); //write as a signed integer for the table's vtable entry
+  const uint32_t tableStart = m_builder.size() + sizeof(int32_t) + PaddingBytes(m_builder.size(), sizeof(int32_t));
+  SaveOffset(pObj, tableStart);
 
   const uint32_t tableSize = (uint32_t)m_builder.size() - tableEnd;
-  //Save the offset of the table...
-  m_offsets[pObj] = (uint32_t)m_builder.size();
 
   const uint16_t tableBaseOffset = tableSize;
   //Now write the vtable entries...
@@ -243,9 +243,11 @@ void OArchiveFlatbuffer::WriteArray(const field_serializer& desc, uint64_t n, st
   for (uint64_t i = 0; i < n; i++)
     elements.push_back(enumerator());
 
+  const auto arrayPtr = m_currentFieldPtr;
+
   for (auto i = elements.rbegin(); i != elements.rend(); i++) {
+    m_currentFieldPtr = *i;
     desc.serialize(*this, *i);
-    m_offsets[*i] = (uint32_t)m_builder.size(); //the string & other serializers aren't passed the base pointer, so make sure we save it here too..
   }
 
   //If this is an array of a type that is stored by offset, store the offsets...
@@ -256,7 +258,7 @@ void OArchiveFlatbuffer::WriteArray(const field_serializer& desc, uint64_t n, st
   }
 
   WriteInteger((uint32_t)n);
-  m_offsets[pObj] = (uint32_t)m_builder.size();
+  SaveOffset(arrayPtr, (uint32_t)m_builder.size());
 }
 
 void OArchiveFlatbuffer::WriteDictionary(

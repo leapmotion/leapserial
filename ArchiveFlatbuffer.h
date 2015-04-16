@@ -82,12 +82,20 @@ namespace leap {
 
     std::set<VTable> m_vTables;
 
-    std::map<const void*, uint32_t> m_offsets;
     uint8_t m_largestAligned = 1;
-
-    void WriteRelativeOffset(const void* pObj);
     void Align(uint8_t boundary);
     void PreAlign(uint32_t len, uint8_t alignment);
+
+    // Bookkeeping helpers for tracking the offsets in the buffer of various child objects.
+    // m_offsets should not be modified except by SaveOffset.
+    const void* m_currentFieldPtr = nullptr; 
+    std::map<const void*, uint32_t> m_offsets;
+    inline void SaveOffset(const void* pObj, uint32_t offset) {
+      if (!m_offsets.insert({ pObj, offset }).second) {
+        throw std::runtime_error("Attempted to modify offset for object!");
+      }
+    }
+    void WriteRelativeOffset(const void* pObj);
   };
 
   class IArchiveFlatbuffer : 
