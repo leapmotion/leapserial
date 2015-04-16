@@ -344,10 +344,7 @@ void IArchiveFlatbuffer::Skip(uint64_t ncb) {
 }
 
 void IArchiveFlatbuffer::ReadObject(const field_serializer& sz, void* pObj, internal::AllocationBase* pOwner) {
-  const auto tableOffset = GetValue<uint32_t>(0);
-  
-  m_offset = tableOffset;
-  sz.deserialize(*this, pObj, 0);
+  sz.deserialize(*this, pObj, 0); //The root entry is an offset to a table.
 }
 
 IArchive::ReleasedMemory IArchiveFlatbuffer::ReadObjectReferenceResponsible(IArchive::ReleasedMemory(*pfnAlloc)(), const field_serializer& sz, bool isUnique) { 
@@ -369,9 +366,12 @@ void IArchiveFlatbuffer::ReadDescriptor(const descriptor& descriptor, void* pObj
     return;
   }
 
-  const auto tableOffset = m_offset;
   const auto orderedDescriptors = SortFields(descriptor);
-  const auto vTableOffset = tableOffset - GetValue<int32_t>(m_offset);
+
+  //If this is a table, then it's stored by offset...
+  const auto tableOffsetOffset = m_offset;
+  const auto tableOffset = m_offset + GetValue<uint32_t>(tableOffsetOffset);
+  const auto vTableOffset = tableOffset - GetValue<int32_t>(tableOffset);
   //const auto vTableSize = GetValue<uint16_t>(vTableOffset);
   const auto tableSize = GetValue<uint16_t>(vTableOffset + sizeof(uint16_t));
 
@@ -388,7 +388,7 @@ void IArchiveFlatbuffer::ReadDescriptor(const descriptor& descriptor, void* pObj
     vTableEntry++;
   }
 
-  m_offset = tableOffset + tableSize;
+  m_offset = tableOffsetOffset + sizeof(uint32_t);
 }
 
 void IArchiveFlatbuffer::ReadByteArray(void* pBuf, uint64_t ncb) {
