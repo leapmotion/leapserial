@@ -219,7 +219,7 @@ void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const voi
   if (descriptor.identified_descriptors.empty())
     return;
 
-  const uint32_t tableStart = m_builder.size() + sizeof(int32_t) + PaddingBytes(m_builder.size(), sizeof(int32_t));
+  const uint32_t tableStart = (uint32_t)(m_builder.size() + sizeof(int32_t) + PaddingBytes(m_builder.size(), sizeof(int32_t)));
   SaveOffset(pObj, tableStart);
 
   //Save the offset of the table (we've yet to write the vtable offset, so add the space it'll take)
@@ -373,7 +373,7 @@ void IArchiveFlatbuffer::ReadDescriptor(const descriptor& descriptor, void* pObj
   const auto tableOffset = m_offset + GetValue<uint32_t>(tableOffsetOffset);
   const auto vTableOffset = tableOffset - GetValue<int32_t>(tableOffset);
   //const auto vTableSize = GetValue<uint16_t>(vTableOffset);
-  const auto tableSize = GetValue<uint16_t>(vTableOffset + sizeof(uint16_t));
+  //const auto tableSize = GetValue<uint16_t>(vTableOffset + sizeof(uint16_t));
 
   uint8_t vTableEntry = 0;
   for (const auto& field_descriptor : orderedDescriptors) {
