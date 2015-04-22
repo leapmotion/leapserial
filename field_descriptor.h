@@ -34,9 +34,11 @@ namespace leap {
     field_descriptor(base<Base, Derived>):
       identifier(0),
       offset(
-        reinterpret_cast<int>(
-          static_cast<Base*>(reinterpret_cast<Derived*>(1))
-        ) - 1
+        static_cast<int>(
+          reinterpret_cast<uint64_t>(
+            static_cast<Base*>(reinterpret_cast<Derived*>(1))
+          ) - 1
+        )
       ),
       serializer(field_serializer_t<Base, void>::GetDescriptor())
     {}
