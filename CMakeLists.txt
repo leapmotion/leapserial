@@ -4,6 +4,7 @@ set(LeapSerial_SRCS
   Archive.h
   ArchiveFlatbuffer.h
   ArchiveFlatbuffer.cpp
+  base.h
   Descriptor.h
   Descriptor.cpp
   field_descriptor.h

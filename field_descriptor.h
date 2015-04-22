@@ -1,4 +1,5 @@
 #pragma once
+#include "base.h"
 #include "field_serializer_t.h"
 
 namespace leap {
@@ -27,6 +28,17 @@ namespace leap {
     template<typename U, typename T>
     field_descriptor(T U::*val) :
       field_descriptor(0, val)
+    {}
+
+    template<typename Base, typename Derived>
+    field_descriptor(base<Base, Derived>):
+      identifier(0),
+      offset(
+        reinterpret_cast<int>(
+          static_cast<Base*>(reinterpret_cast<Derived*>(1))
+        ) - 1
+      ),
+      serializer(field_serializer_t<Base, void>::GetDescriptor())
     {}
 
     // Serializer interface, actually implements our serialization operation
