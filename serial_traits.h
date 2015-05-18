@@ -449,7 +449,7 @@ namespace leap {
     static void deserialize(IArchive& ar, ptr_t& obj, uint64_t ncb) {
       auto released = ar.ReadObjectReferenceResponsible(
         [] {
-          std::shared_ptr<T> retVal = std::make_shared<T>();
+          std::shared_ptr<T> retVal = std::shared_ptr<T>(new T());
           return IArchive::ReleasedMemory{ retVal.get(), retVal };
         },
         field_serializer_t<T, void>::GetDescriptor(),
