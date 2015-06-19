@@ -192,7 +192,7 @@ uint64_t OArchiveImpl::SizeInteger(int64_t value, uint8_t) const {
     return 1;
 
   // Number of bits of significant data
-  unsigned long n;
+  unsigned long n = 0;
   uint64_t x = value;
 
 #ifdef _MSC_VER

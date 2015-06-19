@@ -272,7 +272,7 @@ void IArchiveImpl::Process(const deserialization_task& task) {
     auto id_type = ReadInteger(8);
 
     // Then we need the size (if it's available)
-    uint64_t ncb;
+    uint64_t ncb = 0;
     switch (static_cast<Protobuf::serial_type>(id_type & 7)) {
     case Protobuf::serial_type::b32:
       ncb = 4;
@@ -285,12 +285,7 @@ void IArchiveImpl::Process(const deserialization_task& task) {
       ncb = ReadInteger(sizeof(ncb));
       break;
     case Protobuf::serial_type::varint:
-      // No idea how much, leave it to the consumer
-      ncb = 0;
-      break;
     case Protobuf::serial_type::ignored:
-      // Shold never happen, but if it does, then read no bytes
-      ncb = 0;
       break;
     }
 
