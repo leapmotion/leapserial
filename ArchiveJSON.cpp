@@ -23,15 +23,50 @@ void OArchiveJSON::WriteString(const void* pBuf, uint64_t charCount, uint8_t cha
 }
 
 void OArchiveJSON::WriteBool(bool value) {
-  throw not_implemented_exception();
+  if (value)
+    os << "true";
+  else
+    os << "false";
 }
 
-void OArchiveJSON::WriteInteger(int64_t value, uint8_t ncb) {
-  throw not_implemented_exception();
+void OArchiveJSON::WriteInteger(int8_t value) {
+  os << value;
+}
+
+void OArchiveJSON::WriteInteger(uint8_t value) {
+  os << value;
+}
+
+void OArchiveJSON::WriteInteger(int16_t value) {
+  os << value;
+}
+
+void OArchiveJSON::WriteInteger(uint16_t value) {
+  os << value;
+}
+
+void OArchiveJSON::WriteInteger(int32_t value) {
+  os << value;
+}
+
+void OArchiveJSON::WriteInteger(uint32_t value) {
+  os << value;
+}
+
+void OArchiveJSON::WriteInteger(int64_t value) {
+  os << value;
+}
+
+void OArchiveJSON::WriteInteger(uint64_t value) {
+  os << value;
 }
 
 void OArchiveJSON::WriteFloat(float value) {
-  os << value ;
+  os << value;
+}
+
+void OArchiveJSON::WriteInteger(int64_t value, uint8_t) {
+  os << value;
 }
 
 void OArchiveJSON::WriteFloat(double value) {

@@ -15,7 +15,14 @@ namespace leap {
     void WriteString(const void* pBuf, uint64_t charCount, uint8_t charSize) override;
     void WriteBool(bool value) override;
     void WriteInteger(int64_t value, uint8_t ncb) override;
-    using OArchive::WriteInteger;
+    void WriteInteger(int8_t value) override;
+    void WriteInteger(uint8_t value) override;
+    void WriteInteger(int16_t value) override;
+    void WriteInteger(uint16_t value) override;
+    void WriteInteger(int32_t value) override;
+    void WriteInteger(uint32_t value) override;
+    void WriteInteger(int64_t value) override;
+    void WriteInteger(uint64_t value) override;
     void WriteFloat(float value) override;
     void WriteFloat(double value) override;
     void WriteObjectReference(const field_serializer& serializer, const void* pObj) override;

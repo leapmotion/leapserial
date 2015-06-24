@@ -14,7 +14,8 @@ class ArchiveJSONTest :
 using namespace Test;
 
 struct JSONTestObject {
-  float a, b;
+  float a;
+  int b;
 
   static leap::descriptor GetDescriptor(void) {
     return{
@@ -27,7 +28,7 @@ struct JSONTestObject {
 TEST_F(ArchiveJSONTest, WriteToJSON) {
   std::stringstream ss(std::ios::in | std::ios::out);
 
-  JSONTestObject obj = { 1.1f, 2.2f };
+  JSONTestObject obj = { 1.1f, 200 };
 
   leap::Serialize<leap::OArchiveJSON>(ss, obj);
 
@@ -40,5 +41,5 @@ TEST_F(ArchiveJSONTest, WriteToJSON) {
   const auto b = v.HashGet("field_b");
   ASSERT_TRUE(a.IsNumeric() && b.IsNumeric()) << "Field types were not determined correctly";
   ASSERT_EQ(v.HashGetAs<float>("field_a"), obj.a) << "Value a not written correctly";
-  ASSERT_EQ(v.HashGetAs<float>("field_b"), obj.b) << "Value b not written correctly";
+  ASSERT_EQ(v.HashGetAs<int>("field_b"), obj.b) << "Value b not written correctly";
 }
