@@ -945,6 +945,34 @@ TEST_F(SerializationTest, DiamondInheritanceTest) {
   ) << "Right-hand side of the diamond did not deserialize correctly";
 }
 
+TEST_F(SerializationTest, AlternateDescriptor) {
+  leap::descriptor desc = { 
+    {&MySimpleStructure::a},
+    {&MySimpleStructure::b}
+  };
+
+  std::stringstream ss(std::ios::in | std::ios::out | std::ios::binary);
+  {
+    MySimpleStructure mss;
+    mss.a = 1;
+    mss.b = 2;
+    mss.myString = "This will not be sent";
+    {
+      leap::OArchiveImpl oArch(ss);
+      oArch.WriteObject(desc, &mss);
+    }
+  }
+
+  {
+    MySimpleStructure mss;
+    leap::IArchiveImpl iArch(ss);
+    iArch.ReadObject(desc, &mss, nullptr);
+    ASSERT_EQ(mss.a, 1) << "Field a was not restored correctly";
+    ASSERT_EQ(mss.b, 2) << "Field b was not restored correctly";
+    ASSERT_TRUE(mss.myString.empty()) << "field myString was stored when it shouldn't have been!";
+  }
+}
+
 struct MyNamedStructure {
   int a;
   int b;
