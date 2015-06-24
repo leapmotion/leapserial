@@ -335,10 +335,6 @@ IArchiveFlatbuffer::IArchiveFlatbuffer(std::istream& is) {
   is.read((char*)&m_data[0], m_data.size());
 }
 
-IArchiveFlatbuffer::~IArchiveFlatbuffer() {
-
-}
-
 void IArchiveFlatbuffer::Skip(uint64_t ncb) {
   throw not_implemented_exception();
 }

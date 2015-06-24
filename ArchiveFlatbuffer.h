@@ -103,14 +103,13 @@ namespace leap {
   {
   public:
     IArchiveFlatbuffer(std::istream& is);
-    ~IArchiveFlatbuffer();
 
     void ReadObject(const field_serializer& sz, void* pObj, internal::AllocationBase* pOwner) override;
 
     ReleasedMemory ReadObjectReferenceResponsible(ReleasedMemory(*pfnAlloc)(), const field_serializer& sz, bool isUnique) override;
 
     void Skip(uint64_t ncb) override;
-    uint64_t Count(void) const { return 0; }
+    uint64_t Count(void) const { return m_offset; }
 
     void ReadDescriptor(const descriptor& descriptor, void* pObj, uint64_t ncb) override;
     void ReadByteArray(void* pBuf, uint64_t ncb) override;
