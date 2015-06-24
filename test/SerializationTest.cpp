@@ -944,3 +944,23 @@ TEST_F(SerializationTest, DiamondInheritanceTest) {
     static_cast<DiamondLeg<1>&>(*retVal).val
   ) << "Right-hand side of the diamond did not deserialize correctly";
 }
+
+struct MyNamedStructure {
+  int a;
+  int b;
+
+  static leap::descriptor GetDescriptor(void) {
+    return{
+      { "Unsuitable for JSON", &MyNamedStructure::a },
+      { 1, "suitable_for_json", &MyNamedStructure::b },
+    };
+  }
+};
+TEST_F(SerializationTest, FieldNameTest) {
+  leap::descriptor desc = MyNamedStructure::GetDescriptor();
+
+  ASSERT_STREQ(desc.field_descriptors[0].name, "Unsuitable for JSON")
+    << "Field names were not assigned correctly";
+  ASSERT_STREQ(desc.identified_descriptors.at(1).name, "suitable_for_json")
+    << "Field names were not assigned correctly";
+}
