@@ -11,8 +11,9 @@ namespace leap {
   /// </remarks>
   struct field_descriptor {
     template<typename U, typename T>
-    field_descriptor(int identifier, T U::*val) :
+    field_descriptor(int identifier, const char* name, T U::*val) :
       identifier(identifier),
+      name(name),
       offset(reinterpret_cast<size_t>(&(static_cast<U*>(nullptr)->*val))),
       serializer(field_serializer_t<T, void>::GetDescriptor())
     {}
@@ -20,6 +21,7 @@ namespace leap {
     template<typename U>
     field_descriptor(void (U::*pMemfn)()) :
       identifier(0),
+      name(nullptr),
       offset(0),
       serializer(field_serializer_t<void(U::*)(), void>::GetDescriptor(pMemfn))
     {
@@ -28,6 +30,16 @@ namespace leap {
     template<typename U, typename T>
     field_descriptor(T U::*val) :
       field_descriptor(0, val)
+    {}
+
+    template<typename U, typename T>
+    field_descriptor(int identifier, T U::*val) :
+      field_descriptor(identifier, nullptr, val)
+    {}
+
+    template<typename U, typename T>
+    field_descriptor(const char* name, T U::*val) :
+      field_descriptor(0, name, val)
     {}
 
     template<typename Base, typename Derived>
@@ -45,6 +57,9 @@ namespace leap {
 
     // Serializer interface, actually implements our serialization operation
     const field_serializer& serializer;
+
+    // A string identifier for this field. Used for serialization to formats which require them
+    const char* name;
 
     // A numeric identifier for this field.  If this value is zero, the field is
     // required and strictly positional.
