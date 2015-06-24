@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "ArchiveJSON.h"
+#include "field_serializer.h"
+#include "Descriptor.h"
 
 using namespace leap;
 
@@ -29,11 +31,11 @@ void OArchiveJSON::WriteInteger(int64_t value, uint8_t ncb) {
 }
 
 void OArchiveJSON::WriteFloat(float value) {
-  throw not_implemented_exception();
+  os << value ;
 }
 
 void OArchiveJSON::WriteFloat(double value) {
-  throw not_implemented_exception();
+  os << value;
 }
 
 void OArchiveJSON::WriteObjectReference(const field_serializer& serializer, const void* pObj) {
@@ -41,11 +43,32 @@ void OArchiveJSON::WriteObjectReference(const field_serializer& serializer, cons
 }
 
 void OArchiveJSON::WriteObject(const field_serializer& serializer, const void* pObj) {
-  throw not_implemented_exception();
+  os << "{\n";
+  serializer.serialize(*this, pObj);
+  os << "}\n";
 }
 
 void OArchiveJSON::WriteDescriptor(const descriptor& descriptor, const void* pObj) {
-  throw not_implemented_exception();
+  for (const auto &field_descriptor : descriptor.field_descriptors) {
+    const void* pChildObj = static_cast<const char*>(pObj)+field_descriptor.offset; 
+    os << "\"" << field_descriptor.name << "\": ";
+    field_descriptor.serializer.serialize(*this, pChildObj);
+    os << ",\n";
+  }
+  if (descriptor.field_descriptors.size() > 0)
+    os.seekp(-2, std::ios::cur); //Remove the trailing ",\n"
+
+  for (const auto& iter : descriptor.identified_descriptors) {
+    const auto& field_descriptor = iter.second;
+    const void* pChildObj = static_cast<const char*>(pObj)+field_descriptor.offset;
+    os << "\"" << field_descriptor.name << "\": ";
+    field_descriptor.serializer.serialize(*this, pChildObj);
+    os << ",\n";
+  }
+  if (descriptor.identified_descriptors.size() > 0)
+    os.seekp(-2, std::ios::cur); //Remove the trailing ",\n"
+
+  os << "\n";
 }
 
 void OArchiveJSON::WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) {
