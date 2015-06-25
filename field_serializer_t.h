@@ -184,7 +184,7 @@ namespace leap {
       pfnSetter(pfnSetter)
     {}
  
-    U(pfnGetter)(const T&);
+    U(*pfnGetter)(const T&);
     void(*pfnSetter)(T&, V);
  
     bool allocates(void) const override { return false; }
@@ -194,17 +194,17 @@ namespace leap {
     }
  
     uint64_t size(const OArchiveRegistry& ar, const void* pObj) const override {
-      return serial_traits<field_type>::size(ar, (*pfnGetter)(static_cast<const T*>(pObj)));
+      return serial_traits<field_type>::size(ar, pfnGetter(*static_cast<const T*>(pObj)));
     }
  
     void serialize(OArchiveRegistry& ar, const void* pObj) const override {
-      serial_traits<field_type>::serialize(ar, (*pfnGetter)(static_cast<const T*>(pObj)));
+      serial_traits<field_type>::serialize(ar, pfnGetter(*static_cast<const T*>(pObj)));
     }
  
     void deserialize(IArchiveRegistry& ar, void* pObj, uint64_t ncb) const override {
       field_type val;
       serial_traits<field_type>::deserialize(ar, val, ncb);
-      (*pfnSetter)(*static_cast<T*>(pObj),val);
+      pfnSetter(*static_cast<T*>(pObj),val);
     }
  
     bool operator==(const field_serializer_t& rhs) const {
