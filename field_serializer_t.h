@@ -99,4 +99,66 @@ namespace leap {
       return *q;
     }
   };
+
+  template<typename T, typename U, typename V>
+  struct field_getter_setter{};
+
+  template<typename T, typename U, typename V>
+  struct field_serializer_t <
+    field_getter_setter<T, U, V>,
+    typename std::enable_if<
+      std::is_same<
+        typename std::decay<U>::type,
+        typename std::decay<V>::type
+      >::value
+    >::type
+  > :
+    field_serializer
+  {
+    typedef typename std::decay<U>::type field_type;
+
+    field_serializer_t(U(T::*pfnGetter)() const, void(T::*pfnSetter)(V)):
+      pfnGetter(pfnGetter),
+      pfnSetter(pfnSetter)
+    {}
+
+    U(T::*pfnGetter)() const;
+    void(T::*pfnSetter)(V);
+
+    bool allocates(void) const override { return false; }
+
+    serial_atom type(void) const override {
+      return serial_traits<field_type>::type();
+    }
+
+    uint64_t size(const OArchiveRegistry& ar, const void* pObj) const override {
+      return serial_traits<field_type>::size(ar, (static_cast<const T*>(pObj)->*pfnGetter)());
+    }
+
+    void serialize(OArchiveRegistry& ar, const void* pObj) const override {
+      serial_traits<field_type>::serialize(ar, (static_cast<const T*>(pObj)->*pfnGetter)());
+    }
+
+    void deserialize(IArchiveRegistry& ar, void* pObj, uint64_t ncb) const override {
+      field_type val;
+      serial_traits<field_type>::deserialize(ar, val, ncb);
+      (static_cast<T*>(pObj)->*pfnSetter)(val);
+    }
+
+    bool operator==(const field_serializer_t& rhs) const {
+      return pfnGetter == rhs.pfnGetter && pfnSetter == rhs.pfnSetter;
+    }
+
+    static const field_serializer& GetDescriptor(U(T::*getter)() const, void(T::*setter)(V)) {
+      static std::unordered_set<field_serializer_t, mem_hash<field_serializer_t>> st;
+      static std::mutex lock;
+
+      std::lock_guard<std::mutex> lk(lock);
+      field_serializer_t key{getter, setter};
+      auto q = st.find(key);
+      if (q == st.end())
+        q = st.insert(q, key);
+      return *q;
+    }
+  };
 }

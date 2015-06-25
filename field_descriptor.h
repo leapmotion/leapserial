@@ -10,36 +10,54 @@ namespace leap {
   /// If this descriptor describes an object, it may potentially be recursive
   /// </remarks>
   struct field_descriptor {
-    template<typename U, typename T>
-    field_descriptor(int identifier, const char* name, T U::*val) :
+    template<typename T, typename U>
+    field_descriptor(int identifier, const char* name, U T::*val) :
       identifier(identifier),
       name(name),
-      offset(reinterpret_cast<size_t>(&(static_cast<U*>(nullptr)->*val))),
-      serializer(field_serializer_t<T, void>::GetDescriptor())
+      offset(reinterpret_cast<size_t>(&(static_cast<T*>(nullptr)->*val))),
+      serializer(field_serializer_t<U, void>::GetDescriptor())
     {}
 
-    template<typename U>
-    field_descriptor(void (U::*pMemfn)()) :
+    template<typename T>
+    field_descriptor(void (T::*pMemfn)()) :
       identifier(0),
       name(nullptr),
       offset(0),
-      serializer(field_serializer_t<void(U::*)(), void>::GetDescriptor(pMemfn))
+      serializer(field_serializer_t<void(T::*)(), void>::GetDescriptor(pMemfn))
     {
     }
 
-    template<typename U, typename T>
-    field_descriptor(T U::*val) :
+    template<typename T, typename U, typename V>
+    field_descriptor(int identifier, const char* name, U(T::*pGetFn)() const, void(T::*pSetFn)(V)) :
+      identifier(identifier),
+      name(name),
+      offset(0),
+      serializer(field_serializer_t<field_getter_setter<T,U,V>>::GetDescriptor(pGetFn, pSetFn))
+    {}
+
+    template<typename T, typename U>
+    field_descriptor(U T::*val) :
       field_descriptor(0, val)
     {}
 
-    template<typename U, typename T>
-    field_descriptor(int identifier, T U::*val) :
+    template<typename T, typename U>
+    field_descriptor(int identifier, U T::*val) :
       field_descriptor(identifier, nullptr, val)
     {}
+    
+    template<typename T, typename U, typename V>
+    field_descriptor(int identifier, U(T::*pGetFn)() const, void(T::*pSetFn)(V)) :
+      field_descriptor(identifier, nullptr, pGetFn, pSetFn)
+    {}
 
-    template<typename U, typename T>
-    field_descriptor(const char* name, T U::*val) :
+    template<typename T, typename U>
+    field_descriptor(const char* name, U T::*val) :
       field_descriptor(0, name, val)
+    {}
+    
+    template<typename T, typename U, typename V>
+    field_descriptor(const char* name, U(T::*pGetFn)() const, void(T::*pSetFn)(V)) :
+      field_descriptor(0, name, pGetFn, pSetFn)
     {}
 
     template<typename Base, typename Derived>
@@ -65,7 +83,7 @@ namespace leap {
     // required and strictly positional.
     int identifier;
 
-    // The offset in type U where this field is located
+    // The offset in type T where this field is located
     size_t offset;
   };
 }
