@@ -1003,7 +1003,8 @@ struct MyAccessorStruct {
   void SetB(const int& v) { b = v; }
 
   static leap::descriptor GetDescriptor() {
-    return{
+    return
+    {
       { 0, "field_a", &MyAccessorStruct::GetA, &MyAccessorStruct::SetA },
       { "field_b", &MyAccessorStruct::GetB, &MyAccessorStruct::SetB }
     };
@@ -1018,6 +1019,30 @@ TEST_F(SerializationTest, AccessorMethodTest) {
 
   MyAccessorStruct stIn;
   leap::Deserialize(ss, stIn);
+
+  ASSERT_EQ(st.a, stIn.a) << "Structure was not serialized correctly";
+  ASSERT_EQ(st.b, stIn.b) << "Structure was not serialized correctly";
+}
+
+static int ExternalGetA(const MyAccessorStruct& st) { return st.a; }
+static void ExternalSetA(MyAccessorStruct& st, int v) { st.a = v; }
+
+TEST_F(SerializationTest, LambdaMethodTest) {
+  MyAccessorStruct st{ 10, 20 };
+  std::stringstream ss(std::ios::in | std::ios::out | std::ios::binary);
+  int(*getterFunc)(const MyAccessorStruct&) = [](const MyAccessorStruct& s){ return s.b; };
+  void(*setterFunc)(MyAccessorStruct&, int) = [](MyAccessorStruct& s, int v){ s.b = v; };
+  leap::descriptor desc = 
+  {
+    leap::field_descriptor{0,"field_a", &ExternalGetA, &ExternalSetA},
+    leap::field_descriptor(0, "field_b", getterFunc, setterFunc)
+  };
+
+  { leap::OArchiveImpl(ss).WriteObject(desc, &st); }
+
+  MyAccessorStruct stIn;
+
+  { leap::IArchiveImpl(ss).ReadObject(desc, &stIn, nullptr); }
 
   ASSERT_EQ(st.a, stIn.a) << "Structure was not serialized correctly";
   ASSERT_EQ(st.b, stIn.b) << "Structure was not serialized correctly";

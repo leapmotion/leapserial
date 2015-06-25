@@ -27,12 +27,22 @@ namespace leap {
     {
     }
 
+    //Member getter/setters
     template<typename T, typename U, typename V>
     field_descriptor(int identifier, const char* name, U(T::*pGetFn)() const, void(T::*pSetFn)(V)) :
       identifier(identifier),
       name(name),
       offset(0),
       serializer(field_serializer_t<field_getter_setter<T,U,V>>::GetDescriptor(pGetFn, pSetFn))
+    {}
+    
+    //Non-Member getter/setters
+    template<typename T, typename U, typename V>
+    field_descriptor(int identifier, const char* name, U(*pGetFn)(const T&), void(*pSetFn)(T&,V)) :
+      identifier(identifier),
+      name(name),
+      offset(0),
+      serializer(field_serializer_t<field_getter_setter_extern<T, U, V>>::GetDescriptor(pGetFn, pSetFn))
     {}
 
     template<typename T, typename U>
@@ -50,6 +60,11 @@ namespace leap {
       field_descriptor(identifier, nullptr, pGetFn, pSetFn)
     {}
 
+    template<typename T, typename U, typename V>
+    field_descriptor(int identifier, U(*pGetFn)(const T&), void(*pSetFn)(T&, V)) :
+      field_descriptor(identifier, nullptr, pGetFn, pSetFn)
+    {}
+
     template<typename T, typename U>
     field_descriptor(const char* name, U T::*val) :
       field_descriptor(0, name, val)
@@ -57,6 +72,11 @@ namespace leap {
     
     template<typename T, typename U, typename V>
     field_descriptor(const char* name, U(T::*pGetFn)() const, void(T::*pSetFn)(V)) :
+      field_descriptor(0, name, pGetFn, pSetFn)
+    {}
+
+    template<typename T, typename U, typename V>
+    field_descriptor(const char* name, U(*pGetFn)(const T&), void(*pSetFn)(T&, V)) :
       field_descriptor(0, name, pGetFn, pSetFn)
     {}
 
