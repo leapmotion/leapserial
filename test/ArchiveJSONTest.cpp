@@ -43,3 +43,14 @@ TEST_F(ArchiveJSONTest, WriteToJSON) {
   ASSERT_EQ(v.HashGetAs<float>("field_a"), obj.a) << "Value a not written correctly";
   ASSERT_EQ(v.HashGetAs<int>("field_b"), obj.b) << "Value b not written correctly";
 }
+
+TEST_F(ArchiveJSONTest, VerifyPreciceJSON) {
+  std::stringstream ss(std::ios::in | std::ios::out);
+
+  JSONTestObject obj = { 1.1f, 200 };
+
+  leap::Serialize<leap::OArchiveJSON>(ss, obj);
+
+  const auto string = ss.str();
+  ASSERT_STREQ("{\"field_a\":1.1,\"field_b\":200}", string.c_str());
+}

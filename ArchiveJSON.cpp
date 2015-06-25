@@ -78,32 +78,30 @@ void OArchiveJSON::WriteObjectReference(const field_serializer& serializer, cons
 }
 
 void OArchiveJSON::WriteObject(const field_serializer& serializer, const void* pObj) {
-  os << "{\n";
+  os << "{";
   serializer.serialize(*this, pObj);
-  os << "}\n";
+  os << "}";
 }
 
 void OArchiveJSON::WriteDescriptor(const descriptor& descriptor, const void* pObj) {
   for (const auto &field_descriptor : descriptor.field_descriptors) {
     const void* pChildObj = static_cast<const char*>(pObj)+field_descriptor.offset; 
-    os << "\"" << field_descriptor.name << "\": ";
+    os << "\"" << field_descriptor.name << "\":";
     field_descriptor.serializer.serialize(*this, pChildObj);
-    os << ",\n";
+    os << ",";
   }
   if (descriptor.field_descriptors.size() > 0)
-    os.seekp(-2, std::ios::cur); //Remove the trailing ",\n"
+    os.seekp(-1, std::ios::cur); //Remove the trailing ","
 
   for (const auto& iter : descriptor.identified_descriptors) {
     const auto& field_descriptor = iter.second;
     const void* pChildObj = static_cast<const char*>(pObj)+field_descriptor.offset;
     os << "\"" << field_descriptor.name << "\": ";
     field_descriptor.serializer.serialize(*this, pChildObj);
-    os << ",\n";
+    os << ",";
   }
   if (descriptor.identified_descriptors.size() > 0)
-    os.seekp(-2, std::ios::cur); //Remove the trailing ",\n"
-
-  os << "\n";
+    os.seekp(-1, std::ios::cur); //Remove the trailing ","
 }
 
 void OArchiveJSON::WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) {
