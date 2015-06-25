@@ -992,3 +992,33 @@ TEST_F(SerializationTest, FieldNameTest) {
   ASSERT_STREQ(desc.identified_descriptors.at(1).name, "suitable_for_json")
     << "Field names were not assigned correctly";
 }
+
+struct MyAccessorStruct {
+  int a, b;
+
+  int GetA() const { return a * 5; }
+  const int& GetB() const { return b; }
+
+  void SetA(int v) { a = v / 5; }
+  void SetB(const int& v) { b = v; }
+
+  static leap::descriptor GetDescriptor() {
+    return{
+      { 0, "field_a", &MyAccessorStruct::GetA, &MyAccessorStruct::SetA },
+      { "field_b", &MyAccessorStruct::GetB, &MyAccessorStruct::SetB }
+    };
+  }
+};
+
+TEST_F(SerializationTest, AccessorMethodTest) {
+  MyAccessorStruct st{ 10, 20 };
+
+  std::stringstream ss(std::ios::in | std::ios::out | std::ios::binary);
+  leap::Serialize(ss, st);
+
+  MyAccessorStruct stIn;
+  leap::Deserialize(ss, stIn);
+
+  ASSERT_EQ(st.a, stIn.a) << "Structure was not serialized correctly";
+  ASSERT_EQ(st.b, stIn.b) << "Structure was not serialized correctly";
+}
