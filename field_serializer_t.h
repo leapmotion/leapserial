@@ -169,13 +169,13 @@ namespace leap {
   struct field_serializer_t <
     field_getter_setter_extern<T, U, V>,
     typename std::enable_if<
-    std::is_same<
-    typename std::decay<U>::type,
-    typename std::decay<V>::type
-    >::value
+      std::is_same<
+        typename std::decay<U>::type,
+        typename std::decay<V>::type
+      >::value
     >::type
   > :
-  field_serializer
+    field_serializer
   {
     typedef typename std::decay<U>::type field_type;
  
