@@ -3,6 +3,111 @@
 #include "field_serializer_t.h"
 
 namespace leap {
+  template<typename MemFn>
+  struct decompose {
+    static const bool is_getter = false;
+    static const bool is_setter = false;
+  };
+
+  // Getter functor signature
+  template<typename T, typename RetVal, typename Base>
+  struct decompose<RetVal(T::*)(const Base&) const> {
+    typedef RetVal ret;
+    typedef Base base;
+    static const bool is_getter = true;
+    static const bool is_setter = false;
+  };
+
+  // Setter functor signature
+  template<typename T, typename Base, typename Arg>
+  struct decompose<void(T::*)(Base, Arg) const> {
+    typedef void ret;
+    typedef Base base;
+    typedef Arg arg;
+    static const bool is_getter = false;
+    static const bool is_setter = true;
+  };
+
+  /// <summary>
+  /// Extractor for obtaining traits about a curried candidate accessor functor
+  /// </summary>
+  template<typename Fn, typename = void>
+  struct getter {
+    static const bool value = false;
+  };
+
+  // Function object
+  template<typename Fn>
+  struct getter<Fn, typename std::enable_if<std::is_class<Fn>::value>::type> :
+    decompose<decltype(&Fn::operator())>
+  {
+    typedef decltype(&Fn::operator()) t_fnType;
+    typedef int(*signature)(const typename decompose<t_fnType>::base&);
+    static const bool value = true;
+  };
+
+  // Function pointer proper
+  template<typename Ret, typename Base>
+  struct getter<Ret(*)(const Base&), void>
+  {
+    typedef Ret ret;
+    typedef Base base;
+    typedef Ret(*signature)(const Base&);
+    static const bool value = true;
+  };
+
+  // Function reference
+  template<typename Ret, typename Base>
+  struct getter<Ret(&)(const Base&), void>:
+    getter<Ret(*)(const Base&), void>
+  {};
+
+  // Reference to a function pointer
+  template<typename Ret, typename Base>
+  struct getter<Ret(*&)(const Base&), void> :
+    getter<Ret(*)(const Base&), void>
+  {};
+
+  /// <summary>
+  /// Extractor for obtaining traits about an uncurried mutator functor
+  /// </summary>
+  template<typename Fn, typename = void>
+  struct setter {
+    static const bool value = false;
+  };
+
+  // Function object
+  template<typename Fn>
+  struct setter<Fn, typename std::enable_if<std::is_class<Fn>::value>::type> :
+    decompose<decltype(&Fn::operator())>
+  {
+    typedef decltype(&Fn::operator()) t_fnType;
+    typedef void(*signature)(typename decompose<t_fnType>::base, int);
+    static const bool value = decompose<t_fnType>::is_setter;
+  };
+
+  // Function pointer proper
+  template<typename Base, typename Arg>
+  struct setter<void (*)(Base, Arg), void>
+  {
+    typedef Base base;
+    typedef Arg arg;
+    typedef void(*signature)(base, int);
+    static const bool value = true;
+  };
+
+  // Function reference
+  template<typename Base, typename Arg>
+  struct setter<void(&)(Base, Arg), void>:
+    setter<void(*)(Base, Arg), void>
+  {};
+
+  // Reference to a function pointer
+  template<typename Base, typename Arg>
+  struct setter<void(*&)(Base, Arg), void>:
+    setter<void(*)(Base, Arg), void>
+  {};
+
   /// <summary>
   /// A descriptor which describes serialization operations for a single datatype
   /// </summary>
@@ -24,8 +129,7 @@ namespace leap {
       name(nullptr),
       offset(0),
       serializer(field_serializer_t<void(T::*)(), void>::GetDescriptor(pMemfn))
-    {
-    }
+    {}
 
     //Member getter/setters
     template<typename T, typename U, typename V>
@@ -36,13 +140,29 @@ namespace leap {
       serializer(field_serializer_t<field_getter_setter<T,U,V>>::GetDescriptor(pGetFn, pSetFn))
     {}
     
-    //Non-Member getter/setters
-    template<typename T, typename U, typename V>
-    field_descriptor(int identifier, const char* name, U(*pGetFn)(const T&), void(*pSetFn)(T&,V)) :
+    /// <summary>
+    /// A descriptor for a field with nonmember getter and setters
+    /// </summary>
+    /// <param name="getter">A getter lambda of the form fieldType(classType)</param>
+    template<typename T, typename U>
+    field_descriptor(
+      int identifier,
+      const char* name,
+      T&& get,
+      U&& set
+    ) :
       identifier(identifier),
       name(name),
       offset(0),
-      serializer(field_serializer_t<field_getter_setter_extern<T, U, V>>::GetDescriptor(pGetFn, pSetFn))
+      serializer(
+        field_serializer_t<
+          field_getter_setter_extern<
+            typename getter<T>::base,
+            typename getter<T>::ret,
+            typename setter<U>::arg
+          >
+        >::GetDescriptor(get, set)
+      )
     {}
 
     template<typename T, typename U>

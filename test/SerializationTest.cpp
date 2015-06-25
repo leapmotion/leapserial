@@ -994,7 +994,7 @@ TEST_F(SerializationTest, FieldNameTest) {
 }
 
 struct MyAccessorStruct {
-  int a, b;
+  int a, b, c;
 
   int GetA() const { return a * 5; }
   const int& GetB() const { return b; }
@@ -1026,24 +1026,74 @@ TEST_F(SerializationTest, AccessorMethodTest) {
 
 static int ExternalGetA(const MyAccessorStruct& st) { return st.a; }
 static void ExternalSetA(MyAccessorStruct& st, int v) { st.a = v; }
+static int ExternalGetC(const MyAccessorStruct& st) { return st.c; }
+
+TEST_F(SerializationTest, GetStaticAsserts)
+{
+  // Validate traits on getter lambdas:
+  auto getter = [](const MyAccessorStruct& s) { return s.b; };
+  typedef leap::decompose<decltype(&decltype(getter)::operator())> t_decompose;
+  static_assert(t_decompose::is_getter, "Getter decomposition trait not detected");
+  static_assert(leap::getter<decltype(getter)>::value, "Getter trait not correctly detected");
+
+  static_assert(leap::getter<int(*)(const MyAccessorStruct&)>::value, "Getter trait not correctly detected on getter function");
+
+  static_assert(
+    std::is_convertible<
+      decltype(getter),
+      leap::getter<decltype(getter)>::signature
+    >::value,
+    "Getter did not coerce correctly to the inferred setter signature"
+  );
+}
+
+TEST_F(SerializationTest, SetStaticAsserts)
+{
+  auto setter = [](MyAccessorStruct& s, int v) {};
+
+  typedef leap::decompose<decltype(&decltype(setter)::operator())> t_decompose;
+  static_assert(t_decompose::is_setter, "Setter decomposition trait not detected");
+  static_assert(leap::setter<decltype(setter)>::value, "Setter trait not correctly detected on setter");
+
+  static_assert(leap::setter<void(*)(MyAccessorStruct&, int)>::value, "Setter trait not correctly detected on setter function");
+
+  static_assert(
+    std::is_convertible<
+      decltype(setter),
+      leap::setter<decltype(setter)>::signature
+    >::value,
+    "Setter did not coerce correctly to the inferred setter signature"
+  );
+}
 
 TEST_F(SerializationTest, LambdaMethodTest) {
   MyAccessorStruct st{ 10, 20 };
   std::stringstream ss(std::ios::in | std::ios::out | std::ios::binary);
-  int(*getterFunc)(const MyAccessorStruct&) = [](const MyAccessorStruct& s){ return s.b; };
-  void(*setterFunc)(MyAccessorStruct&, int) = [](MyAccessorStruct& s, int v){ s.b = v; };
+
   leap::descriptor desc = 
   {
     leap::field_descriptor{0,"field_a", &ExternalGetA, &ExternalSetA},
-    leap::field_descriptor(0, "field_b", getterFunc, setterFunc)
+    leap::field_descriptor{
+      0,
+      "field_b",
+      [](const MyAccessorStruct& s) { return s.b; },
+      [](MyAccessorStruct& s, int v) { s.b = v; }
+    },
+    leap::field_descriptor{
+      0,
+      "field_c",
+      ExternalGetC,
+      [](MyAccessorStruct& s, int v) { s.c = v; }
+    }
   };
 
-  { leap::OArchiveImpl(ss).WriteObject(desc, &st); }
+  leap::OArchiveImpl(ss).WriteObject(desc, &st);
 
   MyAccessorStruct stIn;
 
-  { leap::IArchiveImpl(ss).ReadObject(desc, &stIn, nullptr); }
+  leap::IArchiveImpl(ss).ReadObject(desc, &stIn, nullptr);
 
-  ASSERT_EQ(st.a, stIn.a) << "Structure was not serialized correctly";
-  ASSERT_EQ(st.b, stIn.b) << "Structure was not serialized correctly";
+  ASSERT_EQ(st.a, stIn.a) << "Field A was not serialized correctly";
+  ASSERT_EQ(st.b, stIn.b) << "Field B was not serialized correctly";
+  ASSERT_EQ(st.c, stIn.c) << "Field C was not serialized correctly";
 }
