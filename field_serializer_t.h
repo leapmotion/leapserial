@@ -3,7 +3,7 @@
 #include "field_serializer.h"
 #include "serial_traits.h"
 #include <mutex>
-#include <unordered_map>
+#include <unordered_set>
 
 namespace leap {
   template<typename T, typename = void>
@@ -46,9 +46,23 @@ namespace leap {
   };
 
   template<typename T>
+  struct mem_hash {
+    size_t operator()(const T& obj) const {
+      size_t retVal = 0;
+      for (size_t i = 0; i < sizeof(obj); i++)
+        retVal += retVal * 101 + reinterpret_cast<const char*>(&obj)[i];
+      return retVal;
+    }
+  };
+
+  template<typename T>
   struct field_serializer_t<void(T::*)()>:
     field_serializer
   {
+    field_serializer_t(void(T::*pfn)()):
+      pfn(pfn)
+    {}
+
     void(T::*pfn)();
 
     bool allocates(void) const override { return false; }
@@ -69,20 +83,20 @@ namespace leap {
       (static_cast<T*>(pObj)->*pfn)();
     }
 
-    struct hash {
-      size_t operator()(void(T::*pfn)()) const {
-        return *reinterpret_cast<size_t*>(&pfn);
-      }
-    };
+    bool operator==(const field_serializer_t& rhs) const {
+      return pfn == rhs.pfn;
+    }
 
     static const field_serializer& GetDescriptor(void(T::*pfn)()) {
-      static std::unordered_map<void(T::*)(), field_serializer_t, hash> mp;
+      static std::unordered_set<field_serializer_t, mem_hash<field_serializer_t>> st;
       static std::mutex lock;
 
       std::lock_guard<std::mutex> lk(lock);
-      auto& entry = mp[pfn];
-      entry.pfn = pfn;
-      return entry;
+      field_serializer_t key{pfn};
+      auto q = st.find(key);
+      if (q == st.end())
+        q = st.insert(q, key);
+      return *q;
     }
   };
 }
