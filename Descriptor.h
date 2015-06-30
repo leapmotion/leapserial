@@ -35,7 +35,7 @@ namespace leap {
     std::unordered_map<uint64_t, field_descriptor> identified_descriptors;
 
     // field_serializer overrides:
-    bool allocates(void) const { return m_allocates; }
+    bool allocates(void) const override { return m_allocates; }
     serial_atom type(void) const override { return identified_descriptors.empty() ? serial_atom::finalized_descriptor : serial_atom::descriptor; }
     uint64_t size(const OArchiveRegistry& ar, const void* pObj) const override;
     void serialize(OArchiveRegistry& ar, const void* pObj) const override;

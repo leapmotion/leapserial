@@ -21,7 +21,7 @@ namespace leap {
     bool operator<(const VTable& other) const {
       return make_tuple() < other.make_tuple();
     }
-    
+
   };
 
   //Note: Multiple objects with the same vtable are currently not well supported, as all complex types
@@ -88,7 +88,7 @@ namespace leap {
 
     // Bookkeeping helpers for tracking the offsets in the buffer of various child objects.
     // m_offsets should not be modified except by SaveOffset.
-    const void* m_currentFieldPtr = nullptr; 
+    const void* m_currentFieldPtr = nullptr;
     std::map<const void*, uint32_t> m_offsets;
     inline void SaveOffset(const void* pObj, uint32_t offset) {
       if (!m_offsets.insert({ pObj, offset }).second) {
@@ -98,7 +98,7 @@ namespace leap {
     void WriteRelativeOffset(const void* pObj);
   };
 
-  class IArchiveFlatbuffer : 
+  class IArchiveFlatbuffer :
     public IArchiveRegistry
   {
   public:
@@ -109,7 +109,7 @@ namespace leap {
     ReleasedMemory ReadObjectReferenceResponsible(ReleasedMemory(*pfnAlloc)(), const field_serializer& sz, bool isUnique) override;
 
     void Skip(uint64_t ncb) override;
-    uint64_t Count(void) const { return m_offset; }
+    uint64_t Count(void) const override { return m_offset; }
 
     void ReadDescriptor(const descriptor& descriptor, void* pObj, uint64_t ncb) override;
     void ReadByteArray(void* pBuf, uint64_t ncb) override;
@@ -130,7 +130,7 @@ namespace leap {
 
   private:
     std::vector<uint8_t> m_data;
-    
+
     //The offset into m_data to read from - set to the end of the last read object after
     //every read operation, causing it to automatically advance through fields
     uint32_t m_offset = 0;
