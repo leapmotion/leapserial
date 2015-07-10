@@ -41,7 +41,7 @@ set_property(TARGET LeapSerial PROPERTY FOLDER "Utility")
 if(BUILD_TESTING)
   add_pch(LeapSerialTest_SRCS "stdafx.h" "stdafx.cpp")
 
-  
+
   add_custom_command( OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/test/TestObject_generated.h
                     COMMAND FlatBuffers::flatc -c -I ${CMAKE_CURRENT_SOURCE_DIR} -o ${CMAKE_CURRENT_SOURCE_DIR}/test ${CMAKE_CURRENT_SOURCE_DIR}/test/TestObject.fbs
                     MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/test/TestObject.fbs
@@ -49,7 +49,6 @@ if(BUILD_TESTING)
                     VERBATIM )
 
   add_executable(LeapSerialTest ${LeapSerialTest_SRCS} "../gtest-all-guard.cpp")
-  target_strip(LeapSerialTest)
   target_link_libraries(LeapSerialTest LeapSerial Autowiring::AutoTesting Protobuf::Protobuf FlatBuffers::FlatBuffers DataStructures)
   set_property(TARGET LeapSerialTest PROPERTY FOLDER "Utility")
 endif()
