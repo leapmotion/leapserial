@@ -16,7 +16,7 @@ namespace leap {
   ///
   /// This entry will cause a link to the base type's serializer to be added to the
   /// descriptor where it appears.  The base descriptor is not transformed or copied
-  /// into the current descriptor.  For very deep inheritance heirarchies, this may
+  /// into the current descriptor.  For very deep inheritance hierarchies, this may
   /// potentially impact performance.
   /// </remarks>
   template<typename Base, typename Derived>

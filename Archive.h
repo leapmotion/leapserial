@@ -73,7 +73,7 @@ namespace leap {
     /// </summary>
     /// <param name="value">The actual integer to be written</param>
     /// <param name="ncb">
-    /// The number of bytes maximumum that are set in value
+    /// The number of bytes maximum that are set in value
     /// </param>
     /// <remarks>
     /// It is an error for (value & ~(1 << (ncb * 8))) to be nonzero.
@@ -176,7 +176,7 @@ namespace leap {
     };
 
     /// <summary>
-    /// Reads an object into the specificed memory
+    /// Reads an object into the specified memory
     virtual void ReadObject(const field_serializer& sz, void* pObj, internal::AllocationBase* pOwner) = 0;
     /// <summary>
     /// Identical to IArchiveRegistry::ReadObjectReference, except this prevents the IArchive from delegating delete responsibilities to the allocation
@@ -233,7 +233,7 @@ namespace leap {
     /// </summary>
     /// <param name="value">The actual integer to be written</param>
     /// <param name="ncb">
-    /// The number of bytes maximumum that are set in value
+    /// The number of bytes maximum that are set in value
     /// </param>
     /// <remarks>
     /// It is an error for (value & ~(1 << (ncb * 8))) to be nonzero.

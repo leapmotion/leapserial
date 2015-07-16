@@ -8,7 +8,7 @@
 
 using namespace leap;
 
-/// Flatbuffers importaint format information taken from 
+/// Flatbuffers importaint format information taken from
 //// https://google.github.io/flatbuffers/md__internals.html
 ///
 /// offsets are always written as 32 bit integers
@@ -21,7 +21,7 @@ using namespace leap;
 /// Vtables are constructed of voffset_ts(a uint16_t).
 /// 
 /// Strings are vectors of bytes, always null terminated
-/// vectors are stored as contiguous alingned scalars with a uint32_t element count.
+/// vectors are stored as contiguous aligned scalars with a uint32_t element count.
 /// The standard implementation writes buffers backwards as this reduces the amount
 /// of bookkeeping overhead.
 
@@ -246,7 +246,7 @@ void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const voi
 }
 
 void OArchiveFlatbuffer::WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) { 
-  //We need to write these twice in somce cases, so store the pointers & go back through in reverse
+  //We need to write these twice in some cases, so store the pointers & go back through in reverse
   std::vector<const void*> elements;
   for (uint64_t i = 0; i < n; i++)
     elements.push_back(enumerator());

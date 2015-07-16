@@ -28,7 +28,7 @@ void IArchiveImpl::ReadObject(const field_serializer& sz, void* pObj, internal::
     )
   );
 
-  // If objects exist that require transferrence, then we have an error
+  // If objects exist that require transference, then we have an error
   if (!pOwner) {
     if (ClearObjectTable())
       throw std::runtime_error(
@@ -41,7 +41,7 @@ void IArchiveImpl::ReadObject(const field_serializer& sz, void* pObj, internal::
 }
 
 void* IArchiveImpl::ReadObjectReference(const create_delete& cd,  const leap::field_serializer &sz) {
-    // We expect to find an ID in the intput stream
+    // We expect to find an ID in the input stream
   uint32_t objId;
   ReadByteArray(&objId, sizeof(objId));
   
