@@ -22,35 +22,13 @@ set(LeapSerial_SRCS
   serial_traits.h
 )
 
-set(LeapSerialTest_SRCS
-  test/ArchiveFlatbufferTest.cpp
-  test/ArchiveJSONTest.cpp
-  test/LeapArchiveTest.cpp
-  test/PrettyPrintTest.cpp
-  test/SerialFormatTest.cpp
-  test/SerializationTest.cpp
-  test/TestObject.h
-  test/TestObject.fbs
-  test/TestObject_generated.h
-)
-
+rewrite_header_paths(LeapSerial_SRCS)
 add_pch(LeapSerial_SRCS "stdafx.h" "stdafx.cpp")
-
 add_library(LeapSerial ${LeapSerial_SRCS})
-target_link_libraries(LeapSerial Autowiring::Autowiring)
-set_property(TARGET LeapSerial PROPERTY FOLDER "Utility")
+add_subdirectory(test)
 
-if(BUILD_TESTING)
-  add_pch(LeapSerialTest_SRCS "stdafx.h" "stdafx.cpp")
-
-
-  add_custom_command( OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/test/TestObject_generated.h
-                    COMMAND FlatBuffers::flatc -c -I ${CMAKE_CURRENT_SOURCE_DIR} -o ${CMAKE_CURRENT_SOURCE_DIR}/test ${CMAKE_CURRENT_SOURCE_DIR}/test/TestObject.fbs
-                    MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/test/TestObject.fbs
-                    COMMENT "Generating TestObject_generated.h"
-                    VERBATIM )
-
-  add_executable(LeapSerialTest ${LeapSerialTest_SRCS} "../gtest-all-guard.cpp")
-  target_link_libraries(LeapSerialTest LeapSerial Autowiring::AutoTesting Protobuf::Protobuf FlatBuffers::FlatBuffers)
-  set_property(TARGET LeapSerialTest PROPERTY FOLDER "Utility")
-endif()
+install(TARGETS LeapSerial EXPORT LeapSerialTargets
+  DESTINATION lib
+  COMPONENT leapserial
+  CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
+)
