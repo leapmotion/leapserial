@@ -49,6 +49,6 @@ if(BUILD_TESTING)
                     VERBATIM )
 
   add_executable(LeapSerialTest ${LeapSerialTest_SRCS} "../gtest-all-guard.cpp")
-  target_link_libraries(LeapSerialTest LeapSerial Autowiring::AutoTesting Protobuf::Protobuf FlatBuffers::FlatBuffers DataStructures)
+  target_link_libraries(LeapSerialTest LeapSerial Autowiring::AutoTesting Protobuf::Protobuf FlatBuffers::FlatBuffers)
   set_property(TARGET LeapSerialTest PROPERTY FOLDER "Utility")
 endif()

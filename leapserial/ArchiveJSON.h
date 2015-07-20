@@ -1,6 +1,5 @@
 #pragma once
 #include "Archive.h"
-#include "DataStructures/Value.h"
 
 namespace leap {
 
@@ -57,8 +56,6 @@ namespace leap {
 
   private:
     std::ostream& os;
-
-    Value m_value;
   };
 
   class IArchiveJSON :
