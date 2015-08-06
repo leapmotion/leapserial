@@ -369,6 +369,26 @@ namespace leap {
     }
   };
 
+  template<typename T, size_t N>
+  struct primitive_serial_traits<std::array<T, N>, typename std::enable_if<has_serializer<T>::value>::type>
+  {
+    static ::leap::serial_atom type() {
+      return ::leap::serial_atom::array;
+    }
+
+    static uint64_t size(const OArchiveRegistry& ar, const std::array<T, N>& v) {
+      return serial_traits<T[N]>::size(ar, &v.front());
+    }
+
+    static void serialize(OArchiveRegistry& ar, const std::array<T, N>& v) {
+      return serial_traits<T[N]>::serialize(ar, &v.front());
+    }
+
+    static void deserialize(IArchiveRegistry& ar, std::array<T, N>& v, uint64_t ncb) {
+      return serial_traits<T[N]>::deserialize(ar, &v.front(), ncb);
+    }
+  };
+
   template<typename T>
   struct serial_traits:
     primitive_serial_traits<T>
@@ -414,26 +434,6 @@ namespace leap {
       T* ptr;
       serial_traits<T*>::deserialize(ar, ptr, ncb);
       pObj = ptr;
-    }
-  };
-
-  template<typename T, size_t N>
-  struct serial_traits<std::array<T, N>>
-  {
-    static ::leap::serial_atom type() {
-      return ::leap::serial_atom::array;
-    }
-
-    static uint64_t size(const OArchiveRegistry& ar, const std::array<T, N>& v) {
-      return serial_traits<T[N]>::size(ar, &v.front());
-    }
-
-    static void serialize(OArchiveRegistry& ar, const std::array<T, N>& v) {
-      return serial_traits<T[N]>::serialize(ar, &v.front());
-    }
-
-    static void deserialize(IArchiveRegistry& ar, std::array<T, N>& v, uint64_t ncb) {
-      return serial_traits<T[N]>::deserialize(ar, &v.front(), ncb);
     }
   };
 
