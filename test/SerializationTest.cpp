@@ -9,6 +9,21 @@ class SerializationTest:
   public testing::Test
 {};
 
+// Need to ensure that all builtins are correctly recognized
+static_assert(leap::has_serializer<std::string>::value, "std::string");
+static_assert(leap::has_serializer<std::vector<int>>::value, "Vector of ints");
+static_assert(leap::has_serializer<std::vector<std::string>>::value, "Vector of strings");
+static_assert(leap::has_serializer<std::map<int, int>>::value, "Map of primitives");
+static_assert(leap::has_serializer<std::map<std::string, std::string>>::value, "Map of nonprimitives");
+static_assert(leap::has_serializer<std::unordered_map<int, int>>::value, "Unordered map of primitives");
+static_assert(leap::has_serializer<std::unordered_map<std::string, std::string>>::value, "Unordered map of nonprimitives");
+
+struct DummyStruct {};
+static_assert(!leap::has_serializer<DummyStruct>::value, "A dummy structure was incorrectly classified as having a valid serializer");
+static_assert(!leap::has_serializer<DummyStruct[2]>::value, "An arry of dummy structures was incorrectly classified as having a valid serializer");
+static_assert(!leap::has_serializer<std::vector<DummyStruct>>::value, "A vector of dummy structures was incorrectly classified as having a valid serializer");
+static_assert(!leap::has_serializer<std::unique_ptr<DummyStruct>>::value, "A unique pointer to a dummy structure was incorrectly classified as having a valid serializer");
+
 struct MyRepeatedStructure {
   int* pv;
 

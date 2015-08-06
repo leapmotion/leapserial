@@ -14,6 +14,9 @@ namespace leap {
   template<typename T>
   struct serial_traits;
 
+  template<typename T>
+  struct has_serializer;
+
   // Objects that provide serial_traits should use those traits externally
   template<typename T>
   struct field_serializer_t<T, typename std::enable_if<!std::is_base_of<std::false_type, serial_traits<T>>::value>::type> :
