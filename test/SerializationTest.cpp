@@ -23,6 +23,9 @@ static_assert(!leap::has_serializer<DummyStruct>::value, "A dummy structure was 
 static_assert(!leap::has_serializer<DummyStruct[2]>::value, "An arry of dummy structures was incorrectly classified as having a valid serializer");
 static_assert(!leap::has_serializer<std::vector<DummyStruct>>::value, "A vector of dummy structures was incorrectly classified as having a valid serializer");
 static_assert(!leap::has_serializer<std::unique_ptr<DummyStruct>>::value, "A unique pointer to a dummy structure was incorrectly classified as having a valid serializer");
+static_assert(!leap::has_serializer<std::map<int, DummyStruct>>::value, "A map of DummyStruct was incorrectly classified as having a valid serializer");
+static_assert(!leap::has_serializer<std::unordered_map<int, DummyStruct>>::value, "An unordered_map of DummyStruct was incorrectly classified as having a valid serializer");
+static_assert(!leap::has_serializer<std::vector<DummyStruct>>::value, "A vector of DummyStruct was incorrectly classified as having a valid serializer");
 
 struct MyRepeatedStructure {
   int* pv;
