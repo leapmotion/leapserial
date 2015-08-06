@@ -121,7 +121,9 @@ namespace leap {
       name(name),
       offset(reinterpret_cast<size_t>(&(static_cast<T*>(nullptr)->*val))),
       serializer(field_serializer_t<U, void>::GetDescriptor())
-    {}
+    {
+      static_assert(has_serializer<U>::value, "An attempt was made to serialize type U, which does not provide a serial_traits entry or GetDescriptor function");
+    }
 
     template<typename T>
     field_descriptor(void (T::*pMemfn)()) :
