@@ -238,15 +238,6 @@ namespace leap {
     typedef serial_traits<key_type> key_traits;
     typedef serial_traits<mapped_type> mapped_traits;
     
-    static_assert(
-      !std::is_base_of<std::false_type, serial_traits<key_type>>::value,
-      "Attempted to serialize a map, but the map's key type is not serializable"
-    );
-    static_assert(
-      !std::is_base_of<std::false_type, serial_traits<mapped_type>>::value,
-      "Attempted to serialize a map, but the map's mapped type is not serializable"
-    );
-
     // Convenience static.  We need to make allocations if either our key or value type
     // needs to make allocations.
     static const bool sc_needsAllocation =
@@ -295,12 +286,12 @@ namespace leap {
   
   // Associative array types:
   template<typename Key, typename Value>
-  struct primitive_serial_traits<std::map<Key, Value>, void> :
+  struct primitive_serial_traits<std::map<Key, Value>, typename std::enable_if<has_serializer<Key>::value && has_serializer<Value>::value>::type> :
     serial_traits_map_t<std::map<Key, Value>>
   {};
 
   template<typename Key, typename Value>
-  struct primitive_serial_traits<std::unordered_map<Key, Value>, void> :
+  struct primitive_serial_traits<std::unordered_map<Key, Value>, typename std::enable_if<has_serializer<Key>::value && has_serializer<Value>::value>::type> :
     serial_traits_map_t<std::unordered_map<Key, Value>>
   {};
 
@@ -403,11 +394,11 @@ namespace leap {
       return ::leap::serial_atom::reference;
     }
 
-    static uint64_t size(const OArchiveRegistry& ar, const T*const pObj) {
+    static uint64_t size(const OArchiveRegistry& ar, typename std::add_const<T>::type* pObj) {
       return ar.SizeObjectReference(field_serializer_t<T, void>(), pObj);
     }
 
-    static void serialize(OArchiveRegistry& ar, const T* pObj) {
+    static void serialize(OArchiveRegistry& ar, typename std::add_const<T>::type* pObj) {
       ar.WriteObjectReference(
         field_serializer_t<T, void>::GetDescriptor(),
         pObj
