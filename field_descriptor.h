@@ -3,6 +3,18 @@
 #include "field_serializer_t.h"
 
 namespace leap {
+  template<typename T, typename>
+  struct field_serializer_t;
+
+  template<typename T>
+  struct has_serializer;
+
+  template<typename T, typename U, typename V>
+  struct field_getter_setter;
+
+  template<typename T, typename U, typename V>
+  struct field_getter_setter_extern;
+
   template<typename MemFn>
   struct decompose {
     static const bool is_getter = false;
@@ -139,7 +151,7 @@ namespace leap {
       identifier(identifier),
       name(name),
       offset(0),
-      serializer(field_serializer_t<field_getter_setter<T,U,V>>::GetDescriptor(pGetFn, pSetFn))
+      serializer(field_serializer_t<field_getter_setter<T,U,V>, void>::GetDescriptor(pGetFn, pSetFn))
     {}
     
     /// <summary>
@@ -162,7 +174,8 @@ namespace leap {
             typename getter<T>::base,
             typename getter<T>::ret,
             typename setter<U>::arg
-          >
+          >,
+          void
         >::GetDescriptor(get, set)
       )
     {}
