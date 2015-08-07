@@ -79,12 +79,12 @@ void OArchiveJSON::WriteObjectReference(const field_serializer& serializer, cons
 }
 
 void OArchiveJSON::WriteObject(const field_serializer& serializer, const void* pObj) {
-  os << "{";
   serializer.serialize(*this, pObj);
-  os << "}";
 }
 
 void OArchiveJSON::WriteDescriptor(const descriptor& descriptor, const void* pObj) {
+  os << "{";
+
   for (const auto &field_descriptor : descriptor.field_descriptors) {
     const void* pChildObj = static_cast<const char*>(pObj)+field_descriptor.offset; 
     os << "\"" << field_descriptor.name << "\":";
@@ -103,6 +103,8 @@ void OArchiveJSON::WriteDescriptor(const descriptor& descriptor, const void* pOb
   }
   if (descriptor.identified_descriptors.size() > 0)
     os.seekp(-1, std::ios::cur); //Remove the trailing ","
+
+  os << "}";
 }
 
 void OArchiveJSON::WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) {
