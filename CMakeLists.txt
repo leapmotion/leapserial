@@ -25,6 +25,7 @@ set(LeapSerialTest_SRCS
   test/ArchiveFlatbufferTest.cpp
   test/ArchiveJSONTest.cpp
   test/LeapArchiveTest.cpp
+  test/PrettyPrintTest.cpp
   test/SerialFormatTest.cpp
   test/SerializationTest.cpp
   test/TestObject.h
