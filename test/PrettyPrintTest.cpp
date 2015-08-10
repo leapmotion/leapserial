@@ -73,11 +73,11 @@ static void VerifyLinesWithCharacter(const std::vector<std::string>& lines, char
   ASSERT_STREQ("}", lines.back().c_str()) << "Last character of a json object was not }";
 
   // Formatting levels for the middle lines
-  LineWithChar("\"a\":{", lines[1], 1);
-  LineWithChar("\"a\":{", lines[1].c_str(), 1);
-  LineWithChar("\"x\":201", lines[2].c_str(), 2);
+  LineWithChar("\"a\": {", lines[1], 1);
+  LineWithChar("\"a\": {", lines[1].c_str(), 1);
+  LineWithChar("\"x\": 201", lines[2].c_str(), 2);
   LineWithChar("},", lines[3].c_str(), 1);
-  LineWithChar("\"b\":101", lines[4].c_str(), 1);
+  LineWithChar("\"b\": 101", lines[4].c_str(), 1);
 }
 
 TEST_F(PrettyPrintTest, SimplePrettyPrintWithTabs) {

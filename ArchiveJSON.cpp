@@ -100,6 +100,8 @@ void OArchiveJSON::WriteDescriptor(const descriptor& descriptor, const void* pOb
     if (PrettyPrint)
       TabOut();
     os << "\"" << field_descriptor.name << "\":";
+    if (PrettyPrint)
+      os << ' ';
     
     const void* pChildObj = pBase + field_descriptor.offset;
     field_descriptor.serializer.serialize(*this, pChildObj);
@@ -120,7 +122,9 @@ void OArchiveJSON::WriteDescriptor(const descriptor& descriptor, const void* pOb
   for (const auto& iter : descriptor.identified_descriptors) {
     const auto& field_descriptor = iter.second;
     const void* pChildObj = static_cast<const char*>(pObj)+field_descriptor.offset;
-    os << "\"" << field_descriptor.name << "\": ";
+    os << "\"" << field_descriptor.name << "\":";
+    if (PrettyPrint)
+      os << ' ';
     field_descriptor.serializer.serialize(*this, pChildObj);
     os << (PrettyPrint ? ",\n" : ",");
   }
