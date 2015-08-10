@@ -8,7 +8,20 @@ namespace leap {
     public OArchiveRegistry
   {
   public:
-    OArchiveJSON(std::ostream& os);
+    OArchiveJSON(std::ostream& os, bool escapeSlashes = false);
+
+    // Controls whether the forward slash character should be escaped
+    const bool EscapeSlashes;
+
+    // Flag which controls pretty printing of outputs
+    bool PrettyPrint = false;
+
+    // Number of tabs that will be placed on pretty-printed lines
+    size_t TabLevel = 0;
+
+    // Width of a tab character.  Zero prints an actual tab, any other number
+    // prints that number of spaces
+    size_t TabWidth = 0;
 
     // OArchiveRegistry overrides
     void WriteByteArray(const void* pBuf, uint64_t ncb, bool writeSize = false) override;
@@ -35,7 +48,7 @@ namespace leap {
       std::function<const void*()> keyEnumerator,
       const field_serializer& valueDesc,
       std::function<const void*()> valueEnumerator
-      ) override;
+    ) override;
 
     //Size query functions.  Note that these do not return the total size of the object,
     //but rather the size they take up in a table (sizeof(uint32_t) for objects stored by reference).
@@ -53,12 +66,17 @@ namespace leap {
       std::function<const void*()> keyEnumerator,
       const field_serializer& valueDesc,
       std::function<const void*()> valueEnumerator
-      ) const override;
+    ) const override;
 
   private:
+    // Current tab level, if pretty printing is turned on, otherwise ignored
+    size_t currentTabLevel = 0;
     std::ostream& os;
 
     Value m_value;
+    
+    // Prints TabLevel spaces to the output stream
+    void TabOut(void) const;
   };
 
   class IArchiveJSON :

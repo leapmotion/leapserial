@@ -2,6 +2,7 @@
 #include "ArchiveJSON.h"
 #include "field_serializer.h"
 #include "Descriptor.h"
+#include <future>
 #include <iostream>
 
 using namespace leap;
@@ -13,7 +14,10 @@ public:
   not_implemented_exception() : std::runtime_error("This function is not yet implemented!") {}
 };
 
-OArchiveJSON::OArchiveJSON(std::ostream& os) : os(os) {}
+OArchiveJSON::OArchiveJSON(std::ostream& os, bool escapeSlashes) :
+  os(os),
+  EscapeSlashes(escapeSlashes)
+{}
 
 void OArchiveJSON::WriteByteArray(const void* pBuf, uint64_t ncb, bool writeSize) {
   throw not_implemented_exception();
@@ -79,30 +83,64 @@ void OArchiveJSON::WriteObjectReference(const field_serializer& serializer, cons
 }
 
 void OArchiveJSON::WriteObject(const field_serializer& serializer, const void* pObj) {
-  os << "{";
   serializer.serialize(*this, pObj);
-  os << "}";
 }
 
 void OArchiveJSON::WriteDescriptor(const descriptor& descriptor, const void* pObj) {
-  for (const auto &field_descriptor : descriptor.field_descriptors) {
-    const void* pChildObj = static_cast<const char*>(pObj)+field_descriptor.offset; 
-    os << "\"" << field_descriptor.name << "\":";
-    field_descriptor.serializer.serialize(*this, pChildObj);
-    os << ",";
+  if (PrettyPrint) {
+    os << "{\n";
   }
-  if (descriptor.field_descriptors.size() > 0)
-    os.seekp(-1, std::ios::cur); //Remove the trailing ","
+  else
+    os << "{";
+
+  currentTabLevel++;
+
+  const uint8_t* pBase = static_cast<const uint8_t*>(pObj);
+  for (const auto &field_descriptor : descriptor.field_descriptors) {
+    if (PrettyPrint)
+      TabOut();
+    os << "\"" << field_descriptor.name << "\":";
+    if (PrettyPrint)
+      os << ' ';
+    
+    const void* pChildObj = pBase + field_descriptor.offset;
+    field_descriptor.serializer.serialize(*this, pChildObj);
+
+    if(PrettyPrint)
+      os << ",\n";
+    else
+      os << ",";
+  }
+  if (!descriptor.field_descriptors.empty()) {
+    os.seekp(PrettyPrint ? -2 : -1, std::ios::cur); //Remove the trailing ","
+
+    // Reintroduce line break if needed
+    if (PrettyPrint)
+      os << "\n";
+  }
 
   for (const auto& iter : descriptor.identified_descriptors) {
     const auto& field_descriptor = iter.second;
     const void* pChildObj = static_cast<const char*>(pObj)+field_descriptor.offset;
-    os << "\"" << field_descriptor.name << "\": ";
+    os << "\"" << field_descriptor.name << "\":";
+    if (PrettyPrint)
+      os << ' ';
     field_descriptor.serializer.serialize(*this, pChildObj);
-    os << ",";
+    os << (PrettyPrint ? ",\n" : ",");
   }
-  if (descriptor.identified_descriptors.size() > 0)
-    os.seekp(-1, std::ios::cur); //Remove the trailing ","
+  if (!descriptor.identified_descriptors.empty()) {
+    os.seekp(PrettyPrint ? -2 : -1, std::ios::cur); //Remove the trailing ","
+
+    // Reintroduce line break if needed
+    if (PrettyPrint)
+      os << "\n";
+  }
+
+  currentTabLevel--;
+
+  if (PrettyPrint)
+    TabOut();
+  os << '}';
 }
 
 void OArchiveJSON::WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) {
@@ -155,6 +193,15 @@ uint64_t OArchiveJSON::SizeDictionary(
   ) const
 {
   throw not_implemented_exception();
+}
+
+void OArchiveJSON::TabOut(void) const {
+  if (TabWidth)
+    for (size_t i = TabWidth * (currentTabLevel + TabLevel); i--;)
+      os << ' ';
+  else
+    for (size_t i = currentTabLevel + TabLevel; i--;)
+      os << '\t';
 }
 
 IArchiveJSON::IArchiveJSON(std::istream& is) {

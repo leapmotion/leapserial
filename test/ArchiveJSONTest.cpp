@@ -43,3 +43,35 @@ TEST_F(ArchiveJSONTest, VerifyPreciceJSON) {
   const auto string = ss.str();
   ASSERT_STREQ("{\"field_a\":1.1,\"field_b\":200}", string.c_str());
 }
+
+namespace {
+  class NestedObject {
+  public:
+    int value = 201;
+
+    static leap::descriptor GetDescriptor(void) {
+      return{ { "x", &NestedObject::value } };
+    }
+  };
+
+  class HasNestedObject {
+  public:
+    NestedObject obj;
+
+    static leap::descriptor GetDescriptor(void) {
+      return{
+        { "a", &HasNestedObject::obj }
+      };
+    }
+  };
+}
+
+TEST_F(ArchiveJSONTest, HasNestedObject) {
+  HasNestedObject obj;
+
+  std::stringstream ss;
+  leap::Serialize<leap::OArchiveJSON>(ss, obj);
+
+  std::string json = ss.str();
+  ASSERT_STREQ("{\"a\":{\"x\":201}}", json.c_str());
+}
