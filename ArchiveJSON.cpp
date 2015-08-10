@@ -191,6 +191,15 @@ uint64_t OArchiveJSON::SizeDictionary(
   throw not_implemented_exception();
 }
 
+void OArchiveJSON::TabOut(void) const {
+  if (TabWidth)
+    for (size_t i = TabWidth * (currentTabLevel + TabLevel); i--;)
+      os << ' ';
+  else
+    for (size_t i = currentTabLevel + TabLevel; i--;)
+      os << '\t';
+}
+
 IArchiveJSON::IArchiveJSON(std::istream& is) {
   
 }

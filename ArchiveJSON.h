@@ -76,14 +76,7 @@ namespace leap {
     Value m_value;
     
     // Prints TabLevel spaces to the output stream
-    void TabOut(void) const {
-      if (TabWidth)
-        for (size_t i = TabWidth * (currentTabLevel + TabLevel); i--;)
-          os << ' ';
-      else
-        for (size_t i = currentTabLevel + TabLevel; i--;)
-          os << '\t';
-    }
+    void TabOut(void) const;
   };
 
   class IArchiveJSON :
