@@ -237,7 +237,7 @@ uint64_t IArchiveImpl::ReadInteger(uint8_t) {
     
   do {
     ReadByteArray(&ch, 1);
-    retVal |= uint64_t(ch & 0x7F) << (ncb * 7);;
+    retVal |= uint64_t(ch & 0x7F) << (ncb * 7);
     ++ncb;
   }
   while (ch & 0x80);
