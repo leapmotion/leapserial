@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "Serializer.h"
+#include "LeapSerial.h"
 #include "TestObject.h"
 #include "ArchiveJSON.h"
 #include <gtest/gtest.h>
