@@ -3,6 +3,7 @@
 #include "Descriptor.h"
 #include "field_serializer_t.h"
 #include <array>
+#include <chrono>
 #include <map>
 #include <memory>
 #include <string>
@@ -186,6 +187,29 @@ namespace leap {
 
     static void deserialize(IArchive& ar, bool& val, uint64_t ncb) {
       val = ar.ReadBool();
+    }
+  };
+
+  template<typename Rep, typename Period>
+  struct primitive_serial_traits<std::chrono::duration<Rep, Period>, void>:
+    primitive_serial_traits<Rep>
+  {
+    static_assert(std::is_arithmetic<Rep>::value, "LeapSerial presently can only serialize arithmetic duration types");
+    static const bool is_irresponsible = false;
+
+    // Trivial serialization/deserialization operations
+    static uint64_t size(const OArchive& ar, std::chrono::duration<Rep, Period> val) {
+      return ar.SizeInteger(val.count(), sizeof(Rep));
+    }
+
+    static void serialize(OArchive& ar, std::chrono::duration<Rep, Period> val) {
+      ar.WriteInteger(val.count(), sizeof(Rep));
+    }
+
+    static void deserialize(IArchive& ar, std::chrono::duration<Rep, Period>& val, uint64_t ncb) {
+      val = std::chrono::duration<Rep, Period>{
+        static_cast<Rep>(ar.ReadInteger(sizeof(Rep)))
+      };
     }
   };
 
