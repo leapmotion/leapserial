@@ -4,14 +4,16 @@
 
 using namespace leap;
 
-bool InputStreamAdapter::Read(void* pBuf, uint64_t ncb) {
-  return (bool)is.read((char*)pBuf, ncb);
+std::streamsize InputStreamAdapter::Read(void* pBuf, std::streamsize ncb) {
+  is.read((char*)pBuf, ncb);
+  return is ? is.gcount() : -1;
 }
 
-bool InputStreamAdapter::Skip(uint64_t ncb) {
-  return (bool)is.ignore(ncb);
+std::streamsize InputStreamAdapter::Skip(std::streamsize ncb) {
+  is.ignore(ncb);
+  return is ? is.gcount() : -1;
 }
 
-bool OutputStreamAdapter::Write(const void* pBuf, uint64_t ncb) {
+bool OutputStreamAdapter::Write(const void* pBuf, std::streamsize ncb) {
   return (bool)os.write((const char*)pBuf, ncb);
 }

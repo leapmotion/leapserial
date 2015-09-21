@@ -214,7 +214,7 @@ bool IArchiveImpl::IsReleased(uint32_t objId) {
 }
 
 void IArchiveImpl::ReadByteArray(void* pBuf, uint64_t ncb) {
-  if(!is.Read(pBuf, ncb))
+  if(is.Read(pBuf, ncb) < 0)
     throw std::runtime_error("End of file reached prematurely");
   m_count += ncb;
 }

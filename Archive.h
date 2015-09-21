@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <functional>
+#include <ios>
 #include <iosfwd>
 #include <memory>
 
@@ -27,12 +28,17 @@ namespace leap {
     /// <summary>
     /// Reads exactly the specified number of bytes from the input stream
     /// </summary>
-    virtual bool Read(void* pBuf, uint64_t ncb) = 0;
+    /// <returns>
+    /// The number of bytes actually read, -1 if there was an error.  The number of bytes read
+    /// may be less than the number of bytes requested if the end of the file was encountered
+    /// before the operation completed.
+    /// </returns>
+    virtual std::streamsize Read(void* pBuf, std::streamsize ncb) = 0;
 
     /// <summary>
     /// Discards the specified number of bytes from the input stream
     /// </summary>
-    virtual bool Skip(uint64_t ncb) = 0;
+    virtual std::streamsize Skip(std::streamsize ncb) = 0;
   };
 
   /// <summary>
@@ -51,8 +57,8 @@ namespace leap {
 
   public:
     // IInputStream overrides:
-    bool Read(void* pBuf, uint64_t ncb) override;
-    bool Skip(uint64_t ncb) override;
+    std::streamsize Read(void* pBuf, std::streamsize ncb) override;
+    std::streamsize Skip(std::streamsize ncb) override;
   };
 
   /// <summary>
@@ -65,7 +71,7 @@ namespace leap {
     /// <summary>
     /// Writes all of the specified bytes to the output stream
     /// </summary>
-    virtual bool Write(const void* pBuf, uint64_t ncb) = 0;
+    virtual bool Write(const void* pBuf, std::streamsize ncb) = 0;
   };
 
   class OutputStreamAdapter:
@@ -77,7 +83,7 @@ namespace leap {
     {}
 
     // IOutputStream overrides:
-    virtual bool Write(const void* pBuf, uint64_t ncb) override;
+    bool Write(const void* pBuf, std::streamsize ncb) override;
 
   private:
     std::ostream& os;
