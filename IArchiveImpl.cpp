@@ -8,14 +8,27 @@
 
 using namespace leap;
 
-IArchiveImpl::IArchiveImpl(std::istream& is) :
+IArchiveImpl::IArchiveImpl(IInputStream& is) :
   is(is)
 {
   // This sentry addition means we never have to test objId against zero
-  objMap[0] = {nullptr, nullptr};
+  objMap[0] = { nullptr, nullptr };
+}
+
+IArchiveImpl::IArchiveImpl(std::istream& is) :
+  is(*new InputStreamAdapter{ is }),
+  pIsMem(&this->is),
+  pfnDtor([](void* ptr) {
+    delete (InputStreamAdapter*)ptr;
+  })
+{
+  // This sentry addition means we never have to test objId against zero
+  objMap[0] = { nullptr, nullptr };
 }
 
 IArchiveImpl::~IArchiveImpl(void) {
+  if(pfnDtor)
+    pfnDtor(pIsMem);
   ClearObjectTable();
 }
 
@@ -201,13 +214,13 @@ bool IArchiveImpl::IsReleased(uint32_t objId) {
 }
 
 void IArchiveImpl::ReadByteArray(void* pBuf, uint64_t ncb) {
-  if(!is.read((char*) pBuf, ncb))
+  if(!is.Read(pBuf, ncb))
     throw std::runtime_error("End of file reached prematurely");
   m_count += ncb;
 }
 
 void IArchiveImpl::Skip(uint64_t ncb) {
-  is.ignore(ncb);
+  is.Skip(ncb);
 }
 
 void IArchiveImpl::Transfer(internal::AllocationBase& alloc) {

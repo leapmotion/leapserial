@@ -18,8 +18,74 @@ namespace leap {
   }
 
   /// <summary>
-  /// An enumeration of the different basic types that are handled directly by the archiver
+  /// Stream adaptor interface for use with the Archive type
+  /// </summary>
+  class IInputStream {
+  public:
+    virtual ~IInputStream(void) {}
+
+    /// <summary>
+    /// Reads exactly the specified number of bytes from the input stream
+    /// </summary>
+    virtual bool Read(void* pBuf, uint64_t ncb) = 0;
+
+    /// <summary>
+    /// Discards the specified number of bytes from the input stream
+    /// </summary>
+    virtual bool Skip(uint64_t ncb) = 0;
+  };
+
   /// <summary>
+  /// Mapping adaptor, allows input streams to be wrapped to support Archive operations
+  /// </summary>
+  class InputStreamAdapter:
+    public IInputStream 
+  {
+  public:
+    InputStreamAdapter(std::istream& is) :
+      is(is)
+    {}
+
+  private:
+    std::istream& is;
+
+  public:
+    // IInputStream overrides:
+    bool Read(void* pBuf, uint64_t ncb) override;
+    bool Skip(uint64_t ncb) override;
+  };
+
+  /// <summary>
+  /// Stream adaptor interface for use with the Archive type
+  /// </summary>
+  class IOutputStream {
+  public:
+    virtual ~IOutputStream(void) {}
+
+    /// <summary>
+    /// Writes all of the specified bytes to the output stream
+    /// </summary>
+    virtual bool Write(const void* pBuf, uint64_t ncb) = 0;
+  };
+
+  class OutputStreamAdapter:
+    public IOutputStream 
+  {
+  public:
+    OutputStreamAdapter(std::ostream& os) :
+      os(os)
+    {}
+
+    // IOutputStream overrides:
+    virtual bool Write(const void* pBuf, uint64_t ncb) override;
+
+  private:
+    std::ostream& os;
+  };
+
+  /// <summary>
+  /// An enumeration of the different basic types that are handled directly by the archiver
+  /// </summary>
   /// <remarks>
   /// 'Atom' refers to a basic unit of serializablity.  Most are straightforward, but some 
   /// require documentation.

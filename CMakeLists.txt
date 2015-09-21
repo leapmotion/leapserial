@@ -2,6 +2,7 @@ set(LeapSerial_SRCS
   Allocation.h
   Allocation.cpp
   Archive.h
+  Archive.cpp
   ArchiveFlatbuffer.h
   ArchiveFlatbuffer.cpp
   ArchiveJSON.h
