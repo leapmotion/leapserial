@@ -134,11 +134,11 @@ namespace leap {
 
     // Trivial serialization/deserialization operations
     static uint64_t size(const OArchive& ar, T val) {
-      return ar.SizeInteger(val, sizeof(T));
+      return ar.SizeInteger((int64_t)val, sizeof(T));
     }
 
     static void serialize(OArchive& ar, T val) {
-      ar.WriteInteger(val, sizeof(T));
+      ar.WriteInteger((int64_t)val, sizeof(T));
     }
 
     static void deserialize(IArchive& ar, T& val, uint64_t ncb) {

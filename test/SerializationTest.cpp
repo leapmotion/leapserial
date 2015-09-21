@@ -1115,3 +1115,17 @@ TEST_F(SerializationTest, LambdaMethodTest) {
   ASSERT_EQ(st.b, stIn.b) << "Field B was not serialized correctly";
   ASSERT_EQ(st.c, stIn.c) << "Field C was not serialized correctly";
 }
+
+enum class SimpleEnum {
+  One,
+  Two,
+  Four = 0x4444
+};
+
+TEST_F(SerializationTest, EnumClassTest) {
+  std::stringstream ss;
+  leap::Serialize(ss, SimpleEnum::Four);
+
+  auto x = leap::Deserialize<SimpleEnum>(ss);
+  ASSERT_EQ(SimpleEnum::Four, *x) << "Round-trip serialization of an enum class yielded an incorrect result";
+}
