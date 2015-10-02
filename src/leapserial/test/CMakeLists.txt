@@ -5,7 +5,6 @@ set(LeapSerialTest_SRCS
   SerialFormatTest.cpp
   SerializationTest.cpp
   TestObject.h
-  ../../gtest-all-guard.cpp
 )
 add_pch(LeapSerialTest_SRCS "stdafx.h" "stdafx.cpp")
 
@@ -32,6 +31,6 @@ else()
   file(WRITE TestObject_generated.h)
 endif()
 
-add_executable(LeapSerialTest ${LeapSerialTest_SRCS})
+add_executable(LeapSerialTest ${LeapSerialTest_SRCS} ../../gtest-all-guard.cpp)
 target_link_libraries(LeapSerialTest LeapSerial)
 add_test(NAME LeapSerialTest COMMAND $<TARGET_FILE:LeapSerialTest>)
