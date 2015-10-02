@@ -30,6 +30,7 @@ else()
   file(WRITE TestObject_generated.h)
 endif()
 
+find_package(Threads)
 add_executable(LeapSerialTest ${LeapSerialTest_SRCS} ../../gtest-all-guard.cpp)
-target_link_libraries(LeapSerialTest LeapSerial)
+target_link_libraries(LeapSerialTest LeapSerial ${CMAKE_THREAD_LIBS_INIT})
 add_test(NAME LeapSerialTest COMMAND $<TARGET_FILE:LeapSerialTest>)
