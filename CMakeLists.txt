@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 include(version.cmake)
-project(leapserial VERSION ${leapserial_VERSION})
+project(LeapSerial VERSION ${LeapSerial_VERSION})
 
 include(CTest)
 include(CheckTypeSize)
