@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include <gtest/gtest.h>
 
-#include "Serializer.h"
+#include "LeapSerial.h"
 
 #include "TestObject.h"
 

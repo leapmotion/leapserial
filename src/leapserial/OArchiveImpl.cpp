@@ -7,18 +7,29 @@
 
 using namespace leap;
 
-OArchiveImpl::OArchiveImpl(std::ostream& os) :
-  os(os),
-  lastID(0)
+OArchiveImpl::OArchiveImpl(IOutputStream& os) :
+  os(os)
 {
-  // This sentry addition means we never have to nullptr check pObj
   objMap[nullptr] = 0;
 }
 
-OArchiveImpl::~OArchiveImpl(void) {}
+OArchiveImpl::OArchiveImpl(std::ostream& os) :
+  os(*new OutputStreamAdapter{ os }),
+  pOsMem(&this->os),
+  pfnDtor([](void* ptr) {
+    delete (OutputStreamAdapter*)ptr;
+  })
+{
+  objMap[nullptr] = 0;
+}
+
+OArchiveImpl::~OArchiveImpl(void) {
+  if (pfnDtor)
+    pfnDtor(pOsMem);
+}
 
 void OArchiveImpl::WriteSize(uint32_t sz) {
-  os.write((const char*) &sz,sizeof(uint32_t));
+  os.Write(&sz, sizeof(uint32_t));
 }
 
 uint32_t OArchiveImpl::RegisterObject(const field_serializer& serializer, const void*pObj) {
@@ -86,9 +97,10 @@ void OArchiveImpl::WriteDescriptor(const descriptor& descriptor, const void* pOb
 uint64_t OArchiveImpl::SizeDescriptor(const descriptor& descriptor, const void* pObj) const {
   uint64_t retVal = 0;
   for (const auto& field_descriptor : descriptor.field_descriptors) {
-    retVal += field_descriptor.serializer.size(*this,
+    retVal += field_descriptor.serializer.size(
+      *this,
       static_cast<const char*>(pObj)+field_descriptor.offset
-      );
+    );
   }
 
   for (const auto& cur : descriptor.identified_descriptors) {
@@ -120,7 +132,7 @@ void OArchiveImpl::WriteByteArray(const void* pBuf, uint64_t ncb, bool writeSize
   if(writeSize)
     WriteSize((uint32_t)ncb);
   
-  os.write((const char*) pBuf, ncb);
+  os.Write(pBuf, ncb);
 }
 
 void OArchiveImpl::WriteString(const void* pBuf, uint64_t charCount, uint8_t charSize) {
@@ -228,7 +240,7 @@ void OArchiveImpl::Process(void) {
       (w.id << 3) |
       static_cast<uint32_t>(Protobuf::serial_type::string),
       sizeof(uint32_t)
-      );
+    );
     WriteInteger(w.serializer->size(*this, w.pObj), sizeof(uint32_t));
 
     // Now hand off to this type's serialization behavior

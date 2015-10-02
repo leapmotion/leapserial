@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "Serializer.h"
+#include "LeapSerial.h"
 #include <gtest/gtest.h>
 #include <array>
 #include <sstream>
@@ -8,6 +8,24 @@
 class SerializationTest:
   public testing::Test
 {};
+
+// Need to ensure that all builtins are correctly recognized
+static_assert(leap::has_serializer<std::string>::value, "std::string");
+static_assert(leap::has_serializer<std::vector<int>>::value, "Vector of ints");
+static_assert(leap::has_serializer<std::vector<std::string>>::value, "Vector of strings");
+static_assert(leap::has_serializer<std::map<int, int>>::value, "Map of primitives");
+static_assert(leap::has_serializer<std::map<std::string, std::string>>::value, "Map of nonprimitives");
+static_assert(leap::has_serializer<std::unordered_map<int, int>>::value, "Unordered map of primitives");
+static_assert(leap::has_serializer<std::unordered_map<std::string, std::string>>::value, "Unordered map of nonprimitives");
+
+struct DummyStruct {};
+static_assert(!leap::has_serializer<DummyStruct>::value, "A dummy structure was incorrectly classified as having a valid serializer");
+static_assert(!leap::has_serializer<DummyStruct[2]>::value, "An arry of dummy structures was incorrectly classified as having a valid serializer");
+static_assert(!leap::has_serializer<std::vector<DummyStruct>>::value, "A vector of dummy structures was incorrectly classified as having a valid serializer");
+static_assert(!leap::has_serializer<std::unique_ptr<DummyStruct>>::value, "A unique pointer to a dummy structure was incorrectly classified as having a valid serializer");
+static_assert(!leap::has_serializer<std::map<int, DummyStruct>>::value, "A map of DummyStruct was incorrectly classified as having a valid serializer");
+static_assert(!leap::has_serializer<std::unordered_map<int, DummyStruct>>::value, "An unordered_map of DummyStruct was incorrectly classified as having a valid serializer");
+static_assert(!leap::has_serializer<std::vector<DummyStruct>>::value, "A vector of DummyStruct was incorrectly classified as having a valid serializer");
 
 struct MyRepeatedStructure {
   int* pv;
@@ -1096,4 +1114,44 @@ TEST_F(SerializationTest, LambdaMethodTest) {
   ASSERT_EQ(st.a, stIn.a) << "Field A was not serialized correctly";
   ASSERT_EQ(st.b, stIn.b) << "Field B was not serialized correctly";
   ASSERT_EQ(st.c, stIn.c) << "Field C was not serialized correctly";
+}
+
+enum class SimpleEnum {
+  One,
+  Two,
+  Four = 0x4444
+};
+
+TEST_F(SerializationTest, EnumClassTest) {
+  std::stringstream ss;
+  leap::Serialize(ss, SimpleEnum::Four);
+
+  auto x = leap::Deserialize<SimpleEnum>(ss);
+  ASSERT_EQ(SimpleEnum::Four, *x) << "Round-trip serialization of an enum class yielded an incorrect result";
+}
+
+struct HasChronoMembers {
+  std::chrono::seconds one{ 4929 };
+  std::chrono::nanoseconds two{ 4929 };
+  std::chrono::duration<short, std::ratio<24 * 60 * 60, 1>> three{ 2 };
+
+  static leap::descriptor GetDescriptor(void) {
+    return{
+      &HasChronoMembers::one,
+      &HasChronoMembers::two,
+      &HasChronoMembers::three
+    };
+  }
+};
+
+TEST_F(SerializationTest, DurationMembers) {
+  const HasChronoMembers hcm{};
+
+  std::stringstream ss;
+  leap::Serialize(ss, hcm);
+  auto re = leap::Deserialize<HasChronoMembers>(ss);
+
+  ASSERT_EQ(hcm.one, re->one) << "Seconds did not deserialize properly";
+  ASSERT_EQ(hcm.two, re->two) << "Nanoseconds did not deserialize properly";
+  ASSERT_EQ(hcm.three, re->three) << "Custom days duration did not deserialize properly";
 }

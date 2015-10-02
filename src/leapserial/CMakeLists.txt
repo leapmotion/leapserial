@@ -2,6 +2,7 @@ set(LeapSerial_SRCS
   Allocation.h
   Allocation.cpp
   Archive.h
+  Archive.cpp
   ArchiveFlatbuffer.h
   ArchiveFlatbuffer.cpp
   ArchiveJSON.h
@@ -17,7 +18,7 @@ set(LeapSerial_SRCS
   IArchiveImpl.cpp
   OArchiveImpl.h
   OArchiveImpl.cpp
-  Serializer.h
+  LeapSerial.h
   serial_traits.h
 )
 
@@ -25,6 +26,7 @@ set(LeapSerialTest_SRCS
   test/ArchiveFlatbufferTest.cpp
   test/ArchiveJSONTest.cpp
   test/LeapArchiveTest.cpp
+  test/PrettyPrintTest.cpp
   test/SerialFormatTest.cpp
   test/SerializationTest.cpp
   test/TestObject.h

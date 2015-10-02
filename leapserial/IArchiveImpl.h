@@ -15,6 +15,7 @@ namespace leap {
     /// Constructs an archive implementation around the specified stream operator
     /// </summary>
     /// <param name="is">The underlying input stream</param>
+    IArchiveImpl(IInputStream& is);
     IArchiveImpl(std::istream& is);
     ~IArchiveImpl(void);
 
@@ -37,7 +38,11 @@ namespace leap {
 
   private:
     // Underlying input stream
-    std::istream& is;
+    IInputStream& is;
+
+    // If any additional (flat) memory was required to construct the output stream reference, this is it
+    void* const pIsMem = nullptr;
+    void(*const pfnDtor)(void*) = nullptr;
 
     // Number of bytes read so far:
     uint64_t m_count = 0;

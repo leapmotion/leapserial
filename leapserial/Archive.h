@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <functional>
+#include <ios>
 #include <iosfwd>
 #include <memory>
 
@@ -18,8 +19,79 @@ namespace leap {
   }
 
   /// <summary>
-  /// An enumeration of the different basic types that are handled directly by the archiver
+  /// Stream adaptor interface for use with the Archive type
+  /// </summary>
+  class IInputStream {
+  public:
+    virtual ~IInputStream(void) {}
+
+    /// <summary>
+    /// Reads exactly the specified number of bytes from the input stream
+    /// </summary>
+    /// <returns>
+    /// The number of bytes actually read, -1 if there was an error.  The number of bytes read
+    /// may be less than the number of bytes requested if the end of the file was encountered
+    /// before the operation completed.
+    /// </returns>
+    virtual std::streamsize Read(void* pBuf, std::streamsize ncb) = 0;
+
+    /// <summary>
+    /// Discards the specified number of bytes from the input stream
+    /// </summary>
+    virtual std::streamsize Skip(std::streamsize ncb) = 0;
+  };
+
   /// <summary>
+  /// Mapping adaptor, allows input streams to be wrapped to support Archive operations
+  /// </summary>
+  class InputStreamAdapter:
+    public IInputStream 
+  {
+  public:
+    InputStreamAdapter(std::istream& is) :
+      is(is)
+    {}
+
+  private:
+    std::istream& is;
+
+  public:
+    // IInputStream overrides:
+    std::streamsize Read(void* pBuf, std::streamsize ncb) override;
+    std::streamsize Skip(std::streamsize ncb) override;
+  };
+
+  /// <summary>
+  /// Stream adaptor interface for use with the Archive type
+  /// </summary>
+  class IOutputStream {
+  public:
+    virtual ~IOutputStream(void) {}
+
+    /// <summary>
+    /// Writes all of the specified bytes to the output stream
+    /// </summary>
+    virtual bool Write(const void* pBuf, std::streamsize ncb) = 0;
+  };
+
+  class OutputStreamAdapter:
+    public IOutputStream 
+  {
+  public:
+    OutputStreamAdapter(std::ostream& os) :
+      os(os)
+    {}
+
+    // IOutputStream overrides:
+    bool Write(const void* pBuf, std::streamsize ncb) override;
+
+  private:
+    std::ostream& os;
+  };
+
+  /// <summary>
+  /// An enumeration of the different basic types that are handled directly by the archiver
+  /// </summary>
   /// <remarks>
   /// 'Atom' refers to a basic unit of serializablity.  Most are straightforward, but some 
   /// require documentation.

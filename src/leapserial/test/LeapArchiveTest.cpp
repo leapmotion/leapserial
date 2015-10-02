@@ -3,7 +3,7 @@
 
 #include "OArchiveImpl.h"
 #include "IArchiveImpl.h"
-#include "Serializer.h"
+#include "LeapSerial.h"
 
 #include <sstream>
 

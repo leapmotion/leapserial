@@ -37,13 +37,14 @@ namespace leap { namespace internal {
   /// </remarks>
   template<class T>
   class Allocation:
-    public AllocationBase,
-    public T
+    public AllocationBase
   {
   public:
     Allocation(void) {}
     Allocation(Allocation&) = delete;
     Allocation(Allocation&& rhs) = delete;
     void operator=(Allocation&& rhs) = delete;
+
+    T val;
   };
 }}

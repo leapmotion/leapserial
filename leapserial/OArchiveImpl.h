@@ -8,16 +8,21 @@ namespace leap {
     public OArchiveRegistry
   {
   public:
+    OArchiveImpl(IOutputStream& os);
     OArchiveImpl(std::ostream& os);
     ~OArchiveImpl(void);
 
   private:
     // Underlying output stream
-    std::ostream& os;
+    IOutputStream& os;
+
+    // If any additional (flat) memory was required to construct the output stream reference, this is it
+    void* const pOsMem = nullptr;
+    void(*const pfnDtor)(void*) = nullptr;
 
     // The last ID issued for any object, or 0 if no IDs have been issued yet.  The 0 identifier
     // is reserved for the root object.
-    uint32_t lastID;
+    uint32_t lastID = 0;
 
     struct work {
       work(
@@ -82,6 +87,5 @@ namespace leap {
     uint64_t SizeFloat(float value) const override { return sizeof(float); }
     uint64_t SizeFloat(double value) const override { return sizeof(double); }
     uint64_t SizeBool(bool) const override { return 1; }
-
   };
 }

@@ -3,6 +3,7 @@
 #include "Descriptor.h"
 #include "field_serializer_t.h"
 #include <array>
+#include <chrono>
 #include <map>
 #include <memory>
 #include <string>
@@ -23,6 +24,15 @@ namespace leap {
   struct primitive_serial_traits:
     std::false_type
   {};
+
+  /// <summary>
+  /// Holds true if T can be serialized
+  /// </summary>
+  template<typename T>
+  struct has_serializer
+  {
+    static const bool value = !std::is_base_of<std::false_type, serial_traits<T>>::value;
+  };
 
   // Create/delete structure used to describe how to allocate and free a memory block
   struct create_delete {
@@ -125,89 +135,20 @@ namespace leap {
 
     // Trivial serialization/deserialization operations
     static uint64_t size(const OArchive& ar, T val) {
-      return ar.SizeInteger(val, sizeof(T));
+      return ar.SizeInteger((int64_t)val, sizeof(T));
     }
 
     static void serialize(OArchive& ar, T val) {
-      ar.WriteInteger(val, sizeof(T));
+      ar.WriteInteger((int64_t)val, sizeof(T));
     }
 
     static void deserialize(IArchive& ar, T& val, uint64_t ncb) {
       val = static_cast<T>(ar.ReadInteger(sizeof(T)));
     }
   };
-
-  template<typename T>
-  struct serial_traits:
-    primitive_serial_traits<T, void>
-  {
-  };
-
-  // If we have a pointer to another object, we have to write an ID out and not the entire object
-  // The object will be serialized at some other time
-  template<typename T>
-  struct serial_traits<T*>
-  {
-    static ::leap::serial_atom type(){
-      return ::leap::serial_atom::reference;
-    }
-
-    static uint64_t size(const OArchiveRegistry& ar, const T*const pObj) { 
-      return ar.SizeObjectReference(field_serializer_t<T, void>(), pObj);
-    }
-
-    static void serialize(OArchiveRegistry& ar, const T* pObj) {
-      ar.WriteObjectReference(
-        field_serializer_t<T, void>::GetDescriptor(),
-        pObj
-      );
-    }
-
-    static void deserialize(IArchiveRegistry& ar, T*& pObj, uint64_t ncb) {
-      create_delete creatorDeletor = {
-        []() -> void* { return new T; },
-        [](void* ptr) { delete (T*) ptr; }
-      };
-      
-      pObj = (T*)ar.ReadObjectReference(creatorDeletor, field_serializer_t<T, void>::GetDescriptor());
-    }
-  };
-
-  // Const pointer serialization/deserialization rules are the same as pointer serialization rules,
-  // but we act as though the type itself is non-const for the purpose of deserialization
-  template<typename T>
-  struct serial_traits<const T*>:
-    serial_traits<T*>
-  {
-    static void deserialize(IArchiveRegistry& ar, const T*& pObj, uint64_t ncb) {
-      T* ptr;
-      serial_traits<T*>::deserialize(ar, ptr, ncb);
-      pObj = ptr;
-    }
-  };
-
-  template<>
-  struct serial_traits<bool>
-  {
-    static ::leap::serial_atom type() {
-      return ::leap::serial_atom::boolean;
-    }
-
-    static uint64_t size(const OArchive& ar, bool val) {
-      return ar.SizeBool(val);
-    }
-
-    static void serialize(OArchive& ar, bool val) {
-      ar.WriteBool(val);
-    }
-
-    static void deserialize(IArchive& ar, bool& val, uint64_t ncb) {
-      val = ar.ReadBool();
-    }
-  };
   
   template<typename T, size_t N>
-  struct serial_traits<T[N]>
+  struct primitive_serial_traits<T[N], typename std::enable_if<has_serializer<T>::value>::type>
   {
     static ::leap::serial_atom type() {
       return ::leap::serial_atom::array;
@@ -228,39 +169,57 @@ namespace leap {
       ar.ReadArray([](uint64_t){},field_serializer_t<T, void>(), [&](){ return &pObj[i++]; }, N);
     }
   };
-  
-  template<typename T, size_t N>
-  struct serial_traits<std::array<T,N>>
+
+  template<>
+  struct primitive_serial_traits<bool, void>
   {
     static ::leap::serial_atom type() {
-      return ::leap::serial_atom::array;
+      return ::leap::serial_atom::boolean;
     }
 
-    static uint64_t size(const OArchiveRegistry& ar, const std::array<T, N>& v) {
-      return serial_traits<T[N]>::size(ar, &v.front());
+    static uint64_t size(const OArchive& ar, bool val) {
+      return ar.SizeBool(val);
     }
-    
-    static void serialize(OArchiveRegistry& ar, const std::array<T, N>& v) {
-      return serial_traits<T[N]>::serialize(ar, &v.front());
+
+    static void serialize(OArchive& ar, bool val) {
+      ar.WriteBool(val);
     }
-    
-    static void deserialize(IArchiveRegistry& ar, std::array<T, N>& v, uint64_t ncb) {
-      return serial_traits<T[N]>::deserialize(ar, &v.front(), ncb);
+
+    static void deserialize(IArchive& ar, bool& val, uint64_t ncb) {
+      val = ar.ReadBool();
+    }
+  };
+
+  template<typename Rep, typename Period>
+  struct primitive_serial_traits<std::chrono::duration<Rep, Period>, void>:
+    primitive_serial_traits<Rep>
+  {
+    static_assert(std::is_arithmetic<Rep>::value, "LeapSerial presently can only serialize arithmetic duration types");
+    static const bool is_irresponsible = false;
+
+    // Trivial serialization/deserialization operations
+    static uint64_t size(const OArchive& ar, std::chrono::duration<Rep, Period> val) {
+      return ar.SizeInteger(val.count(), sizeof(Rep));
+    }
+
+    static void serialize(OArchive& ar, std::chrono::duration<Rep, Period> val) {
+      ar.WriteInteger(val.count(), sizeof(Rep));
+    }
+
+    static void deserialize(IArchive& ar, std::chrono::duration<Rep, Period>& val, uint64_t ncb) {
+      val = std::chrono::duration<Rep, Period>{
+        static_cast<Rep>(ar.ReadInteger(sizeof(Rep)))
+      };
     }
   };
 
   // Convenience specialization for std::vector
   template<typename T, typename Alloc>
-  struct serial_traits<std::vector<T, Alloc>>
+  struct primitive_serial_traits<std::vector<T, Alloc>, typename std::enable_if<has_serializer<T>::value>::type>
   {
     static ::leap::serial_atom type() {
       return ::leap::serial_atom::array;
     }
-
-    static_assert(
-      !std::is_base_of<std::false_type, serial_traits<T>>::value,
-      "Attempted to serialize a vector of type T, but T is not serializable"
-    );
 
     // We are irresponsible if and only if T is irresponsible
     static const bool is_irresponsible = serializer_is_irresponsible<T>::value;
@@ -289,32 +248,6 @@ namespace leap {
         [&] { return &v[i++]; },
         0
       );
-
-    }
-  };
-
-  template<typename T>
-  struct serial_traits<std::basic_string<T, std::char_traits<T>, std::allocator<T>>>
-  {
-    typedef std::basic_string<T, std::char_traits<T>, std::allocator<T>> string_t;
-
-    static ::leap::serial_atom type() {
-      return ::leap::serial_atom::string;
-    }
-
-    static uint64_t size(const OArchive& ar, const string_t& pObj) {
-      return ar.SizeString(pObj.data(), pObj.size(), sizeof(T));
-    }
-
-    static void serialize(OArchive& ar, const string_t& obj) {
-      ar.WriteString(obj.data(), obj.size(), sizeof(T));
-    }
-
-    static void deserialize(IArchive& ar, string_t& obj, uint64_t ncb) {
-      ar.ReadString([&](uint64_t count) {
-        obj.resize((uint32_t)count);
-        return &obj[0];
-      }, sizeof(T), ncb);
     }
   };
 
@@ -329,15 +262,6 @@ namespace leap {
     typedef serial_traits<key_type> key_traits;
     typedef serial_traits<mapped_type> mapped_traits;
     
-    static_assert(
-      !std::is_base_of<std::false_type, serial_traits<key_type>>::value,
-      "Attempted to serialize a map, but the map's key type is not serializable"
-    );
-    static_assert(
-      !std::is_base_of<std::false_type, serial_traits<mapped_type>>::value,
-      "Attempted to serialize a map, but the map's mapped type is not serializable"
-    );
-
     // Convenience static.  We need to make allocations if either our key or value type
     // needs to make allocations.
     static const bool sc_needsAllocation =
@@ -386,17 +310,17 @@ namespace leap {
   
   // Associative array types:
   template<typename Key, typename Value>
-  struct serial_traits<std::map<Key, Value>> :
+  struct primitive_serial_traits<std::map<Key, Value>, typename std::enable_if<has_serializer<Key>::value && has_serializer<Value>::value>::type> :
     serial_traits_map_t<std::map<Key, Value>>
   {};
 
   template<typename Key, typename Value>
-  struct serial_traits<std::unordered_map<Key, Value>> :
+  struct primitive_serial_traits<std::unordered_map<Key, Value>, typename std::enable_if<has_serializer<Key>::value && has_serializer<Value>::value>::type> :
     serial_traits_map_t<std::unordered_map<Key, Value>>
   {};
 
   template<typename T>
-  struct serial_traits<std::unique_ptr<T>> {
+  struct primitive_serial_traits<std::unique_ptr<T>, typename std::enable_if<has_serializer<T>::value>::type> {
     typedef std::unique_ptr<T> ptr_t;
 
     static ::leap::serial_atom type() {
@@ -428,7 +352,7 @@ namespace leap {
   };
 
   template<typename T>
-  struct serial_traits<std::shared_ptr<T>> {
+  struct primitive_serial_traits<std::shared_ptr<T>, void> {
     typedef std::shared_ptr<T> ptr_t;
 
     static ::leap::serial_atom type() {
@@ -457,6 +381,99 @@ namespace leap {
       );
 
       obj = std::static_pointer_cast<T>(released.pContext);
+    }
+  };
+
+  template<typename T, size_t N>
+  struct primitive_serial_traits<std::array<T, N>, typename std::enable_if<has_serializer<T>::value>::type>
+  {
+    static ::leap::serial_atom type() {
+      return ::leap::serial_atom::array;
+    }
+
+    static uint64_t size(const OArchiveRegistry& ar, const std::array<T, N>& v) {
+      return serial_traits<T[N]>::size(ar, &v.front());
+    }
+
+    static void serialize(OArchiveRegistry& ar, const std::array<T, N>& v) {
+      return serial_traits<T[N]>::serialize(ar, &v.front());
+    }
+
+    static void deserialize(IArchiveRegistry& ar, std::array<T, N>& v, uint64_t ncb) {
+      return serial_traits<T[N]>::deserialize(ar, &v.front(), ncb);
+    }
+  };
+
+  template<typename T>
+  struct serial_traits:
+    primitive_serial_traits<T>
+  {};
+
+  // If we have a pointer to another object, we have to write an ID out and not the entire object
+  // The object will be serialized at some other time
+  template<typename T>
+  struct serial_traits<T*>
+  {
+    static ::leap::serial_atom type() {
+      return ::leap::serial_atom::reference;
+    }
+
+    static uint64_t size(const OArchiveRegistry& ar, typename std::add_const<T>::type* pObj) {
+      return ar.SizeObjectReference(field_serializer_t<T, void>(), pObj);
+    }
+
+    static void serialize(OArchiveRegistry& ar, typename std::add_const<T>::type* pObj) {
+      ar.WriteObjectReference(
+        field_serializer_t<T, void>::GetDescriptor(),
+        pObj
+        );
+    }
+
+    static void deserialize(IArchiveRegistry& ar, T*& pObj, uint64_t ncb) {
+      create_delete creatorDeletor = {
+        []() -> void* { return new T; },
+        [](void* ptr) { delete (T*)ptr; }
+      };
+
+      pObj = (T*)ar.ReadObjectReference(creatorDeletor, field_serializer_t<T, void>::GetDescriptor());
+    }
+  };
+
+  // Const pointer serialization/deserialization rules are the same as pointer serialization rules,
+  // but we act as though the type itself is non-const for the purpose of deserialization
+  template<typename T>
+  struct serial_traits<const T*> :
+    serial_traits<T*>
+  {
+    static void deserialize(IArchiveRegistry& ar, const T*& pObj, uint64_t ncb) {
+      T* ptr;
+      serial_traits<T*>::deserialize(ar, ptr, ncb);
+      pObj = ptr;
+    }
+  };
+
+  template<typename T>
+  struct serial_traits<std::basic_string<T, std::char_traits<T>, std::allocator<T>>>
+  {
+    typedef std::basic_string<T, std::char_traits<T>, std::allocator<T>> string_t;
+
+    static ::leap::serial_atom type() {
+      return ::leap::serial_atom::string;
+    }
+
+    static uint64_t size(const OArchive& ar, const string_t& pObj) {
+      return ar.SizeString(pObj.data(), pObj.size(), sizeof(T));
+    }
+
+    static void serialize(OArchive& ar, const string_t& obj) {
+      ar.WriteString(obj.data(), obj.size(), sizeof(T));
+    }
+
+    static void deserialize(IArchive& ar, string_t& obj, uint64_t ncb) {
+      ar.ReadString([&](uint64_t count) {
+        obj.resize((uint32_t)count);
+        return &obj[0];
+      }, sizeof(T), ncb);
     }
   };
 }

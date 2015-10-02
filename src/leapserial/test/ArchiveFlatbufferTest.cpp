@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 #include "ArchiveFlatbuffer.h"
-#include "Serializer.h"
+#include "LeapSerial.h"
 #include "TestObject.h"
 #include "TestObject_generated.h"
 
