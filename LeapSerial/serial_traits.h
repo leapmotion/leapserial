@@ -199,17 +199,17 @@ namespace leap {
 
     // Trivial serialization/deserialization operations
     static uint64_t size(const OArchive& ar, std::chrono::duration<Rep, Period> val) {
-      return ar.SizeInteger(val.count(), sizeof(Rep));
+      return primitive_serial_traits<Rep>::size(ar, val.count());
     }
 
     static void serialize(OArchive& ar, std::chrono::duration<Rep, Period> val) {
-      ar.WriteInteger(val.count(), sizeof(Rep));
+      primitive_serial_traits<Rep>::serialize(ar, val.count());
     }
 
     static void deserialize(IArchive& ar, std::chrono::duration<Rep, Period>& val, uint64_t ncb) {
-      val = std::chrono::duration<Rep, Period>{
-        static_cast<Rep>(ar.ReadInteger(sizeof(Rep)))
-      };
+      Rep v = 0;
+      primitive_serial_traits<Rep>::deserialize(ar, v, ncb);
+      val = std::chrono::duration<Rep, Period>(v);
     }
   };
 
