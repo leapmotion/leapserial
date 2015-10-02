@@ -34,3 +34,4 @@ endif()
 
 add_executable(LeapSerialTest ${LeapSerialTest_SRCS})
 target_link_libraries(LeapSerialTest LeapSerial)
+add_test(NAME LeapSerialTest COMMAND $<TARGET_FILE:LeapSerialTest>)

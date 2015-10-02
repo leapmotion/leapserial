@@ -5,6 +5,8 @@ project(leapserial VERSION ${leapserial_VERSION})
 include(CTest)
 include(CheckTypeSize)
 
+enable_testing()
+
 if(APPLE)
   option(leapserial_BUILD_FAT "Build fat binaries for LeapSerial" ON)
   set(CMAKE_OSX_ARCHITECTURES "x86_64;i386" CACHE STRING "Mac OS X build architectures" FORCE)
