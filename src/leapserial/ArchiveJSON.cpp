@@ -2,7 +2,6 @@
 #include "ArchiveJSON.h"
 #include "field_serializer.h"
 #include "Descriptor.h"
-#include <future>
 #include <iostream>
 
 using namespace leap;
