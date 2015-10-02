@@ -212,7 +212,7 @@ void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const voi
     else {
       field_descriptor.serializer.serialize(*this, pChildObj);
     }
-    vTable.offsets.push_back((uint32_t)m_builder.size() - tableEnd);
+    vTable.offsets.push_back(static_cast<uint16_t>((uint32_t)m_builder.size() - tableEnd));
   }
   
   //If there are no identified descriptors, then we are a struct and do not care about vtable stuff.
