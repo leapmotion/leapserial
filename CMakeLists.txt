@@ -8,32 +8,32 @@ include(CheckTypeSize)
 enable_testing()
 
 if(APPLE)
-  option(leapserial_BUILD_FAT "Build fat binaries for LeapSerial" ON)
+  option(LeapSerial_BUILD_FAT "Build fat binaries for LeapSerial" ON)
   set(CMAKE_OSX_ARCHITECTURES "x86_64;i386" CACHE STRING "Mac OS X build architectures" FORCE)
 endif()
 
 # Need to classify the architecture before we run anything else
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
-  set(leapserial_BUILD_ARM ON)
-  set(leapserial_BUILD_ARCHITECTURES "arm")
-  set(leapserial_BUILD_64 OFF)
+  set(LeapSerial_BUILD_ARM ON)
+  set(LeapSerial_BUILD_ARCHITECTURES "arm")
+  set(LeapSerial_BUILD_64 OFF)
 elseif(CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64;i386")
-  set(leapserial_BUILD_ARCHITECTURES x64 x86)
-  set(leapserial_BUILD_64 ON)
+  set(LeapSerial_BUILD_ARCHITECTURES x64 x86)
+  set(LeapSerial_BUILD_64 ON)
 elseif(CMAKE_SIZEOF_VOID_P STREQUAL 4)
-  set(leapserial_BUILD_ARCHITECTURES "x86")
-  set(leapserial_BUILD_64 OFF)
+  set(LeapSerial_BUILD_ARCHITECTURES "x86")
+  set(LeapSerial_BUILD_64 OFF)
 else()
-  set(leapserial_BUILD_ARCHITECTURES "x64")
-  set(leapserial_BUILD_64 ON)
+  set(LeapSerial_BUILD_ARCHITECTURES "x64")
+  set(LeapSerial_BUILD_64 ON)
 endif()
-message(STATUS "Using architecture: ${leapserial_BUILD_ARCHITECTURES}")
+message(STATUS "Using architecture: ${LeapSerial_BUILD_ARCHITECTURES}")
 
 # Determine whether LeapSerial has been embedded in another project
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-  set(AUTOWIRING_IS_EMBEDDED OFF)
+  set(LEAPSERIAL_IS_EMBEDDED OFF)
 else()
-  set(AUTOWIRING_IS_EMBEDDED ON)
+  set(LEAPSERIAL_IS_EMBEDDED ON)
 endif()
 
 # If there's an external libraries directory path, use it as a search prefix
@@ -72,7 +72,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()
 
 # Also need position-independent code to make things work correctly on certain 64-bit machines
-if(NOT WIN32 AND leapserial_BUILD_64)
+if(NOT WIN32 AND LeapSerial_BUILD_64)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 endif()
 
@@ -84,12 +84,12 @@ include(ConditionalSources)
 # We don't build tests unless we're being built by ourselves in our own source tree
 # When we're embedded in someone else's subtree, it's not likely that they will want
 # us to bring all of our unit tests in with us.  Though, if they do desire this, they
-# can always set the AUTOWIRING_BUILD_TESTS flag
-get_filename_component(AUTOWIRING_ROOT_DIR . ABSOLUTE)
-if(AUTOWIRING_IS_EMBEDDED)
-  set(AUTOWIRING_BUILD_TESTS_DEFAULT OFF)
+# can always set the LEAPSERIAL_BUILD_TESTS flag
+get_filename_component(LEAPSERIAL_ROOT_DIR . ABSOLUTE)
+if(LEAPSERIAL_IS_EMBEDDED)
+  set(LEAPSERIAL_BUILD_TESTS_DEFAULT OFF)
 else()
-  set(AUTOWIRING_BUILD_TESTS_DEFAULT ON)
+  set(LEAPSERIAL_BUILD_TESTS_DEFAULT ON)
 
   # All of our binaries go to one place:  The binaries output directory.  We only want to tinker
   # with this if we're building by ourselves, otherwise we just do whatever the enclosing project
@@ -109,7 +109,7 @@ endif()
 
 # ARM installations should have "arm" as the suffix for the generated libraries and should be
 # position-independent
-if(leapserial_BUILD_ARM)
+if(LeapSerial_BUILD_ARM)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
   foreach(config IN LISTS CMAKE_CONFIGURATION_TYPES)
@@ -119,7 +119,7 @@ if(leapserial_BUILD_ARM)
 endif()
 
 # 64-bit installations should suffix with 64 regardless of the CPU type (arm or intel)
-if(leapserial_BUILD_64)
+if(LeapSerial_BUILD_64)
   foreach(config IN LISTS CMAKE_CONFIGURATION_TYPES)
     string(TOUPPER ${config} config)
     string(CONCAT CMAKE_${config}_POSTFIX "${CMAKE_${config}_POSTFIX}" "64")
@@ -129,9 +129,9 @@ endif()
 # Postfix on all debug libraries should be "d"
 set(CMAKE_DEBUG_POSTFIX d${CMAKE_DEBUG_POSTFIX})
 
-option(AUTOWIRING_BUILD_TESTS "Build LeapSerial unit tests" ${AUTOWIRING_BUILD_TESTS_DEFAULT})
+option(LEAPSERIAL_BUILD_TESTS "Build LeapSerial unit tests" ${LEAPSERIAL_BUILD_TESTS_DEFAULT})
 function(add_googletest dirname)
-  if(AUTOWIRING_BUILD_TESTS)
+  if(LEAPSERIAL_BUILD_TESTS)
     add_subdirectory(${dirname})
   endif()
 endfunction()
@@ -174,7 +174,7 @@ add_subdirectory(src)
 export(EXPORT LeapSerialTargets FILE LeapSerialTargets.cmake NAMESPACE LeapSerial::)
 
 # Only attempt to do anything with cpack if we're being built stand-alone
-if(NOT AUTOWIRING_IS_EMBEDDED)
+if(NOT LEAPSERIAL_IS_EMBEDDED)
   # Install LeapSerial-config.cmake and LeapSerial-configVersion.cmake
   install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/LeapSerial-config.cmake"
@@ -195,10 +195,10 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
   install(EXPORT LeapSerialTargets FILE LeapSerialTargets.cmake COMPONENT LeapSerial NAMESPACE LeapSerial:: DESTINATION cmake CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
 
   # 64-bit installations get a different upgrade GUID
-  if(leapserial_BUILD_64)
-    set(leapserial_GUID_LAST_CHAR E)
+  if(LeapSerial_BUILD_64)
+    set(LeapSerial_GUID_LAST_CHAR E)
   else()
-    set(leapserial_GUID_LAST_CHAR D)
+    set(LeapSerial_GUID_LAST_CHAR D)
   endif()
 
   # This is the upgrade GUID.  Part of the GUID is derived from the major version number.  Any time
@@ -208,12 +208,12 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
   #
   # For more information on the rationale for this process, see the discussion on semantic versioning
   # found at http://semver.org/
-  SET(CPACK_WIX_UPGRADE_GUID "{060E5EDD-229${leapserial_VERSION_MAJOR}-4AD8-BAFA-A303D5696A2${leapserial_GUID_LAST_CHAR}}")
+  SET(CPACK_WIX_UPGRADE_GUID "{060E5EDD-229${LeapSerial_VERSION_MAJOR}-4AD8-BAFA-A303D5696A2${LeapSerial_GUID_LAST_CHAR}}")
 
   # Need a custom wix installation template so that we update the CMake package registry correctly
   # Only really needed on Windows; Mac and Linux have pretty good default search behavior, so we
   # leave those alone.
-  SET(CPACK_WIX_TEMPLATE "${CMAKE_SOURCE_DIR}/leapserial.wxs")
+  SET(CPACK_WIX_TEMPLATE "${CMAKE_SOURCE_DIR}/LeapSerial.wxs")
   SET(CPACK_MONOLITHIC_INSTALL ON)
 
   # Run the script that will grab the debug and release configurations and install them during packaging
@@ -240,9 +240,9 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
   SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
   SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "LeapSerial")
   SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
-  SET(CPACK_PACKAGE_VERSION_MAJOR "${leapserial_VERSION_MAJOR}")
-  SET(CPACK_PACKAGE_VERSION_MINOR "${leapserial_VERSION_MINOR}")
-  SET(CPACK_PACKAGE_VERSION_PATCH "${leapserial_VERSION_PATCH}")
+  SET(CPACK_PACKAGE_VERSION_MAJOR "${LeapSerial_VERSION_MAJOR}")
+  SET(CPACK_PACKAGE_VERSION_MINOR "${LeapSerial_VERSION_MINOR}")
+  SET(CPACK_PACKAGE_VERSION_PATCH "${LeapSerial_VERSION_PATCH}")
   SET(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "LeapSerial")
   SET(CPACK_PACKAGE_INSTALL_DIRECTORY "LeapSerial")
   INCLUDE(CPack)

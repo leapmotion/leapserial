@@ -29,6 +29,6 @@ add_subdirectory(test)
 
 install(TARGETS LeapSerial EXPORT LeapSerialTargets
   DESTINATION lib
-  COMPONENT leapserial
+  COMPONENT LeapSerial
   CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
 )

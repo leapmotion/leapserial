@@ -31,13 +31,10 @@ leapserial-*-*.deb
 leapserial-*-*.rpm
 leapserial-*-*.msi
 leapserial.xcodeproj
-leapserial/AutowiringConfig.h
 *.nupkg
 lib/*.*
 leapserial-*-*.zip
 _CPack_Packages
-win64/Autowiring.nuspec
-Autowiring.nuspec
 .kdev4
 leapserial.kdev4
 CTestTestfile.cmake

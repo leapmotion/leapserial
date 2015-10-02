@@ -1,14 +1,14 @@
-# - Config file for the autowiring package
+# - Config file for the LeapSerial package
 # It defines the following variables
-#  autowiring_FOUND - indicates that the module was found
-#  autowiring_INCLUDE_DIR - include directories
+#  LeapSerial_FOUND - indicates that the module was found
+#  LeapSerial_INCLUDE_DIR - include directories
 
 # Check if local build
 if ("@CMAKE_CURRENT_BINARY_DIR@" STREQUAL CMAKE_CURRENT_LIST_DIR)
-  set(autowiring_INCLUDE_DIR "@PROJECT_SOURCE_DIR@")
+  set(LeapSerial_INCLUDE_DIR "@PROJECT_SOURCE_DIR@")
 else()
-  set(autowiring_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/../include")
+  set(LeapSerial_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/../include")
 endif()
 
-include("${CMAKE_CURRENT_LIST_DIR}/AutowiringTargets.cmake")
-set(autowiring_FOUND TRUE)
+include("${CMAKE_CURRENT_LIST_DIR}/LeapSerialTargets.cmake")
+set(LeapSerial_FOUND TRUE)
