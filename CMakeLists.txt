@@ -163,8 +163,8 @@ include_directories(
 )
 
 # CMake configurations
-configure_file(LeapSerial-config.cmake.in LeapSerial-config.cmake @ONLY)
-configure_file(LeapSerial-configVersion.cmake.in LeapSerial-configVersion.cmake @ONLY)
+configure_file(leapserial-config.cmake.in leapserial-config.cmake @ONLY)
+configure_file(leapserial-configVersion.cmake.in leapserial-configVersion.cmake @ONLY)
 configure_file(LeapSerialConfig.h.in ${PROJECT_SOURCE_DIR}/LeapSerial/LeapSerialConfig.h @ONLY)
 
 # Recurse through source directories
@@ -175,10 +175,10 @@ export(EXPORT LeapSerialTargets FILE LeapSerialTargets.cmake NAMESPACE LeapSeria
 
 # Only attempt to do anything with cpack if we're being built stand-alone
 if(NOT LEAPSERIAL_IS_EMBEDDED)
-  # Install LeapSerial-config.cmake and LeapSerial-configVersion.cmake
+  # Install leapserial-config.cmake and leapserial-configVersion.cmake
   install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/LeapSerial-config.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/LeapSerial-configVersion.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/leapserial-config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/leapserial-configVersion.cmake"
     DESTINATION "cmake"
     COMPONENT LeapSerial
   )
