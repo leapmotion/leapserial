@@ -8,8 +8,6 @@ set(LeapSerialTest_SRCS
 )
 add_pch(LeapSerialTest_SRCS "stdafx.h" "stdafx.cpp")
 
-find_package(FlatBuffers QUIET)
-
 add_conditional_sources(
   LeapSerialTest_SRCS
   "FlatBuffers_FOUND"
@@ -20,6 +18,7 @@ add_conditional_sources(
   TestObject_generated.h
 )
 
+find_package(FlatBuffers QUIET)
 if(${FlatBuffers_FOUND})
   add_custom_command( OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/test/TestObject_generated.h
                     COMMAND FlatBuffers::flatc -c -I ${CMAKE_CURRENT_SOURCE_DIR} -o ${CMAKE_CURRENT_SOURCE_DIR}/test ${CMAKE_CURRENT_SOURCE_DIR}/test/TestObject.fbs
