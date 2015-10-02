@@ -137,13 +137,13 @@ function(add_googletest dirname)
 endfunction()
 
 function(rewrite_header_paths target_SRC_VAR)
-  # All include files are located in /leapserial from here, so prepend that to all sources
+  # All include files are located in /LeapSerial from here, so prepend that to all sources
   set(SRCS_TEMP ${${target_SRC_VAR}})
   set(SRCS)
   foreach(i ${SRCS_TEMP})
     string(REGEX MATCH ".*\\.h$" hfile ${i})
     if(hfile)
-      list(APPEND SRCS ${PROJECT_SOURCE_DIR}/leapserial/${i})
+      list(APPEND SRCS ${PROJECT_SOURCE_DIR}/LeapSerial/${i})
     else()
       list(APPEND SRCS ${i})
     endif()
@@ -163,9 +163,9 @@ include_directories(
 )
 
 # CMake configurations
-configure_file(leapserial-config.cmake.in leapserial-config.cmake @ONLY)
-configure_file(leapserial-configVersion.cmake.in leapserial-configVersion.cmake @ONLY)
-configure_file(LeapSerialConfig.h.in ${PROJECT_SOURCE_DIR}/leapserial/LeapSerialConfig.h @ONLY)
+configure_file(LeapSerial-config.cmake.in LeapSerial-config.cmake @ONLY)
+configure_file(LeapSerial-configVersion.cmake.in LeapSerial-configVersion.cmake @ONLY)
+configure_file(LeapSerialConfig.h.in ${PROJECT_SOURCE_DIR}/LeapSerial/LeapSerialConfig.h @ONLY)
 
 # Recurse through source directories
 add_subdirectory(src)
@@ -175,19 +175,19 @@ export(EXPORT LeapSerialTargets FILE LeapSerialTargets.cmake NAMESPACE LeapSeria
 
 # Only attempt to do anything with cpack if we're being built stand-alone
 if(NOT AUTOWIRING_IS_EMBEDDED)
-  # Install leapserial-config.cmake and leapserial-configVersion.cmake
+  # Install LeapSerial-config.cmake and LeapSerial-configVersion.cmake
   install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/leapserial-config.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/leapserial-configVersion.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/LeapSerial-config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/LeapSerial-configVersion.cmake"
     DESTINATION "cmake"
-    COMPONENT leapserial
+    COMPONENT LeapSerial
   )
 
   # Install public header files
   install(
-    DIRECTORY ${PROJECT_SOURCE_DIR}/leapserial
+    DIRECTORY ${PROJECT_SOURCE_DIR}/LeapSerial
     DESTINATION include
-    COMPONENT leapserial
+    COMPONENT LeapSerial
     FILES_MATCHING PATTERN "*.h"
   )
  
@@ -197,13 +197,13 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
       install(
         DIRECTORY ${PROJECT_SOURCE_DIR}/contrib/autoboost/autoboost
         DESTINATION include
-        COMPONENT leapserial
+        COMPONENT LeapSerial
       )
     endif()
   endif()
  
   # Targets file is needed in order to describe how to link LeapSerial to the rest of the system
-  install(EXPORT LeapSerialTargets FILE LeapSerialTargets.cmake COMPONENT leapserial NAMESPACE LeapSerial:: DESTINATION cmake CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
+  install(EXPORT LeapSerialTargets FILE LeapSerialTargets.cmake COMPONENT LeapSerial NAMESPACE LeapSerial:: DESTINATION cmake CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
 
   # 64-bit installations get a different upgrade GUID
   if(leapserial_BUILD_64)
@@ -254,7 +254,7 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
   SET(CPACK_PACKAGE_VERSION_MAJOR "${leapserial_VERSION_MAJOR}")
   SET(CPACK_PACKAGE_VERSION_MINOR "${leapserial_VERSION_MINOR}")
   SET(CPACK_PACKAGE_VERSION_PATCH "${leapserial_VERSION_PATCH}")
-  SET(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "leapserial")
-  SET(CPACK_PACKAGE_INSTALL_DIRECTORY "leapserial")
+  SET(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "LeapSerial")
+  SET(CPACK_PACKAGE_INSTALL_DIRECTORY "LeapSerial")
   INCLUDE(CPack)
 endif()
