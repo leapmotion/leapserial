@@ -179,7 +179,7 @@ if(NOT LEAPSERIAL_IS_EMBEDDED)
   install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/leapserial-config.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/leapserial-configVersion.cmake"
-    DESTINATION "cmake"
+    DESTINATION ${CMAKE_INSTALL_PREFIX}
     COMPONENT LeapSerial
   )
 
