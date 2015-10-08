@@ -7,8 +7,8 @@
 if ("@CMAKE_CURRENT_BINARY_DIR@" STREQUAL CMAKE_CURRENT_LIST_DIR)
   set(LeapSerial_INCLUDE_DIR "@PROJECT_SOURCE_DIR@")
 else()
-  set(LeapSerial_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/../include")
+  set(LeapSerial_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/include")
 endif()
 
-include("${CMAKE_CURRENT_LIST_DIR}/LeapSerialTargets.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/LeapSerialTargets.cmake")
 set(LeapSerial_FOUND TRUE)
