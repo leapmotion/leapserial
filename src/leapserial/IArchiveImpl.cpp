@@ -93,9 +93,9 @@ void IArchiveImpl::ReadDescriptor(const descriptor& descriptor, void* pObj, uint
   uint64_t countLimit = Count() + ncb;
   for (const auto& field_descriptor : descriptor.field_descriptors)
     field_descriptor.serializer.deserialize(
-    *this,
-    static_cast<char*>(pObj)+field_descriptor.offset,
-    0
+      *this,
+      static_cast<char*>(pObj)+field_descriptor.offset,
+      0
     );
 
   if (!ncb)

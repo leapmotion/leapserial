@@ -7,6 +7,9 @@ set(LeapSerial_SRCS
   ArchiveFlatbuffer.cpp
   ArchiveJSON.h
   ArchiveJSON.cpp
+  ArchiveProtobuf.h
+  IArchiveProtobuf.cpp
+  OArchiveProtobuf.cpp
   base.h
   Descriptor.h
   Descriptor.cpp
@@ -21,6 +24,8 @@ set(LeapSerial_SRCS
   OArchiveImpl.h
   OArchiveImpl.cpp
   optional.h
+  ProtobufUtil.cpp
+  ProtobufUtil.hpp
   LeapSerial.h
   serial_traits.h
   Utility.hpp

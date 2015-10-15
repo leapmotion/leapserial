@@ -1,0 +1,40 @@
+package leap.test;
+
+message Pet {
+  required string name = 1;
+
+  enum Species {
+    DOG = 0;
+    CAT = 1;
+  }
+  required Species species = 2;
+}
+
+message PetFieldEntry{
+  required string key = 1;
+  required Pet value = 2;
+}
+
+message Person {
+  required string name = 1;
+  required int32 id = 2;
+  optional string email = 3;
+
+  enum PhoneType {
+    MOBILE = 0;
+    HOME = 1;
+    WORK = 2;
+  }
+
+  message PhoneNumber {
+    required string number = 1;
+    optional PhoneType type = 2[default = HOME];
+  }
+
+  repeated PhoneNumber phone = 4;
+  repeated PetFieldEntry pet = 5;
+}
+
+message AddressBook {
+  repeated Person person = 1;
+}
