@@ -1,12 +1,10 @@
 #include "stdafx.h"
-#include <gtest/gtest.h>
-
 #include "ArchiveFlatbuffer.h"
 #include "LeapSerial.h"
 #include "TestObject.h"
 #include "TestObject_generated.h"
-
-#include "flatbuffers/flatbuffers.h"
+#include <flatbuffers/flatbuffers.h>
+#include <gtest/gtest.h>
 #include <sstream>
 
 class ArchiveFlatbufferTest :
@@ -14,6 +12,7 @@ class ArchiveFlatbufferTest :
 {};
 
 using namespace Test;
+
 TEST_F(ArchiveFlatbufferTest, ReadFromFlatbufferMessage) {
 
   //Generate the flatbuffer message
