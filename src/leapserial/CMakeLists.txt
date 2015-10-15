@@ -18,6 +18,7 @@ set(LeapSerial_SRCS
   IArchiveImpl.cpp
   OArchiveImpl.h
   OArchiveImpl.cpp
+  optional.h
   LeapSerial.h
   serial_traits.h
   Utility.hpp
