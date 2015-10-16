@@ -1,4 +1,4 @@
-// Copyright (c) 2010 - 2015 Leap Motion. All rights reserved. Proprietary and confidential.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 
 #if _WIN32
