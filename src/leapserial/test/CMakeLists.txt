@@ -31,7 +31,6 @@ add_conditional_sources(
   TestObject_generated.h
 )
 
-find_package(Protobuf 2.5.0 QUIET)
 find_package(Threads)
 add_executable(LeapSerialTest ${LeapSerialTest_SRCS} ../../gtest-all-guard.cpp)
 target_link_libraries(LeapSerialTest LeapSerial ${CMAKE_THREAD_LIBS_INIT})
@@ -40,6 +39,8 @@ add_test(NAME LeapSerialTest COMMAND $<TARGET_FILE:LeapSerialTest>)
 if(${FlatBuffers_FOUND})
   target_link_libraries(LeapSerialTest FlatBuffers::FlatBuffers)
 endif()
+
+find_package(Protobuf 2.5.0 QUIET)
 if(${Protobuf_FOUND})
   target_link_libraries(LeapSerialTest Protobuf::Protobuf)
 endif()
