@@ -138,7 +138,7 @@ export(EXPORT LeapSerialTargets FILE LeapSerialTargets.cmake NAMESPACE LeapSeria
 install(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/leapserial-config.cmake"
   "${CMAKE_CURRENT_BINARY_DIR}/leapserial-configVersion.cmake"
-  DESTINATION ${CMAKE_INSTALL_PREFIX}
+  DESTINATION "."
   COMPONENT LeapSerial
 )
 
