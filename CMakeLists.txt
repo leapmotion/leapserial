@@ -5,8 +5,6 @@ project(LeapSerial VERSION ${LeapSerial_VERSION})
 include(CTest)
 include(CheckTypeSize)
 
-enable_testing()
-
 if(APPLE)
   option(LeapSerial_BUILD_FAT "Build fat binaries for LeapSerial" ON)
   set(CMAKE_OSX_ARCHITECTURES "x86_64;i386" CACHE STRING "Mac OS X build architectures" FORCE)
@@ -28,19 +26,6 @@ else()
   set(LeapSerial_BUILD_64 ON)
 endif()
 message(STATUS "Using architecture: ${LeapSerial_BUILD_ARCHITECTURES}")
-
-# Determine whether LeapSerial has been embedded in another project
-if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-  set(LEAPSERIAL_IS_EMBEDDED OFF)
-else()
-  set(LEAPSERIAL_IS_EMBEDDED ON)
-endif()
-
-# If there's an external libraries directory path, use it as a search prefix
-if(EXTERNAL_LIBRARY_DIR)
-  list(APPEND CMAKE_PREFIX_PATH ${EXTERNAL_LIBRARY_DIR})
-  list(APPEND CMAKE_INCLUDE_PATH ${EXTERNAL_LIBRARY_DIR})
-endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.8")
@@ -81,31 +66,22 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules")
 include(AddPCH)
 include(ConditionalSources)
 
-# We don't build tests unless we're being built by ourselves in our own source tree
-# When we're embedded in someone else's subtree, it's not likely that they will want
-# us to bring all of our unit tests in with us.  Though, if they do desire this, they
-# can always set the LEAPSERIAL_BUILD_TESTS flag
 get_filename_component(LEAPSERIAL_ROOT_DIR . ABSOLUTE)
-if(LEAPSERIAL_IS_EMBEDDED)
-  set(LEAPSERIAL_BUILD_TESTS_DEFAULT OFF)
-else()
-  set(LEAPSERIAL_BUILD_TESTS_DEFAULT ON)
 
-  # All of our binaries go to one place:  The binaries output directory.  We only want to tinker
-  # with this if we're building by ourselves, otherwise we just do whatever the enclosing project
-  # wants us to do.
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+# All of our binaries go to one place:  The binaries output directory.  We only want to tinker
+# with this if we're building by ourselves, otherwise we just do whatever the enclosing project
+# wants us to do.
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-  # Libraries not only all wind up in the libraries directory, but we also keep them all together
-  # here by putting them in the same place, regardless of whether they are debug or release.  This
-  # makes globbing them together much easier.
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/lib)
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib)
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/lib)
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib)
-endif()
+# Libraries not only all wind up in the libraries directory, but we also keep them all together
+# here by putting them in the same place, regardless of whether they are debug or release.  This
+# makes globbing them together much easier.
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib)
 
 # ARM installations should have "arm" as the suffix for the generated libraries and should be
 # position-independent
@@ -129,13 +105,6 @@ endif()
 # Postfix on all debug libraries should be "d"
 set(CMAKE_DEBUG_POSTFIX d${CMAKE_DEBUG_POSTFIX})
 
-option(LEAPSERIAL_BUILD_TESTS "Build LeapSerial unit tests" ${LEAPSERIAL_BUILD_TESTS_DEFAULT})
-function(add_googletest dirname)
-  if(LEAPSERIAL_BUILD_TESTS)
-    add_subdirectory(${dirname})
-  endif()
-endfunction()
-
 function(rewrite_header_paths target_SRC_VAR)
   # All include files are located in /LeapSerial from here, so prepend that to all sources
   set(SRCS_TEMP ${${target_SRC_VAR}})
@@ -154,14 +123,6 @@ endfunction()
 # We have unit test projects via googletest, they're added in the places where they are defined
 enable_testing()
 
-# We want everyone to be compilable as though they have this root project in their search tree,
-# because external entities will likely have just that
-include_directories(
-  .
-  contrib
-  contrib/websocketpp
-)
-
 # CMake configurations
 configure_file(leapserial-config.cmake.in leapserial-config.cmake @ONLY)
 configure_file(leapserial-configVersion.cmake.in leapserial-configVersion.cmake @ONLY)
@@ -173,77 +134,74 @@ add_subdirectory(src)
 # Export library
 export(EXPORT LeapSerialTargets FILE LeapSerialTargets.cmake NAMESPACE LeapSerial::)
 
-# Only attempt to do anything with cpack if we're being built stand-alone
-if(NOT LEAPSERIAL_IS_EMBEDDED)
-  # Install leapserial-config.cmake and leapserial-configVersion.cmake
-  install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/leapserial-config.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/leapserial-configVersion.cmake"
-    DESTINATION ${CMAKE_INSTALL_PREFIX}
-    COMPONENT LeapSerial
-  )
+# Install leapserial-config.cmake and leapserial-configVersion.cmake
+install(FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/leapserial-config.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/leapserial-configVersion.cmake"
+  DESTINATION "."
+  COMPONENT LeapSerial
+)
 
-  # Install public header files
-  install(
-    DIRECTORY ${PROJECT_SOURCE_DIR}/LeapSerial
-    DESTINATION include
-    COMPONENT LeapSerial
-    FILES_MATCHING PATTERN "*.h"
-  )
+# Install public header files
+install(
+  DIRECTORY ${PROJECT_SOURCE_DIR}/leapserial
+  DESTINATION include
+  COMPONENT LeapSerial
+  FILES_MATCHING PATTERN "*.h"
+)
  
-  # Targets file is needed in order to describe how to link LeapSerial to the rest of the system
-  install(EXPORT LeapSerialTargets FILE LeapSerialTargets.cmake COMPONENT LeapSerial NAMESPACE LeapSerial:: DESTINATION cmake CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
+# Targets file is needed in order to describe how to link LeapSerial to the rest of the system
+install(EXPORT LeapSerialTargets FILE LeapSerialTargets.cmake COMPONENT LeapSerial NAMESPACE LeapSerial:: DESTINATION cmake CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
 
-  # 64-bit installations get a different upgrade GUID
-  if(LeapSerial_BUILD_64)
-    set(LeapSerial_GUID_LAST_CHAR E)
-  else()
-    set(LeapSerial_GUID_LAST_CHAR D)
-  endif()
-
-  # This is the upgrade GUID.  Part of the GUID is derived from the major version number.  Any time
-  # the major version number is adjusted, the upgrade GUID changes.  This allows multiple versions
-  # of the same product to be installed on a user's system at the same time, but also means that
-  # manual uninstallation of older versions is required.
-  #
-  # For more information on the rationale for this process, see the discussion on semantic versioning
-  # found at http://semver.org/
-  SET(CPACK_WIX_UPGRADE_GUID "{060E5EDD-229${LeapSerial_VERSION_MAJOR}-4AD8-BAFA-A303D5696A2${LeapSerial_GUID_LAST_CHAR}}")
-
-  # Need a custom wix installation template so that we update the CMake package registry correctly
-  # Only really needed on Windows; Mac and Linux have pretty good default search behavior, so we
-  # leave those alone.
-  SET(CPACK_WIX_TEMPLATE "${CMAKE_SOURCE_DIR}/LeapSerial.wxs")
-  SET(CPACK_MONOLITHIC_INSTALL ON)
-
-  # Run the script that will grab the debug and release configurations and install them during packaging
-  set(CPACK_INSTALL_COMMANDS
-    "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config Debug"
-    "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config Release"
-    "${CMAKE_COMMAND} -DBUILD_TYPE=Debug -P \\\"${CMAKE_SOURCE_DIR}/cmake_package.cmake\\\""
-    "${CMAKE_COMMAND} -DBUILD_TYPE=Release -P \\\"${CMAKE_SOURCE_DIR}/cmake_package.cmake\\\""
-  )
-
-  # Pick the generator in an appropriate way
-  if(WIN32)
-    set(CPACK_GENERATOR WIX ZIP)
-  elseif(APPLE)
-    # TODO: Add Bundle as a generator here
-    set(CPACK_GENERATOR TGZ)
-  else()
-    set(CPACK_GENERATOR TGZ DEB)
-  endif()
-
-  # Packaging stuff, if an installer is being made instead
-  SET(CPACK_PACKAGE_VENDOR "Leap Motion")
-  SET(CPACK_PACKAGE_CONTACT "cmercenary@gmail.com")
-  SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-  SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "LeapSerial")
-  SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
-  SET(CPACK_PACKAGE_VERSION_MAJOR "${LeapSerial_VERSION_MAJOR}")
-  SET(CPACK_PACKAGE_VERSION_MINOR "${LeapSerial_VERSION_MINOR}")
-  SET(CPACK_PACKAGE_VERSION_PATCH "${LeapSerial_VERSION_PATCH}")
-  SET(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "LeapSerial")
-  SET(CPACK_PACKAGE_INSTALL_DIRECTORY "LeapSerial")
-  INCLUDE(CPack)
+# 64-bit installations get a different upgrade GUID
+if(LeapSerial_BUILD_64)
+  set(LeapSerial_GUID_LAST_CHAR E)
+else()
+  set(LeapSerial_GUID_LAST_CHAR D)
 endif()
+
+# This is the upgrade GUID.  Part of the GUID is derived from the major version number.  Any time
+# the major version number is adjusted, the upgrade GUID changes.  This allows multiple versions
+# of the same product to be installed on a user's system at the same time, but also means that
+# manual uninstallation of older versions is required.
+#
+# For more information on the rationale for this process, see the discussion on semantic versioning
+# found at http://semver.org/
+SET(CPACK_WIX_UPGRADE_GUID "{060E5EDD-229${LeapSerial_VERSION_MAJOR}-4AD8-BAFA-A303D5696A2${LeapSerial_GUID_LAST_CHAR}}")
+
+# Need a custom wix installation template so that we update the CMake package registry correctly
+# Only really needed on Windows; Mac and Linux have pretty good default search behavior, so we
+# leave those alone.
+SET(CPACK_WIX_TEMPLATE "${CMAKE_SOURCE_DIR}/LeapSerial.wxs")
+SET(CPACK_MONOLITHIC_INSTALL ON)
+
+# Run the script that will grab the debug and release configurations and install them during packaging
+set(CPACK_INSTALL_COMMANDS
+  "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config Debug"
+  "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config Release"
+  "${CMAKE_COMMAND} -DBUILD_TYPE=Debug -P \\\"${CMAKE_SOURCE_DIR}/cmake_package.cmake\\\""
+  "${CMAKE_COMMAND} -DBUILD_TYPE=Release -P \\\"${CMAKE_SOURCE_DIR}/cmake_package.cmake\\\""
+)
+
+# Pick the generator in an appropriate way
+if(WIN32)
+  set(CPACK_GENERATOR WIX ZIP)
+elseif(APPLE)
+  # TODO: Add Bundle as a generator here
+  set(CPACK_GENERATOR TGZ)
+else()
+  set(CPACK_GENERATOR TGZ DEB)
+endif()
+
+# Packaging stuff, if an installer is being made instead
+SET(CPACK_PACKAGE_VENDOR "Leap Motion")
+SET(CPACK_PACKAGE_CONTACT "cmercenary@gmail.com")
+SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "LeapSerial")
+SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
+SET(CPACK_PACKAGE_VERSION_MAJOR "${LeapSerial_VERSION_MAJOR}")
+SET(CPACK_PACKAGE_VERSION_MINOR "${LeapSerial_VERSION_MINOR}")
+SET(CPACK_PACKAGE_VERSION_PATCH "${LeapSerial_VERSION_PATCH}")
+SET(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "LeapSerial")
+SET(CPACK_PACKAGE_INSTALL_DIRECTORY "LeapSerial")
+INCLUDE(CPack)
