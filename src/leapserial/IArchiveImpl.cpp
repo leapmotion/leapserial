@@ -3,6 +3,7 @@
 #include "field_serializer.h"
 #include "serial_traits.h"
 #include "ProtobufType.h"
+#include "Utility.hpp"
 #include <iostream>
 #include <sstream>
 
@@ -244,18 +245,11 @@ bool IArchiveImpl::ReadBool() {
 }
 
 uint64_t IArchiveImpl::ReadInteger(uint8_t) {
-  uint8_t ch;
-  uint64_t retVal = 0;
   size_t ncb = 0;
-    
-  do {
-    ReadByteArray(&ch, 1);
-    retVal |= uint64_t(ch & 0x7F) << (ncb * 7);
-    ++ncb;
-  }
-  while (ch & 0x80);
-
-  return retVal;
+  uint8_t buf[10];
+  do ReadByteArray(&buf[ncb], 1);
+  while (buf[ncb++] & 0x80);
+  return leap::FromBase128(buf, ncb);
 }
 
 size_t IArchiveImpl::ClearObjectTable(void) {

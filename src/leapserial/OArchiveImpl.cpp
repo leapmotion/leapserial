@@ -3,6 +3,7 @@
 #include "OArchiveImpl.h"
 #include "field_serializer.h"
 #include "Descriptor.h"
+#include "Utility.hpp"
 #include <iostream>
 
 using namespace leap;
@@ -145,16 +146,12 @@ void OArchiveImpl::WriteBool(bool value) {
 }
 
 void OArchiveImpl::WriteInteger(int64_t value, uint8_t) {
-  uint8_t varint[10];
-
-  // Serialize out
   size_t ncb = 0;
-  for (uint64_t i = *reinterpret_cast<uint64_t*>(&value); i; i >>= 7, ncb++)
-    varint[ncb] = ((i & ~0x7F) ? 0x80 : 0) | (i & 0x7F);
-
-  if (ncb)
+  if (value) {
     // Write out our composed varint
-    WriteByteArray(varint, ncb);
+    auto buf = ToBase128(value, ncb).data();
+    WriteByteArray(buf, ncb);
+  }
   else
     // Just write one byte of zero
     WriteByteArray(&ncb, 1);
@@ -199,35 +196,7 @@ uint64_t OArchiveImpl::SizeDictionary(uint64_t n,
 }
 
 uint64_t OArchiveImpl::SizeInteger(int64_t value, uint8_t) const {
-  //Bitscan and clz11 do not work with the null case.
-  if (value == 0)
-    return 1;
-
-  // Number of bits of significant data
-  unsigned long n = 0;
-  uint64_t x = value;
-
-#ifdef _MSC_VER
-#ifdef _M_X64
-  _BitScanReverse64(&n, x);
-  n++;
-#else
-  // Need to fake a 64-bit scan
-  DWORD* pDW = (DWORD*) &x;
-  if (pDW[1]) {
-    _BitScanReverse(&n, pDW[1]);
-    n += 32;
-  }
-  else
-    _BitScanReverse(&n, pDW[0]);
-  n++;
-#endif
-#else
-  n = 64 - __builtin_clzll(x);
-#endif
-
-  // Round up value divided by 7, that's the number of bytes we need to output
-  return static_cast<uint64_t>((n + 6) / 7);
+  return leap::SizeBase128(value);
 }
 
 void OArchiveImpl::Process(void) {

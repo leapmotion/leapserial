@@ -20,6 +20,8 @@ set(LeapSerial_SRCS
   OArchiveImpl.cpp
   LeapSerial.h
   serial_traits.h
+  Utility.hpp
+  Utility.cpp
 )
 
 rewrite_header_paths(LeapSerial_SRCS)
