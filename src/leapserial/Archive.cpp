@@ -18,3 +18,37 @@ std::streamsize InputStreamAdapter::Skip(std::streamsize ncb) {
 bool OutputStreamAdapter::Write(const void* pBuf, std::streamsize ncb) {
   return (bool)os.write((const char*)pBuf, ncb);
 }
+
+const char* leap::ToString(serial_atom atom) {
+  switch (atom) {
+  case serial_atom::ignored:
+    return "[?]";
+  case serial_atom::boolean:
+    return "bool";
+  case serial_atom::i8:
+    return "i8";
+  case serial_atom::i16:
+    return "i16";
+  case serial_atom::i32:
+    return "i32";
+  case serial_atom::i64:
+    return "i64";
+  case serial_atom::f32:
+    return "f32";
+  case serial_atom::f64:
+    return "f64";
+  case serial_atom::reference:
+    return "ref";
+  case serial_atom::array:
+    return "array";
+  case serial_atom::string:
+    return "string";
+  case serial_atom::map:
+    return "map";
+  case serial_atom::descriptor:
+    return "descr";
+  case serial_atom::finalized_descriptor:
+    return "DESCR";
+  }
+  throw std::invalid_argument("Attempted to ToString an unrecognized serial atom type");
+}

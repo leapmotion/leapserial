@@ -117,6 +117,8 @@ namespace leap {
     finalized_descriptor //a combination type which may never change
   };
 
+  const char* ToString(serial_atom atom);
+
   /// <summary>
   /// Represents a stateful serialization archive structure
   /// </summary>
@@ -195,6 +197,10 @@ namespace leap {
     /// <summary>
     /// Writes an object directly to the stream - used as the root call to serialize an object.
     /// </summary>
+    /// <remarks>
+    /// This method MUST NOT BE CALLED by any internal serialization routines.  Is intended exclusively for
+    /// root objects--IE, objects that have no context and therefore no identifiers.
+    /// </remarks>
     virtual void WriteObject(const field_serializer& serializer, const void* pObj) = 0;
     
     /// <summary>
