@@ -75,6 +75,16 @@ public:
   bool operator<(const T& rhs) { return m_valid && _value() < rhs; }
 
   // Standard assignment
+  optional& operator=(optional&& rhs) {
+    if (rhs.m_valid)
+      *this = std::move(rhs._value());
+    else if (m_valid) {
+      // RHS is invalid, we need to invalidate ourselves
+      m_valid = false;
+      _value().~T();
+    }
+    return *this;
+  }
   optional& operator=(const optional& rhs) {
     if (rhs.m_valid)
       *this = rhs._value();
@@ -85,19 +95,15 @@ public:
     return *this;
   }
 
-  optional& operator=(const T& rhs) {
+  template<typename U>
+  typename std::enable_if<
+    !std::is_same<typename std::decay<U>::type, optional>::value,
+    optional
+  >::type& operator=(U&& rhs) {
     if (m_valid)
-      _value() = rhs;
+      _value() = std::forward<U&&>(rhs);
     else
-      new(val) T{ rhs };
-    m_valid = true;
-    return *this;
-  }
-  optional& operator=(T&& rhs) {
-    if (m_valid)
-      _value() = std::move(rhs);
-    else
-      new(val) T{ std::move(rhs) };
+      new(val) T{ std::forward<U&&>(rhs) };
     m_valid = true;
     return *this;
   }
