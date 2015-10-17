@@ -5,6 +5,10 @@
 
 using namespace leap;
 
+bool InputStreamAdapter::IsEof(void) const {
+  return is.eof();
+}
+
 std::streamsize InputStreamAdapter::Read(void* pBuf, std::streamsize ncb) {
   is.read((char*)pBuf, ncb);
   return is ? is.gcount() : -1;
