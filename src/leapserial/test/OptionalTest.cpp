@@ -18,6 +18,27 @@ TEST(OptionalTest, Basics) {
   ASSERT_EQ(2, copy->use_count()) << "Copy assignment did not properly invoke a destructor";
 }
 
+TEST(OptionalTest, Primitives) {
+  leap::optional<int> optInt;
+  leap::optional<float> optFloat;
+  leap::optional<double> optDouble;
+
+  optInt = 9;
+  optFloat = 1.0f;
+  optDouble = 929.4949;
+
+  ASSERT_EQ(9, *optInt);
+  ASSERT_FLOAT_EQ(1.0f, *optFloat);
+  ASSERT_DOUBLE_EQ(929.4949, *optDouble);
+}
+
+TEST(OptionalTest, Pointers) {
+  std::unique_ptr<int> data{ new int { 1001 } };
+  leap::optional<int*> val = data.get();
+  ASSERT_EQ(data.get(), *val);
+  ASSERT_EQ(1001, **val);
+}
+
 TEST(OptionalTest, DtorTest) {
   auto val = std::make_shared<int>(292);
   leap::optional<std::shared_ptr<int>> optVal;
