@@ -235,7 +235,8 @@ namespace leap {
 
     static void serialize(OArchiveRegistry& ar, const std::vector<T, Alloc>& v) {
       size_t i = 0;
-      ar.WriteArray(field_serializer_t<T,void>(),
+      ar.WriteArray(
+        field_serializer_t<T,void>::GetDescriptor(),
         static_cast<uint64_t>(v.size()),
         [&] { return &v[i++]; }
       );
@@ -245,7 +246,7 @@ namespace leap {
       size_t i = 0;
       ar.ReadArray(
         [&](uint64_t sz){ v.resize((uint32_t)sz); },
-        field_serializer_t<T, void>(),
+        field_serializer_t<T, void>::GetDescriptor(),
         [&] { return &v[i++]; },
         0
       );
@@ -282,8 +283,11 @@ namespace leap {
       auto iKey = obj.begin();
       auto iValue = obj.begin();
       return ar.SizeDictionary(obj.size(),
-        field_serializer_t<key_type, void>(), [&]{ return &(iKey++)->first; },
-        field_serializer_t<mapped_type, void>(), [&]{ return &(iValue++)->second; }
+        field_serializer_t<key_type, void>::GetDescriptor(),
+        [&]{ return &(iKey++)->first; },
+        field_serializer_t<mapped_type, void>::GetDescriptor(),
+        [&]{ return &(iValue++)->second;
+      }
       );
     }
 
@@ -471,10 +475,14 @@ namespace leap {
     }
 
     static void deserialize(IArchive& ar, string_t& obj, uint64_t ncb) {
-      ar.ReadString([&](uint64_t count) {
-        obj.resize((uint32_t)count);
-        return &obj[0];
-      }, sizeof(T), ncb);
+      ar.ReadString(
+        [&](uint64_t count) {
+          obj.resize((uint32_t)count);
+          return &obj[0];
+        },
+        sizeof(T),
+        ncb
+      );
     }
   };
 }
