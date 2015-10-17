@@ -60,8 +60,8 @@ public:
   // Comparisons
   bool operator==(const optional& rhs) const {
     return
-      !m_valid && !rhs.m_valid ||
-      m_valid && rhs.m_valid && _value() == rhs._value();
+      (!m_valid && !rhs.m_valid) ||
+      (m_valid && rhs.m_valid && _value() == rhs._value());
   }
   bool operator==(const T& rhs) const { return m_valid && _value() == rhs; }
   bool operator!=(const optional& rhs) const { return !(*this == rhs); }
@@ -69,8 +69,8 @@ public:
 
   bool operator<(const optional& rhs) {
     return
-      !m_valid && !rhs.m_valid ||
-      m_valid && rhs.m_valid && _value() < rhs._value();
+      (!m_valid && !rhs.m_valid) ||
+      (m_valid && rhs.m_valid && _value() < rhs._value());
   }
   bool operator<(const T& rhs) { return m_valid && _value() < rhs; }
 
