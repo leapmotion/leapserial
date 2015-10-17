@@ -1,11 +1,9 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include <gtest/gtest.h>
-
 #include "OArchiveImpl.h"
 #include "IArchiveImpl.h"
 #include "LeapSerial.h"
-
+#include <gtest/gtest.h>
 #include <sstream>
 
 class LeapArchiveTest :
