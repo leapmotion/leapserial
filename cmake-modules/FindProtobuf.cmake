@@ -24,7 +24,7 @@ if(DEFINED Protobuf_LIBRARY AND NOT EXISTS ${Protobuf_LIBRARY})
 endif()
 
 find_library(Protobuf_LIBRARY
-  NAMES protobuf libprotobuf #This is dumb, but nessecary because on mac, the prefix is "lib", but on windows its ""
+  NAMES protobuf libprotobuf #This is dumb, but necessary because on mac, the prefix is "lib", but on windows its ""
   HINTS "${Protobuf_ROOT_DIR}/lib"
         "${Protobuf_ROOT_DIR}/lib/Release"
 )
