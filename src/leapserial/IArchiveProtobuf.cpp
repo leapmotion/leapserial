@@ -50,6 +50,8 @@ void IArchiveProtobuf::ReadSingle(const descriptor& descriptor, void* pObj) {
     case protobuf::WireType::StartGroup:
     case protobuf::WireType::EndGroup:
       throw std::runtime_error("Unexpected protobuf wire type");
+    case protobuf::WireType::ObjReference:
+      throw std::runtime_error("Cannot serialize object references");
     }
   else
     // Straight handoff to deserialize

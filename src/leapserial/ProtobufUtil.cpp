@@ -31,6 +31,8 @@ protobuf::WireType leap::protobuf::ToWireType(serial_atom atom) {
     return protobuf::WireType::LenDelimit;
   case serial_atom::finalized_descriptor:
     break;
+  case serial_atom::ignored:
+    throw std::invalid_argument("serial_atom::ignored is a utility type and should not be used in ordinary operations");
   }
   throw std::invalid_argument("Attempted to find a wire type for an unrecognized serial atom type");
 }
