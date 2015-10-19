@@ -98,6 +98,8 @@ void OArchiveProtobuf::WriteDescriptor(const descriptor& descriptor, const void*
       // Map type is implemented basically the same way as array, except entries are pairs
       curDescEntry = &identified_descriptor;
       break;
+    case serial_atom::ignored:
+      throw std::runtime_error("Invalid serialization atom type returned");
     }
 
     // Now we write the payload proper
@@ -199,6 +201,8 @@ uint64_t OArchiveProtobuf::SizeDescriptor(const descriptor& descriptor, const vo
     case serial_atom::map:
       curDescEntry = &identified_descriptor;
       break;
+    case serial_atom::ignored:
+      throw std::runtime_error("Invalid serialization atom type returned");
     }
     
     uint64_t ncb = member_field.serializer.size(
@@ -213,6 +217,9 @@ uint64_t OArchiveProtobuf::SizeDescriptor(const descriptor& descriptor, const vo
       // These are all counted fields.  GetDescriptor is responsible for writing out the length
       // in advance of these calls, and so we must account for this length here.
       retVal += leap::SizeBase128(ncb);
+      break;
+    default:
+      // Do nothing
       break;
     }
     retVal += ncb;

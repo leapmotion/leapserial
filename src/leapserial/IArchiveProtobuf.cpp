@@ -47,6 +47,9 @@ void IArchiveProtobuf::ReadSingle(const descriptor& descriptor, void* pObj) {
     case protobuf::WireType::QuadWord:
       Skip(8);
       break;
+    case protobuf::WireType::StartGroup:
+    case protobuf::WireType::EndGroup:
+      throw std::runtime_error("Unexpected protobuf wire type");
     }
   else
     // Straight handoff to deserialize

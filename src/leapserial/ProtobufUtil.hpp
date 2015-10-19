@@ -25,9 +25,7 @@ namespace leap {
     struct serialization_error :
       public std::runtime_error
     {
-      serialization_error(std::string what) :
-        std::runtime_error(std::move(what))
-      {}
+      serialization_error(std::string what);
       serialization_error(const descriptor& descriptor);
     };
   }

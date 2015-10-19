@@ -44,6 +44,10 @@ static std::string FormatError(const descriptor& descriptor) {
   return ss.str();
 }
 
+protobuf::serialization_error::serialization_error(std::string what) :
+  std::runtime_error(std::move(what))
+{}
+
 protobuf::serialization_error::serialization_error(const descriptor& descriptor) :
   std::runtime_error(FormatError(descriptor))
 {}
