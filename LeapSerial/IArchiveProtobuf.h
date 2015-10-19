@@ -1,3 +1,4 @@
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "Archive.h"
 
@@ -27,7 +28,7 @@ namespace leap {
     void* ReadObjectReference(const create_delete& cd, const field_serializer& desc) override;
 
   private:
-    void ReadSingle(const descriptor& descriptor, void* pObj);
+    bool ReadSingle(const descriptor& descriptor, void* pObj);
 
     // Descriptor of current object being read, if any exist:
     const descriptor* m_pCurDesc = nullptr;
