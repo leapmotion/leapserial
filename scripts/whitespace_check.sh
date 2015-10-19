@@ -4,7 +4,7 @@
 # Enforce spaces instead of tabs
 #
 
-ENFORCED_FILES="autowiring examples src CMakeLists.txt"
+ENFORCED_FILES="LeapSerial src CMakeLists.txt"
 
 # Go to root directory
 
