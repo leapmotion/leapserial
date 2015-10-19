@@ -32,7 +32,12 @@ add_conditional_sources(
   TestObject_generated.h
 )
 
-find_package(Protobuf 2.5.0 QUIET)
+if(LS_PROTOBUF_REQUIRED)
+  find_package(Protobuf 2.5.0 REQUIRED)
+else()
+  find_package(Protobuf 2.5.0 QUIET)
+endif()
+
 if(Protobuf_FOUND)
   add_custom_command(
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/TestProtobuf.pb.cc ${CMAKE_CURRENT_SOURCE_DIR}/TestProtobuf.pb.h
