@@ -4,8 +4,8 @@
 namespace leap {
   struct field_serializer;
 
-  struct IArray {
-    IArray(const field_serializer& serializer) :
+  struct IArrayReader {
+    IArrayReader(const field_serializer& serializer) :
       serializer(serializer)
     {}
 
@@ -23,6 +23,17 @@ namespace leap {
     /// The size of the array object
     /// </returns>
     virtual size_t size(void) const = 0;
+  };
+
+  struct IArrayAppender {
+    IArrayAppender(const field_serializer& serializer) :
+      serializer(serializer)
+    {}
+
+    /// <summary>
+    /// The serializer for elements of the array
+    /// </summary>
+    const field_serializer& serializer;
 
     /// <summary>
     /// Reserves the specified number of entries in the array

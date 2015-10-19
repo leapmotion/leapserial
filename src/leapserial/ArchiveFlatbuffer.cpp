@@ -246,7 +246,7 @@ void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const voi
   WriteInteger(vTable.size);
 }
 
-void OArchiveFlatbuffer::WriteArray(const IArray& ary) { 
+void OArchiveFlatbuffer::WriteArray(IArrayReader&& ary) {
   //We need to write these twice in some cases, so store the pointers & go back through in reverse
   std::vector<const void*> elements;
   size_t n = ary.size();
@@ -307,7 +307,7 @@ uint64_t OArchiveFlatbuffer::SizeDescriptor(const descriptor& descriptor, const 
   return sizeof(uint32_t);
 }
 
-uint64_t OArchiveFlatbuffer::SizeArray(const IArray& ary) const { 
+uint64_t OArchiveFlatbuffer::SizeArray(IArrayReader&& ary) const { 
   return sizeof(uint32_t);
 }
 
@@ -427,7 +427,7 @@ void IArchiveFlatbuffer::ReadFloat(double& value) {
   m_offset += sizeof(float);
 }
 
-void IArchiveFlatbuffer::ReadArray(IArray& ary) {
+void IArchiveFlatbuffer::ReadArray(IArrayAppender&& ary) {
   const auto baseOffset = m_offset;
   const auto arrayOffset = baseOffset + GetValue<uint32_t>(baseOffset);
 

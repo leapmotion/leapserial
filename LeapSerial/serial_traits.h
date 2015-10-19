@@ -152,35 +152,29 @@ namespace leap {
   struct primitive_serial_traits<T[N], typename std::enable_if<has_serializer<T>::value>::type>
   {
     struct CArrayImpl :
-      public IArray
+      public IArrayReader
     {
       CArrayImpl(const T* pAry) :
-        IArray(field_serializer_t<T, void>::GetDescriptor()),
+        IArrayReader(field_serializer_t<T, void>::GetDescriptor()),
         pAry(pAry)
       {}
 
       const T* const pAry;
-      size_t i = 0;
 
       const void* get(size_t i) const override { return pAry + i; }
       size_t size(void) const override { return N; }
-      void reserve(size_t n) override { throw std::runtime_error("Attempted to access a non-const member on a constant type"); }
-      void* allocate(void) override { throw std::runtime_error("Attempted to access a non-const member on a constant type"); }
     };
 
     struct ArrayImpl :
-      public IArray
+      public IArrayAppender
     {
       ArrayImpl(T* pAry) :
-        IArray(field_serializer_t<T, void>::GetDescriptor()),
+        IArrayAppender(field_serializer_t<T, void>::GetDescriptor()),
         pAry(pAry)
       {}
 
       T* const pAry;
       size_t i = 0;
-
-      const void* get(size_t i) const override { return pAry + i; }
-      size_t size(void) const override { return N; }
 
       void reserve(size_t n) override {
         if (n != N)
@@ -259,10 +253,10 @@ namespace leap {
     typedef std::vector<T, Alloc> serial_type;
 
     struct CArrayImpl :
-      IArray
+      IArrayReader
     {
       CArrayImpl(const serial_type& obj) :
-        IArray(field_serializer_t<T, void>::GetDescriptor()),
+        IArrayReader(field_serializer_t<T, void>::GetDescriptor()),
         obj(obj)
       {}
 
@@ -270,22 +264,18 @@ namespace leap {
 
       const void* get(size_t i) const override { return &obj[i]; }
       size_t size(void) const override { return obj.size(); }
-      void reserve(size_t n) override { throw std::runtime_error("Attempted to access a non-const member on a constant type"); }
-      void* allocate(void) override { throw std::runtime_error("Attempted to access a non-const member on a constant type"); }
     };
 
     struct ArrayImpl :
-      IArray
+      IArrayAppender
     {
       ArrayImpl(serial_type& obj) :
-        IArray(field_serializer_t<T, void>::GetDescriptor()),
+        IArrayAppender(field_serializer_t<T, void>::GetDescriptor()),
         obj(obj)
       {}
 
       serial_type& obj;
 
-      const void* get(size_t i) const override { return &obj[i]; }
-      size_t size(void) const override { return obj.size(); }
       void reserve(size_t n) override { obj.reserve(n); }
       void* allocate(void) override {
         obj.push_back({});

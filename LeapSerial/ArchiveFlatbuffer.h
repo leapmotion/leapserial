@@ -47,7 +47,7 @@ namespace leap {
     void WriteObjectReference(const field_serializer& serializer, const void* pObj) override;
     void WriteObject(const field_serializer& serializer, const void* pObj) override;
     void WriteDescriptor(const descriptor& descriptor, const void* pObj) override;
-    void WriteArray(const IArray& ary) override;
+    void WriteArray(IArrayReader&& ary) override;
     void WriteDictionary(IDictionaryReader&& dictionary) override;
 
     //Size query functions.  Note that these do not return the total size of the object,
@@ -59,7 +59,7 @@ namespace leap {
     uint64_t SizeString(const void* pBuf, uint64_t ncb, uint8_t charSize) const override;
     uint64_t SizeObjectReference(const field_serializer& serializer, const void* pObj) const override;
     uint64_t SizeDescriptor(const descriptor& descriptor, const void* pObj) const override;
-    uint64_t SizeArray(const IArray& ary) const override;
+    uint64_t SizeArray(IArrayReader&& ary) const override;
     uint64_t SizeDictionary(IDictionaryReader&& dictionary) const override;
 
   private:
@@ -107,7 +107,7 @@ namespace leap {
     uint64_t ReadInteger(uint8_t ncb) override;
     void ReadFloat(float& value) override;
     void ReadFloat(double& value) override;
-    void ReadArray(IArray& ary) override;
+    void ReadArray(IArrayAppender&& ary) override;
     void ReadDictionary(IDictionaryInserter&& dictionary) override;
 
     void* ReadObjectReference(const create_delete& cd, const field_serializer& desc) override;

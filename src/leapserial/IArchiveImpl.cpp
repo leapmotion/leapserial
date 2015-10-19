@@ -150,7 +150,7 @@ void IArchiveImpl::ReadDescriptor(const descriptor& descriptor, void* pObj, uint
   }
 }
 
-void IArchiveImpl::ReadArray(IArray& ary) {
+void IArchiveImpl::ReadArray(IArrayAppender&& ary) {
   // Read the number of entries first:
   uint32_t nEntries;
   ReadByteArray(&nEntries, sizeof(nEntries));

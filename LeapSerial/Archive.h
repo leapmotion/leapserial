@@ -213,7 +213,7 @@ namespace leap {
     /// <summary>
     /// Writes out an array of entries
     /// </summary>
-    virtual void WriteArray(const IArray& ary) = 0;
+    virtual void WriteArray(IArrayReader&& ary) = 0;
     
     /// <summary>
     /// Writes out a dictionary of entries
@@ -222,7 +222,7 @@ namespace leap {
 
     virtual uint64_t SizeObjectReference(const field_serializer& serializer, const void* pObj) const = 0;
     virtual uint64_t SizeDescriptor(const descriptor& descriptor, const void* pObj) const = 0;
-    virtual uint64_t SizeArray(const IArray& ary) const = 0;
+    virtual uint64_t SizeArray(IArrayReader&& ary) const = 0;
     virtual uint64_t SizeDictionary(IDictionaryReader&& dictionary) const = 0;
   };
 
@@ -292,7 +292,7 @@ namespace leap {
     /// <summary>
     /// Reads out a length delimited array of an arbitrary type into the specified buffer.
     /// </summary>
-    virtual void ReadArray(IArray& ary) = 0;
+    virtual void ReadArray(IArrayAppender&& ary) = 0;
 
     /// <summary>
     /// Reads the specified boolean value to the output stream

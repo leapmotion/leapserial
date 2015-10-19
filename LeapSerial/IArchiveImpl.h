@@ -107,7 +107,7 @@ namespace leap {
     void ReadFloat(float& value) override { ReadByteArray(&value, sizeof(float)); }
     void ReadFloat(double& value) override { ReadByteArray(&value, sizeof(double)); }
     void ReadDescriptor(const descriptor& descriptor, void* pObj, uint64_t ncb) override;
-    void ReadArray(IArray& ary) override;
+    void ReadArray(IArrayAppender&& ary) override;
     void ReadDictionary(IDictionaryInserter&& dictionary) override;
   };
 }

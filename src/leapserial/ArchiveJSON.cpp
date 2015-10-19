@@ -143,7 +143,7 @@ void OArchiveJSON::WriteDescriptor(const descriptor& descriptor, const void* pOb
   os << '}';
 }
 
-void OArchiveJSON::WriteArray(const IArray& ary) {
+void OArchiveJSON::WriteArray(IArrayReader&& ary) {
   throw not_implemented_exception();
 }
 
@@ -174,7 +174,7 @@ uint64_t OArchiveJSON::SizeDescriptor(const descriptor& descriptor, const void* 
   throw not_implemented_exception();
 }
 
-uint64_t OArchiveJSON::SizeArray(const IArray& ary) const {
+uint64_t OArchiveJSON::SizeArray(IArrayReader&& ary) const {
   throw not_implemented_exception();
 }
 
@@ -240,7 +240,7 @@ void IArchiveJSON::ReadFloat(double& value) {
   throw not_implemented_exception();
 }
 
-void IArchiveJSON::ReadArray(IArray& ary) {
+void IArchiveJSON::ReadArray(IArrayAppender&& ary) {
   throw not_implemented_exception();
 }
 

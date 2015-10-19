@@ -158,7 +158,7 @@ void OArchiveImpl::WriteInteger(int64_t value, uint8_t) {
     WriteByteArray(&ncb, 1);
 }
 
-void OArchiveImpl::WriteArray(const IArray& ary) {
+void OArchiveImpl::WriteArray(IArrayReader&& ary) {
   uint32_t n = (uint32_t)ary.size();
   WriteSize(n);
   
@@ -166,7 +166,7 @@ void OArchiveImpl::WriteArray(const IArray& ary) {
     ary.serializer.serialize(*this, ary.get(i));
 }
 
-uint64_t OArchiveImpl::SizeArray(const IArray& ary) const {
+uint64_t OArchiveImpl::SizeArray(IArrayReader&& ary) const {
   uint64_t sz = sizeof(uint32_t);
   size_t n = ary.size();
   for (size_t i = 0; i < n; i++)
