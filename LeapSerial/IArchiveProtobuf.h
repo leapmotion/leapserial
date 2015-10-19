@@ -27,7 +27,7 @@ namespace leap {
     void* ReadObjectReference(const create_delete& cd, const field_serializer& desc) override;
 
   private:
-    void ReadSingle(const descriptor& descriptor, void* pObj);
+    bool ReadSingle(const descriptor& descriptor, void* pObj);
 
     // Descriptor of current object being read, if any exist:
     const descriptor* m_pCurDesc = nullptr;

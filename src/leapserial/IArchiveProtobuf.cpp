@@ -26,8 +26,11 @@ void IArchiveProtobuf::Skip(uint64_t ncb) {
   m_count += ncb;
 }
 
-void IArchiveProtobuf::ReadSingle(const descriptor& descriptor, void* pObj) {
+bool IArchiveProtobuf::ReadSingle(const descriptor& descriptor, void* pObj) {
   uint64_t v = ReadInteger(0);
+  if (is.IsEof())
+    return false;
+
   protobuf::WireType type = static_cast<protobuf::WireType>(v & 7);
   uint64_t ident = v >> 3;
 
@@ -60,6 +63,7 @@ void IArchiveProtobuf::ReadSingle(const descriptor& descriptor, void* pObj) {
       reinterpret_cast<uint8_t*>(pObj) + q->second.offset,
       0
     );
+  return true;
 }
 
 void IArchiveProtobuf::ReadDescriptor(const descriptor& descriptor, void* pObj, uint64_t ncb) {
@@ -78,11 +82,11 @@ void IArchiveProtobuf::ReadDescriptor(const descriptor& descriptor, void* pObj, 
   {
     uint64_t maxCount = m_count + ncb;
     while (m_count < maxCount)
-      ReadSingle(descriptor, pObj);
+      if(!ReadSingle(descriptor, pObj))
+        throw std::runtime_error("Premature end of input stream");
   }
   else
-    while (!is.IsEof())
-      ReadSingle(descriptor, pObj);
+    while (ReadSingle(descriptor, pObj));
 }
 
 void IArchiveProtobuf::ReadByteArray(void* pBuf, uint64_t ncb) {
@@ -102,7 +106,8 @@ bool IArchiveProtobuf::ReadBool(void) {
 uint64_t IArchiveProtobuf::ReadInteger(uint8_t) {
   size_t ncb = 0;
   uint8_t buf[10];
-  do is.Read(buf, 1);
+  do if(is.Read(buf, 1) < 0)
+    return ~0;
   while (buf[ncb++] & 0x80);
   m_count += ncb;
   return leap::FromBase128(buf, ncb);
@@ -120,13 +125,19 @@ void IArchiveProtobuf::ReadDictionary(IDictionaryInserter&& dictionary)
   // Read out length field first
   uint64_t ncb = ReadInteger(8);
   uint64_t maxCount = m_count + ncb;
-  while (m_count < maxCount) {
-    // Key first, then value
-    dictionary.key_serializer.deserialize(*this, dictionary.key(), maxCount - m_count);
-    if (maxCount <= m_count)
-      throw std::runtime_error("Stream torn while reading a dictionary");
-    dictionary.value_serializer.deserialize(*this, dictionary.insert(), maxCount - m_count);
-  }
+
+  // Key and value
+  uint64_t keyIdent = ReadInteger(8) >> 3;
+  if (keyIdent != 1)
+    throw std::runtime_error("Key provided more than once for a map entry");
+  dictionary.key_serializer.deserialize(*this, dictionary.key(), maxCount - m_count);
+
+  uint64_t valueIdent = ReadInteger(8) >> 3;
+  if (valueIdent != 2)
+    throw std::runtime_error("Expected the key to be provided first, then the value");
+  dictionary.value_serializer.deserialize(*this, dictionary.insert(), maxCount - m_count);
+  if (m_count != maxCount)
+    throw std::runtime_error("Stray bytes encountered after deserializing an object");
 }
 
 void* IArchiveProtobuf::ReadObjectReference(const create_delete& cd, const field_serializer& desc) {
