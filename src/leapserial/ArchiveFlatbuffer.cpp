@@ -246,21 +246,22 @@ void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const voi
   WriteInteger(vTable.size);
 }
 
-void OArchiveFlatbuffer::WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) { 
+void OArchiveFlatbuffer::WriteArray(IArrayReader&& ary) {
   //We need to write these twice in some cases, so store the pointers & go back through in reverse
   std::vector<const void*> elements;
-  for (uint64_t i = 0; i < n; i++)
-    elements.push_back(enumerator());
+  size_t n = ary.size();
+  for (size_t i = 0; i < n; i++)
+    elements.push_back(ary.get(i));
 
   const auto arrayPtr = m_currentFieldPtr;
 
   for (auto i = elements.rbegin(); i != elements.rend(); i++) {
     m_currentFieldPtr = *i;
-    desc.serialize(*this, *i);
+    ary.serializer.serialize(*this, *i);
   }
 
   //If this is an array of a type that is stored by offset, store the offsets...
-  if (WillStoreAsOffset(*this, desc, elements[0])) {
+  if (WillStoreAsOffset(*this, ary.serializer, elements[0])) {
     for (auto i = elements.rbegin(); i != elements.rend(); i++) {
       WriteRelativeOffset(*i);
     }
@@ -270,13 +271,7 @@ void OArchiveFlatbuffer::WriteArray(const field_serializer& desc, uint64_t n, st
   SaveOffset(arrayPtr, (uint32_t)m_builder.size());
 }
 
-void OArchiveFlatbuffer::WriteDictionary(
-  uint64_t n,
-  const field_serializer& keyDesc,
-  std::function<const void*()> keyEnumerator,
-  const field_serializer& valueDesc,
-  std::function<const void*()> valueEnumerator
-  )
+void OArchiveFlatbuffer::WriteDictionary(IDictionaryReader&& dictionary)
 { 
   throw not_implemented_exception();
 }
@@ -312,17 +307,11 @@ uint64_t OArchiveFlatbuffer::SizeDescriptor(const descriptor& descriptor, const 
   return sizeof(uint32_t);
 }
 
-uint64_t OArchiveFlatbuffer::SizeArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) const { 
+uint64_t OArchiveFlatbuffer::SizeArray(IArrayReader&& ary) const { 
   return sizeof(uint32_t);
 }
 
-uint64_t OArchiveFlatbuffer::SizeDictionary(
-  uint64_t n,
-  const field_serializer& keyDesc,
-  std::function<const void*()> keyEnumerator,
-  const field_serializer& valueDesc,
-  std::function<const void*()> valueEnumerator
-  ) const 
+uint64_t OArchiveFlatbuffer::SizeDictionary(IDictionaryReader&& dictionary) const
 { 
   throw not_implemented_exception();
 }
@@ -438,24 +427,20 @@ void IArchiveFlatbuffer::ReadFloat(double& value) {
   m_offset += sizeof(float);
 }
 
-void IArchiveFlatbuffer::ReadArray(std::function<void(uint64_t)> sizeBufferFn, const field_serializer& t_serializer, std::function<void*()> enumerator, uint64_t expectedEntries) {
+void IArchiveFlatbuffer::ReadArray(IArrayAppender&& ary) {
   const auto baseOffset = m_offset;
   const auto arrayOffset = baseOffset + GetValue<uint32_t>(baseOffset);
 
   const auto size = GetValue<uint32_t>(arrayOffset);
-
-  sizeBufferFn(size);
+  ary.reserve(size);
 
   m_offset = arrayOffset + sizeof(uint32_t);
-  //const auto step = GetFieldSize(t_serializer.type());
-  for (uint32_t i = 0 ; i < size; ++i) {
-    //assert(m_offset == arrayOffset + sizeof(uint32_t) + (i * step));
-    t_serializer.deserialize(*this, enumerator(), 0);
-  }
+  for (uint32_t i = 0 ; i < size; ++i)
+    ary.serializer.deserialize(*this, ary.allocate(), 0);
 
   m_offset = baseOffset + sizeof(uint32_t);
 }
 
-void IArchiveFlatbuffer::ReadDictionary(const field_serializer& keyDesc, void* key, const field_serializer& valueDesc, void* value, std::function<void(const void* key, const void* value)> inserter) {
+void IArchiveFlatbuffer::ReadDictionary(IDictionaryInserter&& dictionary) {
   throw not_implemented_exception();
 }

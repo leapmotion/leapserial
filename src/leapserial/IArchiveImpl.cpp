@@ -150,19 +150,15 @@ void IArchiveImpl::ReadDescriptor(const descriptor& descriptor, void* pObj, uint
   }
 }
 
-void IArchiveImpl::ReadArray(std::function<void(uint64_t)> sizeBufferFn, const field_serializer& t_serializer, std::function<void*()> enumerator, uint64_t expectedEntries) {
+void IArchiveImpl::ReadArray(IArrayAppender&& ary) {
   // Read the number of entries first:
   uint32_t nEntries;
   ReadByteArray(&nEntries, sizeof(nEntries));
-  
-  if (expectedEntries != 0 && nEntries != expectedEntries)
-    // We expected to get N entries, but got back some other value.  Something is wrong.
-    throw std::runtime_error("Attempted to deserialize a non-matching number of entries into a fixed-size space");
-  
-  sizeBufferFn(nEntries);
+  ary.reserve(nEntries);
+
   // Now loop until we get the desired number of entries from the stream
   for (size_t i = 0; i < nEntries; i++)
-    t_serializer.deserialize(*this, enumerator(), 0);
+    ary.serializer.deserialize(*this, ary.allocate(), 0);
 }
 
 void IArchiveImpl::ReadString(std::function<void*(uint64_t)> getBufferFn, uint8_t charSize, uint64_t ncb) {
@@ -175,9 +171,7 @@ void IArchiveImpl::ReadString(std::function<void*(uint64_t)> getBufferFn, uint8_
   ReadByteArray(pBuf, nEntries * charSize);
 }
 
-void IArchiveImpl::ReadDictionary(const field_serializer& keyDesc, void* key,
-                                  const field_serializer& valueDesc, void* value,
-                                  std::function<void(const void* key, const void* value)> insertionFn)
+void IArchiveImpl::ReadDictionary(IDictionaryInserter&& dictionary)
 {
   // Read the number of entries first:
   uint32_t nEntries;
@@ -185,11 +179,10 @@ void IArchiveImpl::ReadDictionary(const field_serializer& keyDesc, void* key,
   
   // Now read in all values:
   while (nEntries--) {
-    keyDesc.deserialize(*this, key, 0);
-    valueDesc.deserialize(*this, value, 0);
-    insertionFn(key,value);
+    dictionary.key_serializer.deserialize(*this, dictionary.key(), 0);
+    void* value = dictionary.insert();
+    dictionary.value_serializer.deserialize(*this, value, 0);
   }
-
 }
 
 IArchive::ReleasedMemory IArchiveImpl::Release(ReleasedMemory(*pfnAlloc)(), const field_serializer& serializer, uint32_t objId) {

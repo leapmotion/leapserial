@@ -107,16 +107,7 @@ namespace leap {
     void ReadFloat(float& value) override { ReadByteArray(&value, sizeof(float)); }
     void ReadFloat(double& value) override { ReadByteArray(&value, sizeof(double)); }
     void ReadDescriptor(const descriptor& descriptor, void* pObj, uint64_t ncb) override;
-    void ReadArray(std::function<void(uint64_t)> sizeBufferFn, const field_serializer& t_serializer, std::function<void*()> enumerator, uint64_t n) override;
-    void ReadDictionary(const field_serializer& keyDesc,
-                        void* key,
-                        const field_serializer& valueDesc,
-                        void* value,
-                        std::function<void(const void* key, const void* value)> insertionFn
-                        ) override;
-
-    
-
-
+    void ReadArray(IArrayAppender&& ary) override;
+    void ReadDictionary(IDictionaryInserter&& dictionary) override;
   };
 }

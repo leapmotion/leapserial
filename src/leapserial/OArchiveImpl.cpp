@@ -158,41 +158,49 @@ void OArchiveImpl::WriteInteger(int64_t value, uint8_t) {
     WriteByteArray(&ncb, 1);
 }
 
-void OArchiveImpl::WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) {
-  WriteSize((uint32_t)n);
+void OArchiveImpl::WriteArray(IArrayReader&& ary) {
+  uint32_t n = (uint32_t)ary.size();
+  WriteSize(n);
   
-  while (n--)
-    desc.serialize(*this, enumerator());
+  for (uint32_t i = 0; i < n; i++)
+    ary.serializer.serialize(*this, ary.get(i));
 }
 
-uint64_t OArchiveImpl::SizeArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) const {
+uint64_t OArchiveImpl::SizeArray(IArrayReader&& ary) const {
   uint64_t sz = sizeof(uint32_t);
-  while (n--)
-    sz += desc.size(*this, enumerator());
+  size_t n = ary.size();
+  for (size_t i = 0; i < n; i++)
+    sz += ary.serializer.size(*this, ary.get(i));
   return sz;
 }
 
-void OArchiveImpl::WriteDictionary(uint64_t n,
-  const field_serializer& keyDesc, std::function<const void*()> keyEnumerator,
-  const field_serializer& valueDesc, std::function<const void*()> valueEnumerator)
+void OArchiveImpl::WriteDictionary(IDictionaryReader&& dictionary)
 {
+  uint32_t n = dictionary.size();
   WriteSize((uint32_t)n);
   
-  while (n--){
-    keyDesc.serialize(*this, keyEnumerator());
-    valueDesc.serialize(*this, valueEnumerator());
+  while (dictionary.next()) {
+    dictionary.key_serializer.serialize(*this, dictionary.key());
+    dictionary.value_serializer.serialize(*this, dictionary.value());
+    if (!n--)
+      break;
   }
+  if (n)
+    throw std::runtime_error("Dictionary size function reported a count inconsistent with the number of entries enumerated");
 }
 
-uint64_t OArchiveImpl::SizeDictionary(uint64_t n,
-  const field_serializer& keyDesc, std::function<const void*()> keyEnumerator,
-  const field_serializer& valueDesc, std::function<const void*()> valueEnumerator) const
+uint64_t OArchiveImpl::SizeDictionary(IDictionaryReader&& dictionary) const
 {
   uint64_t retVal = sizeof(uint32_t);
-  while (n--) {
-    retVal += keyDesc.size(*this, keyEnumerator());
-    retVal += valueDesc.size(*this, valueEnumerator());
+  size_t n = dictionary.size();
+  while (dictionary.next()) {
+    retVal += dictionary.key_serializer.size(*this, dictionary.key());
+    retVal += dictionary.value_serializer.size(*this, dictionary.value());
+    if (!n--)
+      break;
   }
+  if (n)
+    throw std::runtime_error("Dictionary size function reported a count inconsistent with the number of entries enumerated");
   return retVal;
 }
 
