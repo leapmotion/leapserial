@@ -26,8 +26,7 @@ matrix:
     - _CXX: clang++
     - CMAKE_URL=http://cmake.org/files/v3.1/cmake-3.1.0-Darwin64.tar.gz
     - CMAKE_DIRNAME=cmake-3.1.0-Darwin64/CMake.app/Contents
-    - CMAKE_EXTRA_FLAGS=-DLS_PROTOBUF_REQUIRED:BOOL=ON
-    - BREW_COMMAND="brew install protobuf"
+    - CMAKE_EXTRA_FLAGS=
 
 before_install:
   # Enforce whitespace guidelines
