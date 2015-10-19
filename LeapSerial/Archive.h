@@ -26,6 +26,11 @@ namespace leap {
   public:
     virtual ~IInputStream(void) {}
 
+    /// <returns>
+    /// False if the next call to Read might succeed
+    /// </returns>
+    virtual bool IsEof(void) const = 0;
+
     /// <summary>
     /// Reads exactly the specified number of bytes from the input stream
     /// </summary>
@@ -58,6 +63,7 @@ namespace leap {
 
   public:
     // IInputStream overrides:
+    bool IsEof(void) const override;
     std::streamsize Read(void* pBuf, std::streamsize ncb) override;
     std::streamsize Skip(std::streamsize ncb) override;
   };
