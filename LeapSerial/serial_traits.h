@@ -151,36 +151,61 @@ namespace leap {
   template<typename T, size_t N>
   struct primitive_serial_traits<T[N], typename std::enable_if<has_serializer<T>::value>::type>
   {
+    struct CArrayImpl :
+      public IArray
+    {
+      CArrayImpl(const T* pAry) :
+        IArray(field_serializer_t<T, void>::GetDescriptor()),
+        pAry(pAry)
+      {}
+
+      const T* const pAry;
+      size_t i = 0;
+
+      const void* get(size_t i) const override { return pAry + i; }
+      size_t size(void) const override { return N; }
+      void reserve(size_t n) override { throw std::runtime_error("Attempted to access a non-const member on a constant type"); }
+      void* allocate(void) override { throw std::runtime_error("Attempted to access a non-const member on a constant type"); }
+    };
+
+    struct ArrayImpl :
+      public IArray
+    {
+      ArrayImpl(T* pAry) :
+        IArray(field_serializer_t<T, void>::GetDescriptor()),
+        pAry(pAry)
+      {}
+
+      T* const pAry;
+      size_t i = 0;
+
+      const void* get(size_t i) const override { return pAry + i; }
+      size_t size(void) const override { return N; }
+
+      void reserve(size_t n) override {
+        if (n != N)
+          throw std::runtime_error("Incorrect deserialization attempt into a non-fixed-size space");
+      }
+
+      void* allocate(void) override {
+        return pAry + i++;
+      };
+    };
+
     static ::leap::serial_atom type() {
       return ::leap::serial_atom::array;
     }
 
     static uint64_t size(const OArchiveRegistry& ar, const T* pObj) {
-      size_t i = 0;
-      return ar.SizeArray(
-        field_serializer_t<T,void>::GetDescriptor(),
-        N,
-        [&] {return &pObj[i++]; }
-      );
+      return ar.SizeArray(CArrayImpl{ pObj });
     }
 
     static void serialize(OArchiveRegistry& ar, const T* pObj) {
-      size_t i = 0;
-      ar.WriteArray(
-        field_serializer_t<T,void>::GetDescriptor(),
-        N,
-        [&]{ return &pObj[i++]; }
-      );
+      ar.WriteArray(CArrayImpl{ pObj });
     }
 
     static void deserialize(IArchiveRegistry& ar, T* pObj, uint64_t ncb) {
-      size_t i = 0;
-      ar.ReadArray(
-        [](uint64_t){},
-        field_serializer_t<T, void>::GetDescriptor(),
-        [&](){ return &pObj[i++]; },
-        N
-      );
+      ar.ReadArray(ArrayImpl{ pObj });
     }
   };
 
@@ -231,6 +256,43 @@ namespace leap {
   template<typename T, typename Alloc>
   struct primitive_serial_traits<std::vector<T, Alloc>, typename std::enable_if<has_serializer<T>::value>::type>
   {
+    typedef std::vector<T, Alloc> serial_type;
+
+    struct CArrayImpl :
+      IArray
+    {
+      CArrayImpl(const serial_type& obj) :
+        IArray(field_serializer_t<T, void>::GetDescriptor()),
+        obj(obj)
+      {}
+
+      const serial_type& obj;
+
+      const void* get(size_t i) const override { return &obj[i]; }
+      size_t size(void) const override { return obj.size(); }
+      void reserve(size_t n) override { throw std::runtime_error("Attempted to access a non-const member on a constant type"); }
+      void* allocate(void) override { throw std::runtime_error("Attempted to access a non-const member on a constant type"); }
+    };
+
+    struct ArrayImpl :
+      IArray
+    {
+      ArrayImpl(serial_type& obj) :
+        IArray(field_serializer_t<T, void>::GetDescriptor()),
+        obj(obj)
+      {}
+
+      serial_type& obj;
+
+      const void* get(size_t i) const override { return &obj[i]; }
+      size_t size(void) const override { return obj.size(); }
+      void reserve(size_t n) override { obj.reserve(n); }
+      void* allocate(void) override {
+        obj.push_back({});
+        return &obj.back();
+      }
+    };
+
     static ::leap::serial_atom type() {
       return ::leap::serial_atom::array;
     }
@@ -241,32 +303,16 @@ namespace leap {
     // If we're irresponsible, we need a more powerful archive registry as an input
     typedef typename std::conditional<is_irresponsible, IArchiveRegistry, IArchive>::type iarchive;
 
-    static uint64_t size(const OArchiveRegistry& ar, const std::vector<T, Alloc>& v) {
-      size_t i = 0;
-      return ar.SizeArray(
-        field_serializer_t<T,void>::GetDescriptor(),
-        v.size(),
-        [&] { return &v[i++]; }
-      );
+    static uint64_t size(const OArchiveRegistry& ar, const serial_type& v) {
+      return ar.SizeArray(CArrayImpl{ v });
     }
 
-    static void serialize(OArchiveRegistry& ar, const std::vector<T, Alloc>& v) {
-      size_t i = 0;
-      ar.WriteArray(
-        field_serializer_t<T,void>::GetDescriptor(),
-        static_cast<uint64_t>(v.size()),
-        [&] { return &v[i++]; }
-      );
+    static void serialize(OArchiveRegistry& ar, const serial_type& v) {
+      ar.WriteArray(CArrayImpl{ v });
     }
 
-    static void deserialize(iarchive& ar, std::vector<T, Alloc>& v, uint64_t ncb) {
-      size_t i = 0;
-      ar.ReadArray(
-        [&](uint64_t sz){ v.resize((uint32_t)sz); },
-        field_serializer_t<T, void>::GetDescriptor(),
-        [&] { return &v[i++]; },
-        0
-      );
+    static void deserialize(iarchive& ar, serial_type& v, uint64_t ncb) {
+      ar.ReadArray(ArrayImpl{ v });
     }
   };
 
@@ -292,45 +338,72 @@ namespace leap {
     // type in order to ensure values are correctly propagated.
     typedef typename std::conditional<sc_needsAllocation, IArchiveRegistry, IArchive>::type iarchive;
 
+    struct DictionaryReaderImpl :
+      IDictionaryReader
+    {
+      DictionaryReaderImpl(const Container& container) :
+        IDictionaryReader(
+          field_serializer_t<key_type, void>::GetDescriptor(),
+          field_serializer_t<mapped_type, void>::GetDescriptor()
+        ),
+        container(container),
+        q(container.end())
+      {}
+
+      const Container& container;
+      bool init = false;
+      typename Container::const_iterator q;
+
+      size_t size(void) const override { return container.size(); }
+      bool next(void) {
+        if (init)
+          ++q;
+        else {
+          init = true;
+          q = container.begin();
+        }
+        return q != container.end();
+      }
+      const void* key(void) const { return &q->first; }
+      const void* value(void) const { return &q->second; }
+    };
+
+    struct DictionaryInserterImpl :
+      IDictionaryInserter
+    {
+      DictionaryInserterImpl(Container& container) :
+        IDictionaryInserter(
+          field_serializer_t<key_type, void>::GetDescriptor(),
+          field_serializer_t<mapped_type, void>::GetDescriptor()
+        ),
+        container(container)
+      {}
+
+      Container& container;
+      key_type m_key;
+
+      void* key(void) override { return &m_key; }
+      void* insert(void) override {
+        void* retVal = &container[std::move(m_key)];
+        m_key = key_type{};
+        return retVal;
+      }
+    };
+
     static ::leap::serial_atom type() {
       return ::leap::serial_atom::map;
     }
 
     static uint64_t size(const OArchiveRegistry& ar, const Container& obj) {
-      auto iKey = obj.begin();
-      auto iValue = obj.begin();
-      return ar.SizeDictionary(obj.size(),
-        field_serializer_t<key_type, void>::GetDescriptor(),
-        [&]{ return &(iKey++)->first; },
-        field_serializer_t<mapped_type, void>::GetDescriptor(),
-        [&]{ return &(iValue++)->second;
-      }
-      );
+      return ar.SizeDictionary(DictionaryReaderImpl{ obj });
     }
 
     static void serialize(OArchiveRegistry& ar, const Container& obj) {
-      auto iKey = obj.begin();
-      auto iValue = obj.begin();
-      return ar.WriteDictionary(obj.size(),
-        field_serializer_t<key_type, void>::GetDescriptor(),
-        [&]{ return &((iKey++)->first); },
-        field_serializer_t<mapped_type, void>::GetDescriptor(),
-        [&]{ return &((iValue++)->second); }
-      );
+      return ar.WriteDictionary(DictionaryReaderImpl{ obj });
     }
 
     static void deserialize(iarchive& ar, Container& obj, uint64_t ncb) {
-      typename Container::key_type key;
-      typename Container::mapped_type value;
-      ar.ReadDictionary(
-        field_serializer_t<key_type,void>::GetDescriptor(),
-        &key,
-        field_serializer_t<mapped_type,void>::GetDescriptor(),
-        &value,
-        [&](const void* keyIn, const void* valueIn) {
-          obj.emplace(*reinterpret_cast<const key_type*>(keyIn), *reinterpret_cast<const mapped_type*>(valueIn));
-        }
-      );
+      ar.ReadDictionary(DictionaryInserterImpl{ obj });
     }
   };
   

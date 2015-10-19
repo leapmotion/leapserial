@@ -47,14 +47,8 @@ namespace leap {
     void WriteObjectReference(const field_serializer& serializer, const void* pObj) override;
     void WriteObject(const field_serializer& serializer, const void* pObj) override;
     void WriteDescriptor(const descriptor& descriptor, const void* pObj) override;
-    void WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) override;
-    void WriteDictionary(
-      uint64_t n,
-      const field_serializer& keyDesc,
-      std::function<const void*()> keyEnumerator,
-      const field_serializer& valueDesc,
-      std::function<const void*()> valueEnumerator
-      ) override;
+    void WriteArray(const IArray& ary) override;
+    void WriteDictionary(IDictionaryReader&& dictionary) override;
 
     //Size query functions.  Note that these do not return the total size of the object,
     //but rather the size they take up in a table (sizeof(uint32_t) for objects stored by reference).
@@ -65,14 +59,8 @@ namespace leap {
     uint64_t SizeString(const void* pBuf, uint64_t ncb, uint8_t charSize) const override;
     uint64_t SizeObjectReference(const field_serializer& serializer, const void* pObj) const override;
     uint64_t SizeDescriptor(const descriptor& descriptor, const void* pObj) const override;
-    uint64_t SizeArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) const override;
-    uint64_t SizeDictionary(
-      uint64_t n,
-      const field_serializer& keyDesc,
-      std::function<const void*()> keyEnumerator,
-      const field_serializer& valueDesc,
-      std::function<const void*()> valueEnumerator
-      ) const override;
+    uint64_t SizeArray(const IArray& ary) const override;
+    uint64_t SizeDictionary(IDictionaryReader&& dictionary) const override;
 
   private:
     std::ostream& os;
@@ -119,13 +107,8 @@ namespace leap {
     uint64_t ReadInteger(uint8_t ncb) override;
     void ReadFloat(float& value) override;
     void ReadFloat(double& value) override;
-    void ReadArray(std::function<void(uint64_t)> sizeBufferFn, const field_serializer& t_serializer, std::function<void*()> enumerator, uint64_t n) override;
-    void ReadDictionary(const field_serializer& keyDesc,
-      void* key,
-      const field_serializer& valueDesc,
-      void* value,
-      std::function<void(const void* key, const void* value)> inserter
-      ) override;
+    void ReadArray(IArray& ary) override;
+    void ReadDictionary(IDictionaryInserter&& dictionary) override;
 
     void* ReadObjectReference(const create_delete& cd, const field_serializer& desc) override;
 

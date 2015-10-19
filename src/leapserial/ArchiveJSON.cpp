@@ -143,17 +143,11 @@ void OArchiveJSON::WriteDescriptor(const descriptor& descriptor, const void* pOb
   os << '}';
 }
 
-void OArchiveJSON::WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) {
+void OArchiveJSON::WriteArray(const IArray& ary) {
   throw not_implemented_exception();
 }
 
-void OArchiveJSON::WriteDictionary(
-  uint64_t n,
-  const field_serializer& keyDesc,
-  std::function<const void*()> keyEnumerator,
-  const field_serializer& valueDesc,
-  std::function<const void*()> valueEnumerator
-  )
+void OArchiveJSON::WriteDictionary(IDictionaryReader&& dictionary)
 {
   throw not_implemented_exception();
 }
@@ -180,17 +174,11 @@ uint64_t OArchiveJSON::SizeDescriptor(const descriptor& descriptor, const void* 
   throw not_implemented_exception();
 }
 
-uint64_t OArchiveJSON::SizeArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) const {
+uint64_t OArchiveJSON::SizeArray(const IArray& ary) const {
   throw not_implemented_exception();
 }
 
-uint64_t OArchiveJSON::SizeDictionary(
-  uint64_t n,
-  const field_serializer& keyDesc,
-  std::function<const void*()> keyEnumerator,
-  const field_serializer& valueDesc,
-  std::function<const void*()> valueEnumerator
-  ) const
+uint64_t OArchiveJSON::SizeDictionary(IDictionaryReader&& dictionary) const
 {
   throw not_implemented_exception();
 }
@@ -252,10 +240,10 @@ void IArchiveJSON::ReadFloat(double& value) {
   throw not_implemented_exception();
 }
 
-void IArchiveJSON::ReadArray(std::function<void(uint64_t)> sizeBufferFn, const field_serializer& t_serializer, std::function<void*()> enumerator, uint64_t expectedEntries) {
+void IArchiveJSON::ReadArray(IArray& ary) {
   throw not_implemented_exception();
 }
 
-void IArchiveJSON::ReadDictionary(const field_serializer& keyDesc, void* key, const field_serializer& valueDesc, void* value, std::function<void(const void* key, const void* value)> inserter) {
+void IArchiveJSON::ReadDictionary(IDictionaryInserter&& dictionary) {
   throw not_implemented_exception();
 }

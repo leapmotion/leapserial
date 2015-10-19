@@ -1,5 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "IArray.h"
+#include "IDictionary.h"
 #include <cstdint>
 #include <functional>
 #include <ios>
@@ -211,29 +213,17 @@ namespace leap {
     /// <summary>
     /// Writes out an array of entries
     /// </summary>
-    virtual void WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) = 0;
+    virtual void WriteArray(const IArray& ary) = 0;
     
     /// <summary>
     /// Writes out a dictionary of entries
     /// </summary>
-    virtual void WriteDictionary(
-      uint64_t n,
-      const field_serializer& keyDesc,
-      std::function<const void*()> keyEnumerator,
-      const field_serializer& valueDesc,
-      std::function<const void*()> valueEnumerator
-     ) = 0;
+    virtual void WriteDictionary(IDictionaryReader&& dictionary) = 0;
 
     virtual uint64_t SizeObjectReference(const field_serializer& serializer, const void* pObj) const = 0;
     virtual uint64_t SizeDescriptor(const descriptor& descriptor, const void* pObj) const = 0;
-    virtual uint64_t SizeArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) const = 0;
-    virtual uint64_t SizeDictionary(
-      uint64_t n,
-      const field_serializer& keyDesc,
-      std::function<const void*()> keyEnumerator,
-      const field_serializer& valueDesc,
-      std::function<const void*()> valueEnumerator
-      ) const = 0;
+    virtual uint64_t SizeArray(const IArray& ary) const = 0;
+    virtual uint64_t SizeDictionary(IDictionaryReader&& dictionary) const = 0;
   };
 
   class IArchive {
@@ -256,7 +246,9 @@ namespace leap {
 
     /// <summary>
     /// Reads an object into the specified memory
+    /// </summary>
     virtual void ReadObject(const field_serializer& sz, void* pObj, internal::AllocationBase* pOwner) = 0;
+
     /// <summary>
     /// Identical to IArchiveRegistry::ReadObjectReference, except this prevents the IArchive from delegating delete responsibilities to the allocation
     /// </summary>
@@ -296,11 +288,11 @@ namespace leap {
     /// <param name="charSize"> The number of bytes per character </param>
     /// <param name="getBufferFn"> Function to get the buffer to write to, takes the size of the string as an argument </param>
     virtual void ReadString(std::function<void*(uint64_t)> getBufferFn, uint8_t charSize, uint64_t ncb) = 0;
-    
+
     /// <summary>
     /// Reads out a length delimited array of an arbitrary type into the specified buffer.
     /// </summary>
-    virtual void ReadArray(std::function<void(uint64_t)> sizeBufferFn, const field_serializer& t_serializer, std::function<void*()> enumerator, uint64_t n) = 0;
+    virtual void ReadArray(IArray& ary) = 0;
 
     /// <summary>
     /// Reads the specified boolean value to the output stream
@@ -320,13 +312,7 @@ namespace leap {
     virtual uint64_t ReadInteger(uint8_t ncb) = 0;
     virtual void ReadFloat(float& value) { ReadByteArray(&value, sizeof(float)); }
     virtual void ReadFloat(double& value) { ReadByteArray(&value, sizeof(double)); }
-    virtual void ReadDictionary(const field_serializer& keyDesc,
-                                void* key,
-                                const field_serializer& valueDesc,
-                                void* value,
-                                std::function<void(const void* key, const void* value)> inserter
-                                ) = 0;
-
+    virtual void ReadDictionary(IDictionaryInserter&& dictionary) = 0;
   };
 
   /// <summary>

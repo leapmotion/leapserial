@@ -16,6 +16,8 @@ set(LeapSerial_SRCS
   ProtobufType.h
   IArchiveImpl.h
   IArchiveImpl.cpp
+  IArray.h
+  IDictionary.h
   OArchiveImpl.h
   OArchiveImpl.cpp
   optional.h

@@ -75,13 +75,13 @@ namespace leap {
     void WriteString(const void* pbuf, uint64_t charCount, uint8_t charSize) override;
     void WriteBool(bool value) override;
     void WriteInteger(int64_t value, uint8_t ncb) override;
-    void WriteArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) override;
-    void WriteDictionary(uint64_t n, const field_serializer& keyDesc, std::function<const void*()> keyEnumerator, const field_serializer& valueDesc, std::function<const void*()> valueEnumerator) override;
+    void WriteArray(const IArray& ary) override;
+    void WriteDictionary(IDictionaryReader&& dictionary) override;
     
     uint64_t SizeDescriptor(const descriptor& desc, const void* pObj) const override;
     uint64_t SizeObjectReference(const field_serializer&, const void*) const override { return sizeof(uint32_t); }
-    uint64_t SizeArray(const field_serializer& desc, uint64_t n, std::function<const void*()> enumerator) const override;
-    uint64_t SizeDictionary(uint64_t n, const field_serializer& keyDesc, std::function<const void*()> keyEnumerator, const field_serializer& valueDesc, std::function<const void*()> valueEnumerator) const override;
+    uint64_t SizeArray(const IArray& ary) const override;
+    uint64_t SizeDictionary(IDictionaryReader&& dictionary) const override;
     
     inline uint64_t SizeString(const void* pBuf, uint64_t charCount, uint8_t charSize) const override { return (size_t)(sizeof(uint32_t) + (charCount*charSize)); }
     uint64_t SizeInteger(int64_t value, uint8_t ncb) const override;
