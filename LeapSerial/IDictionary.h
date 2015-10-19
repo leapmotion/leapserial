@@ -1,7 +1,10 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include <cstddef>
 
 namespace leap {
+  struct field_serializer;
+
   /// <summary>
   /// An interface to describe read operations related to a dictionary
   /// </summary>
