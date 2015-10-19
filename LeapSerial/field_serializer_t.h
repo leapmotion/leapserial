@@ -23,6 +23,11 @@ namespace leap {
   struct field_serializer_t<T, typename std::enable_if<!std::is_base_of<std::false_type, serial_traits<T>>::value>::type> :
     field_serializer
   {
+  private:
+    // Singleton pattern, do not use this routine, use GetDescriptor instead
+    field_serializer_t(void) {}
+
+  public:
     bool allocates(void) const override {
       return serializer_is_irresponsible<T>::value;
     }
