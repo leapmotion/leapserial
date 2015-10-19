@@ -118,20 +118,6 @@ static Person MakeDefaultPerson(void) {
   return person;
 }
 
-TEST(ArchiveProtobufTest, SerializationEquivalence) {
-  // Create reference string that we will serialize to protobuf
-  const Person defaultPerson = MakeDefaultPerson();
-  std::string reference = ToProtobuf(defaultPerson);
-
-  // Now use LeapSerial to serialize the selfsame object:
-  std::stringstream ss;
-
-  leap::Serialize<leap::OArchiveProtobuf>(leap::OutputStreamAdapter(ss), defaultPerson);
-  std::string val = ss.str();
-
-  ASSERT_EQ(val, reference) << "Failed to serialize to a reference protobuf buffer";
-}
-
 TEST(ArchiveProtobufTest, LeapSerialToProtobuf) {
   const Person defaultPerson = MakeDefaultPerson();
 
