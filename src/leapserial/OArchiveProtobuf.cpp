@@ -64,7 +64,7 @@ void OArchiveProtobuf::WriteDescriptor(const descriptor& descriptor, const void*
     throw leap::protobuf::serialization_error{ descriptor };
 
   // Now we write out the identified fields in order.
-  auto pshr = leap::internal::MakePusher(curDescEntry);
+  leap::internal::Pusher<decltype(curDescEntry)> p(curDescEntry);
   for (const auto& identified_descriptor : descriptor.identified_descriptors) {
     const auto& member_field = identified_descriptor.second;
     const void* pMember = reinterpret_cast<const uint8_t*>(pObj) + member_field.offset;
@@ -172,7 +172,7 @@ uint64_t OArchiveProtobuf::SizeObjectReference(const field_serializer& serialize
 }
 
 uint64_t OArchiveProtobuf::SizeDescriptor(const descriptor& descriptor, const void* pObj) const {
-  auto restoreIdent = leap::internal::MakePusher(curDescEntry);
+  leap::internal::Pusher<decltype(curDescEntry)> p(curDescEntry);
   
   // Context-free.  We just write out the identified fields in order.
   uint64_t retVal = 0;

@@ -66,7 +66,7 @@ void IArchiveProtobuf::ReadDescriptor(const descriptor& descriptor, void* pObj, 
     // will be.  So, we read out the length here in this case.
     ncb = ReadInteger(8);
 
-  auto r = leap::internal::MakePusher(m_pCurDesc);
+  leap::internal::Pusher<decltype(m_pCurDesc)> r(m_pCurDesc);
   m_pCurDesc = &descriptor;
 
   if(ncb)
@@ -113,8 +113,8 @@ void IArchiveProtobuf::ReadArray(IArrayAppender&& ary) {
 void IArchiveProtobuf::ReadDictionary(IDictionaryInserter&& dictionary)
 {
   // Read out length field first
-  size_t ncb = ReadInteger(8);
-  size_t maxCount = m_count + ncb;
+  uint64_t ncb = ReadInteger(8);
+  uint64_t maxCount = m_count + ncb;
   while (m_count < maxCount) {
     // Key first, then value
     dictionary.key_serializer.deserialize(*this, dictionary.key(), maxCount - m_count);

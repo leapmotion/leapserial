@@ -35,9 +35,6 @@ namespace leap {
       T& cur;
       T prior;
     };
-
-    template<typename T>
-    Pusher<T> MakePusher(T& cur) { return Pusher<T>{cur}; }
   }
 
   /// <summary>

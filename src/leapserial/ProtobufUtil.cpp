@@ -3,6 +3,7 @@
 #include "ProtobufUtil.hpp"
 #include "Archive.h"
 #include "Descriptor.h"
+#include <iomanip>
 #include <sstream>
 
 using namespace leap;
