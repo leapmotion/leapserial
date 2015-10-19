@@ -32,6 +32,36 @@ add_conditional_sources(
   TestObject_generated.h
 )
 
+if(LS_PROTOBUF_REQUIRED)
+  find_package(Protobuf 2.5.0 REQUIRED)
+else()
+  find_package(Protobuf 2.5.0 QUIET)
+endif()
+
+if(Protobuf_FOUND)
+  add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/TestProtobuf.pb.cc ${CMAKE_CURRENT_SOURCE_DIR}/TestProtobuf.pb.h
+    COMMAND Protobuf::protoc -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/TestProtobuf.proto
+    MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/TestProtobuf.proto
+    COMMENT "Generating TestProtobuf.pb.cc and TestProtobuf.pb.h"
+    VERBATIM
+  )
+else()
+  file(WRITE TestProtobuf.pb.h)
+  file(WRITE TestProtobuf.pb.cc)
+endif()
+
+add_conditional_sources(
+  LeapSerialTest_SRCS
+  "Protobuf_FOUND"
+  GROUP_NAME "Protobuf"
+  FILES
+  ArchiveProtobufTest.cpp
+  TestProtobuf.proto
+  TestProtobuf.pb.h
+  TestProtobuf.pb.cc
+)
+
 find_package(Threads)
 add_executable(LeapSerialTest ${LeapSerialTest_SRCS} ../../gtest-all-guard.cpp)
 target_link_libraries(LeapSerialTest LeapSerial ${CMAKE_THREAD_LIBS_INIT})
@@ -41,7 +71,6 @@ if(${FlatBuffers_FOUND})
   target_link_libraries(LeapSerialTest FlatBuffers::FlatBuffers)
 endif()
 
-find_package(Protobuf 2.5.0 QUIET)
 if(${Protobuf_FOUND})
   target_link_libraries(LeapSerialTest Protobuf::Protobuf)
 endif()

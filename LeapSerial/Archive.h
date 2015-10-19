@@ -19,6 +19,22 @@ namespace leap {
 
   namespace internal {
     class AllocationBase;
+
+    // Utility type for maintaining stack-based state
+    template<typename T>
+    struct Pusher {
+      Pusher(Pusher&&) = delete;
+      Pusher(const Pusher&) = delete;
+
+      Pusher(T& cur) :
+        cur(cur),
+        prior(cur)
+      {}
+      ~Pusher(void) { cur = prior; }
+
+      T& cur;
+      T prior;
+    };
   }
 
   /// <summary>
