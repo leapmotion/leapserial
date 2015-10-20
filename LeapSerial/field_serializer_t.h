@@ -18,10 +18,35 @@ namespace leap {
   template<typename T>
   struct has_serializer;
 
+  template<typename T, typename = void>
+  struct field_serializer_base_t : field_serializer {};
+
+  template<typename T>
+  struct field_serializer_base_t<T, typename std::enable_if<serial_traits<T>::is_array>::type> :
+    field_serializer_array
+  {
+    const field_serializer& element(void) const override { return field_serializer_t<typename serial_traits<T>::value_type>::GetDescriptor(); }
+  };
+
+  template<typename T>
+  struct field_serializer_base_t<T, typename std::enable_if<serial_traits<T>::is_map>::type> :
+    field_serializer_map
+  {
+    const field_serializer& key(void) const override { return field_serializer_t<typename serial_traits<T>::key_type>::GetDescriptor(); }
+    const field_serializer& mapped(void) const override { return field_serializer_t<typename serial_traits<T>::mapped_type>::GetDescriptor(); }
+  };
+
+  template<typename T>
+  struct field_serializer_base_t<T, typename std::enable_if<serial_traits<T>::is_object>::type> :
+    field_serializer_object
+  {
+    const descriptor& object(void) const override { return serial_traits<T>::get_descriptor(); }
+  };
+
   // Objects that provide serial_traits should use those traits externally
   template<typename T>
   struct field_serializer_t<T, typename std::enable_if<!std::is_base_of<std::false_type, serial_traits<T>>::value>::type> :
-    field_serializer
+    field_serializer_base_t<T, void>
   {
   private:
     // Singleton pattern, do not use this routine, use GetDescriptor instead

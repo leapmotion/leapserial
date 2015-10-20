@@ -12,6 +12,8 @@
 #include <vector>
 
 namespace leap {
+  struct descriptor;
+
   template<typename T>
   struct serial_traits;
 
@@ -61,25 +63,27 @@ namespace leap {
   template<typename T>
   struct primitive_serial_traits<T, typename std::enable_if<internal::has_getdescriptor<T>::value>::type>
   {
+    static const bool is_object = true;
+
     static ::leap::serial_atom type() {
-      return GetDescriptor().type();
+      return get_descriptor().type();
     }
 
     // Trivial serialization/deserialization operations
     static uint64_t size(const OArchiveRegistry& ar, const T& obj) {
-      return GetDescriptor().size(ar, &obj);
+      return get_descriptor().size(ar, &obj);
     }
 
     static void serialize(OArchiveRegistry& ar, const T& obj) {
-      GetDescriptor().serialize(ar, &obj);
+      get_descriptor().serialize(ar, &obj);
     }
 
     static void deserialize(IArchiveRegistry& ar, T& obj, uint64_t ncb) {
-      GetDescriptor().deserialize(ar, &obj, ncb);
+      get_descriptor().deserialize(ar, &obj, ncb);
     }
 
     // GetDescriptor is defined for our type, we can invoke it
-    static const field_serializer& GetDescriptor(void) {
+    static const descriptor& get_descriptor(void) {
       static const auto desc = T::GetDescriptor();
       return desc;
     }
@@ -151,6 +155,9 @@ namespace leap {
   template<typename T, size_t N>
   struct primitive_serial_traits<T[N], typename std::enable_if<has_serializer<T>::value>::type>
   {
+    typedef T value_type;
+    static const bool is_array = true;
+
     struct CArrayImpl :
       public IArrayReader
     {
@@ -251,6 +258,8 @@ namespace leap {
   struct primitive_serial_traits<std::vector<T, Alloc>, typename std::enable_if<has_serializer<T>::value>::type>
   {
     typedef std::vector<T, Alloc> serial_type;
+    typedef T value_type;
+    static const bool is_array = true;
 
     struct CArrayImpl :
       IArrayReader
@@ -312,6 +321,7 @@ namespace leap {
   template<typename Container>
   struct serial_traits_map_t
   {
+    static const bool is_map = true;
     typedef typename Container::key_type key_type;
     typedef typename Container::mapped_type mapped_type;
     typedef serial_traits<key_type> key_traits;
@@ -479,6 +489,9 @@ namespace leap {
   template<typename T, size_t N>
   struct primitive_serial_traits<std::array<T, N>, typename std::enable_if<has_serializer<T>::value>::type>
   {
+    typedef T value_type;
+    static const bool is_array = true;
+
     static ::leap::serial_atom type() {
       return ::leap::serial_atom::array;
     }
