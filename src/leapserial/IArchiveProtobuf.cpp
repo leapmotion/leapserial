@@ -8,6 +8,7 @@
 #include <iostream>
 
 using namespace leap;
+using leap::internal::protobuf::WireType;
 
 IArchiveProtobuf::IArchiveProtobuf(IInputStream& is) :
   is(is)
@@ -31,29 +32,29 @@ bool IArchiveProtobuf::ReadSingle(const descriptor& descriptor, void* pObj) {
   if (is.IsEof())
     return false;
 
-  protobuf::WireType type = static_cast<protobuf::WireType>(v & 7);
+  WireType type = static_cast<WireType>(v & 7);
   uint64_t ident = v >> 3;
 
   auto q = descriptor.identified_descriptors.find(ident);
   if (q == descriptor.identified_descriptors.end())
     // Skip behavior
     switch (type) {
-    case protobuf::WireType::Varint:
+    case WireType::Varint:
       ReadInteger(0);
       break;
-    case protobuf::WireType::LenDelimit:
+    case WireType::LenDelimit:
       Skip(ReadInteger(0));
       break;
-    case protobuf::WireType::DoubleWord:
+    case WireType::DoubleWord:
       Skip(4);
       break;
-    case protobuf::WireType::QuadWord:
+    case WireType::QuadWord:
       Skip(8);
       break;
-    case protobuf::WireType::StartGroup:
-    case protobuf::WireType::EndGroup:
+    case WireType::StartGroup:
+    case WireType::EndGroup:
       throw std::runtime_error("Unexpected protobuf wire type");
-    case protobuf::WireType::ObjReference:
+    case WireType::ObjReference:
       throw std::runtime_error("Cannot serialize object references");
     }
   else
@@ -68,7 +69,7 @@ bool IArchiveProtobuf::ReadSingle(const descriptor& descriptor, void* pObj) {
 
 void IArchiveProtobuf::ReadDescriptor(const descriptor& descriptor, void* pObj, uint64_t ncb) {
   if (!descriptor.field_descriptors.empty())
-    throw leap::protobuf::serialization_error{ descriptor };
+    throw leap::internal::protobuf::serialization_error{ descriptor };
 
   if (m_pCurDesc)
     // We are not the root type.  The root type is not length-delimited, but all embedded messages
