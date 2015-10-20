@@ -13,9 +13,13 @@ WireType leap::internal::protobuf::ToWireType(serial_atom atom) {
   switch (atom) {
   case serial_atom::boolean:
   case serial_atom::i8:
+  case serial_atom::ui8:
   case serial_atom::i16:
+  case serial_atom::ui16:
   case serial_atom::i32:
+  case serial_atom::ui32:
   case serial_atom::i64:
+  case serial_atom::ui64:
     return WireType::Varint;
   case serial_atom::f32:
     return WireType::DoubleWord;
