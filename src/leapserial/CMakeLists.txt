@@ -21,13 +21,15 @@ set(LeapSerial_SRCS
   IArchiveImpl.cpp
   IArray.h
   IDictionary.h
+  LeapSerial.h
   OArchiveImpl.h
   OArchiveImpl.cpp
   optional.h
   ProtobufUtil.cpp
   ProtobufUtil.hpp
-  LeapSerial.h
   serial_traits.h
+  serialization_error.h
+  serialization_error.cpp
   Utility.hpp
   Utility.cpp
 )
