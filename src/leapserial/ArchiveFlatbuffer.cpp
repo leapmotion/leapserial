@@ -48,12 +48,16 @@ uint8_t GetFieldSize(leap::serial_atom p) {
   switch (p) {
   case leap::serial_atom::boolean:
   case leap::serial_atom::i8:
+  case leap::serial_atom::ui8:
     return 1;
   case leap::serial_atom::i16:
+  case leap::serial_atom::ui16:
     return 2;
   case leap::serial_atom::i32:
+  case leap::serial_atom::ui32:
     return 4;
   case leap::serial_atom::i64:
+  case leap::serial_atom::ui64:
     return 8;
   case leap::serial_atom::array:
   case leap::serial_atom::string:
