@@ -21,6 +21,8 @@ set(LeapSerial_SRCS
   IArchiveImpl.cpp
   IArray.h
   IDictionary.h
+  IInputStream.h
+  IOutputStream.h
   LeapSerial.h
   OArchiveImpl.h
   OArchiveImpl.cpp
