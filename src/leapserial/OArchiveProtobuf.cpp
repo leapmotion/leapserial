@@ -77,9 +77,13 @@ void OArchiveProtobuf::WriteDescriptor(const descriptor& descriptor, const void*
     switch(member_field.serializer.type()) {
     case serial_atom::boolean:
     case serial_atom::i8:
+    case serial_atom::ui8:
     case serial_atom::i16:
+    case serial_atom::ui16:
     case serial_atom::i32:
+    case serial_atom::ui32:
     case serial_atom::i64:
+    case serial_atom::ui64:
     case serial_atom::f32:
     case serial_atom::f64:
       // These types are all context-free, we are responsible for writing the identifier here, and the
@@ -187,9 +191,13 @@ uint64_t OArchiveProtobuf::SizeDescriptor(const descriptor& descriptor, const vo
     switch(member_field.serializer.type()) {
     case serial_atom::boolean:
     case serial_atom::i8:
+    case serial_atom::ui8:
     case serial_atom::i16:
+    case serial_atom::ui16:
     case serial_atom::i32:
+    case serial_atom::ui32:
     case serial_atom::i64:
+    case serial_atom::ui64:
     case serial_atom::f32:
     case serial_atom::f64:
     case serial_atom::string:

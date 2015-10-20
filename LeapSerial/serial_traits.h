@@ -120,18 +120,18 @@ namespace leap {
       if (std::is_same<T, bool>::value)
         return ::leap::serial_atom::boolean;
 
+      static_assert(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 || sizeof(T) == 8, "Cannot serialize integral types larger than 8 bytes");
       switch (sizeof(T)) {
       case 1:
-        return ::leap::serial_atom::i8;
+        return std::is_signed<T>::value ? ::leap::serial_atom::i8 : ::leap::serial_atom::ui8;
       case 2:
-        return ::leap::serial_atom::i16;
+        return std::is_signed<T>::value ? ::leap::serial_atom::i16 : ::leap::serial_atom::ui16;
       case 4:
-        return ::leap::serial_atom::i32;
+        return std::is_signed<T>::value ? ::leap::serial_atom::i32 : ::leap::serial_atom::ui32;
       case 8:
-        return ::leap::serial_atom::i64;
-      default:
-        return ::leap::serial_atom::ignored;
+        return std::is_signed<T>::value ? ::leap::serial_atom::i64 : ::leap::serial_atom::ui64;
       }
+      throw std::runtime_error("Integral type encountered with an unsupported field size");
     }
 
     // Trivial serialization/deserialization operations
