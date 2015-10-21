@@ -78,6 +78,16 @@ namespace leap {
     /// The "ncb" field is only valid if the type of this object is serial_type::string.
     /// </remarks>
     virtual void deserialize(IArchiveRegistry& ar, void* pObj, uint64_t ncb) const = 0;
+
+    /// <returns>
+    /// True if the field being serialized has an optional notion
+    /// </returns>
+    /// <remarks>
+    /// "Optional" means that the field can be externally described as being initialized or
+    /// absent.  Shared pointers, unique pointers, dumb pointers, and leap::optional fields
+    /// are all considered "optional" fields.  Embedded types are considered mandatory.
+    /// </remarks>
+    virtual bool is_optional(void) const = 0;
   };
 
   /// <summary>

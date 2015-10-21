@@ -17,9 +17,14 @@ namespace leap {
 
   template<typename T>
   struct has_serializer;
+  
+  template<typename T, typename>
+  struct is_optional;
 
   template<typename T, typename = void>
-  struct field_serializer_base_t : field_serializer {};
+  struct field_serializer_base_t :
+    field_serializer
+  {};
 
   template<typename T>
   struct field_serializer_base_t<T, typename std::enable_if<serial_traits<T>::is_array>::type> :
@@ -73,6 +78,8 @@ namespace leap {
       serial_traits<T>::deserialize(ar, *static_cast<T*>(pObj), ncb);
     }
 
+    bool is_optional(void) const override { return leap::is_optional<T, void>::value; }
+
     static const field_serializer& GetDescriptor(void) {
       static const field_serializer_t m{};
       return m;
@@ -116,6 +123,8 @@ namespace leap {
     void deserialize(IArchiveRegistry& ar, void* pObj, uint64_t ncb) const override {
       (static_cast<T*>(pObj)->*pfn)();
     }
+
+    bool is_optional(void) const override { return true; }
 
     bool operator==(const field_serializer_t& rhs) const {
       return pfn == rhs.pfn;
@@ -179,6 +188,8 @@ namespace leap {
       (static_cast<T*>(pObj)->*pfnSetter)(val);
     }
 
+    bool is_optional(void) const override { return true; }
+
     bool operator==(const field_serializer_t& rhs) const {
       return pfnGetter == rhs.pfnGetter && pfnSetter == rhs.pfnSetter;
     }
@@ -240,6 +251,8 @@ namespace leap {
       serial_traits<field_type>::deserialize(ar, val, ncb);
       pfnSetter(*static_cast<T*>(pObj),val);
     }
+
+    bool is_optional(void) const override { return true; }
  
     bool operator==(const field_serializer_t& rhs) const {
       return pfnGetter == rhs.pfnGetter && pfnSetter == rhs.pfnSetter;
