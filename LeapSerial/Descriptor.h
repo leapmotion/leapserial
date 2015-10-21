@@ -67,6 +67,7 @@ namespace leap {
     uint64_t size(const OArchiveRegistry& ar, const void* pObj) const override;
     void serialize(OArchiveRegistry& ar, const void* pObj) const override;
     void deserialize(IArchiveRegistry& ar, void* pObj, uint64_t ncb) const override;
+    bool is_optional(void) const override;
   };
 
   // Embedded object types should use their corresponding descriptors

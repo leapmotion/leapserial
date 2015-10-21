@@ -32,3 +32,7 @@ void leap::descriptor::serialize(OArchiveRegistry& ar, const void* pObj) const {
 void leap::descriptor::deserialize(IArchiveRegistry& ar, void* pObj, uint64_t ncb) const {
   ar.ReadDescriptor(*this, pObj, ncb);
 }
+
+bool leap::descriptor::is_optional(void) const {
+  return false;
+}

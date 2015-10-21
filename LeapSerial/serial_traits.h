@@ -35,6 +35,19 @@ namespace leap {
     static const bool value = !std::is_base_of<std::false_type, serial_traits<T>>::value;
   };
 
+  /// <summary>
+  /// Holds true if the referenced field is optional
+  /// </summary>
+  template<typename T, typename = void>
+  struct is_optional
+  {
+    static const bool value = false;
+  };
+  template<typename T>
+  struct is_optional<T, typename std::enable_if<serial_traits<T>::is_optional>::type> {
+    static const bool value = true;
+  };
+
   // Create/delete structure used to describe how to allocate and free a memory block
   struct create_delete {
     void* (*pfnAlloc)();
@@ -47,6 +60,8 @@ namespace leap {
   template<typename T>
   struct primitive_serial_traits<T, typename std::enable_if<std::is_floating_point<T>::value>::type>
   {
+    static const bool is_optional = false;
+
     static ::leap::serial_atom type() {
       if (sizeof(T) == sizeof(float))
         return ::leap::serial_atom::f32;
@@ -72,6 +87,8 @@ namespace leap {
   template<typename T>
   struct primitive_serial_traits<T, typename std::enable_if<std::is_integral<T>::value || std::is_enum<T>::value>::type>
   {
+    static const bool is_optional = false;
+
     static ::leap::serial_atom type() {
       if (std::is_same<T, bool>::value)
         return ::leap::serial_atom::boolean;
@@ -109,6 +126,7 @@ namespace leap {
   {
     typedef T value_type;
     static const bool is_array = true;
+    static const bool is_optional = false;
 
     struct CArrayImpl :
       public IArrayReader
@@ -165,6 +183,8 @@ namespace leap {
   template<>
   struct primitive_serial_traits<bool, void>
   {
+    static const bool is_optional = false;
+
     static ::leap::serial_atom type() {
       return ::leap::serial_atom::boolean;
     }
@@ -188,6 +208,7 @@ namespace leap {
   {
     static_assert(std::is_arithmetic<Rep>::value, "LeapSerial presently can only serialize arithmetic duration types");
     static const bool is_irresponsible = false;
+    static const bool is_optional = false;
 
     // Trivial serialization/deserialization operations
     static uint64_t size(const OArchive& ar, std::chrono::duration<Rep, Period> val) {
@@ -212,6 +233,7 @@ namespace leap {
     typedef std::vector<T, Alloc> serial_type;
     typedef T value_type;
     static const bool is_array = true;
+    static const bool is_optional = true;
 
     struct CArrayImpl :
       IArrayReader
@@ -274,6 +296,7 @@ namespace leap {
   struct serial_traits_map_t
   {
     static const bool is_map = true;
+    static const bool is_optional = true;
     typedef typename Container::key_type key_type;
     typedef typename Container::mapped_type mapped_type;
     typedef serial_traits<key_type> key_traits;
@@ -373,6 +396,7 @@ namespace leap {
   template<typename T>
   struct primitive_serial_traits<std::unique_ptr<T>, typename std::enable_if<has_serializer<T>::value>::type> {
     typedef std::unique_ptr<T> ptr_t;
+    static const bool is_optional = true;
 
     static ::leap::serial_atom type() {
       return ::leap::serial_atom::reference;
@@ -408,6 +432,7 @@ namespace leap {
   template<typename T>
   struct primitive_serial_traits<std::shared_ptr<T>, void> {
     typedef std::shared_ptr<T> ptr_t;
+    static const bool is_optional = true;
 
     static ::leap::serial_atom type() {
       return ::leap::serial_atom::reference;
@@ -443,6 +468,7 @@ namespace leap {
   {
     typedef T value_type;
     static const bool is_array = true;
+    static const bool is_optional = false;
 
     static ::leap::serial_atom type() {
       return ::leap::serial_atom::array;
@@ -471,6 +497,8 @@ namespace leap {
   template<typename T>
   struct serial_traits<T*>
   {
+    static const bool is_optional = true;
+
     static ::leap::serial_atom type() {
       return ::leap::serial_atom::reference;
     }
@@ -502,6 +530,8 @@ namespace leap {
   struct serial_traits<const T*> :
     serial_traits<T*>
   {
+    static const bool is_optional = true;
+
     static void deserialize(IArchiveRegistry& ar, const T*& pObj, uint64_t ncb) {
       T* ptr;
       serial_traits<T*>::deserialize(ar, ptr, ncb);
@@ -512,6 +542,8 @@ namespace leap {
   template<typename T>
   struct serial_traits<std::basic_string<T, std::char_traits<T>, std::allocator<T>>>
   {
+    static const bool is_optional = true;
+
     typedef std::basic_string<T, std::char_traits<T>, std::allocator<T>> string_t;
 
     static ::leap::serial_atom type() {
