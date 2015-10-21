@@ -12,8 +12,6 @@
 #include <vector>
 
 namespace leap {
-  struct descriptor;
-
   template<typename T>
   struct serial_traits;
 
@@ -41,52 +39,6 @@ namespace leap {
   struct create_delete {
     void* (*pfnAlloc)();
     void(*pfnFree)(void*);
-  };
-
-  namespace internal {
-    /// <summary>
-    /// Holds "true" if T::GetDescriptor exists
-    /// </summary>
-    template<class T>
-    struct has_getdescriptor {
-      template<class U>
-      static std::true_type select(decltype(U::GetDescriptor)*);
-
-      template<class U>
-      static std::false_type select(...);
-
-      static const bool value = decltype(select<T>(nullptr))::value;
-    };
-  }
-
-  // Embedded object types should use their corresponding descriptors
-  template<typename T>
-  struct primitive_serial_traits<T, typename std::enable_if<internal::has_getdescriptor<T>::value>::type>
-  {
-    static const bool is_object = true;
-
-    static ::leap::serial_atom type() {
-      return get_descriptor().type();
-    }
-
-    // Trivial serialization/deserialization operations
-    static uint64_t size(const OArchiveRegistry& ar, const T& obj) {
-      return get_descriptor().size(ar, &obj);
-    }
-
-    static void serialize(OArchiveRegistry& ar, const T& obj) {
-      get_descriptor().serialize(ar, &obj);
-    }
-
-    static void deserialize(IArchiveRegistry& ar, T& obj, uint64_t ncb) {
-      get_descriptor().deserialize(ar, &obj, ncb);
-    }
-
-    // GetDescriptor is defined for our type, we can invoke it
-    static const descriptor& get_descriptor(void) {
-      static const auto desc = T::GetDescriptor();
-      return desc;
-    }
   };
 
   // Specialization for anything that is a floating-point type.  These can be written directly to disk,
