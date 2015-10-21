@@ -229,6 +229,13 @@ namespace leap {
       serializer(field_serializer_t<Base, void>::GetDescriptor())
     {}
 
+    field_descriptor(const field_serializer& serializer, const char* name, int identifier, size_t offset) :
+      serializer(serializer),
+      name(name),
+      identifier(identifier),
+      offset(offset)
+    {}
+
     // Serializer interface, actually implements our serialization operation
     const field_serializer& serializer;
 

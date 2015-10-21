@@ -53,7 +53,7 @@ namespace leap {
     bool m_allocates = false;
 
     // Holds the descriptor's symbolic name, if one has been provided
-    const char* const name = nullptr;
+    const char* name = nullptr;
 
     // Required field descriptors
     std::vector<field_descriptor> field_descriptors;
