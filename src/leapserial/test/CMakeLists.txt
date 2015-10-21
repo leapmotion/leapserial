@@ -8,6 +8,7 @@ set(LeapSerialTest_SRCS
   SerialFormatTest.cpp
   SerializationTest.cpp
   TestObject.h
+  TestProtobufLS.hpp
 )
 add_pch(LeapSerialTest_SRCS "stdafx.h" "stdafx.cpp")
 
