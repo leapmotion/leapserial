@@ -10,7 +10,7 @@ message Pet {
   required Species species = 2;
 }
 
-message PetFieldEntry{
+message PetFieldEntry {
   required string key = 1;
   required Pet value = 2;
 }
@@ -38,3 +38,4 @@ message Person {
 message AddressBook {
   repeated Person person = 1;
 }
+

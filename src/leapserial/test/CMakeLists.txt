@@ -60,6 +60,7 @@ add_conditional_sources(
   GROUP_NAME "Protobuf"
   FILES
   ArchiveProtobufTest.cpp
+  SchemaTest.cpp
   TestProtobuf.proto
   TestProtobuf.pb.h
   TestProtobuf.pb.cc

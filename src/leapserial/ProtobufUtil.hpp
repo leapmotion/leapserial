@@ -24,6 +24,8 @@ namespace leap {
 
       protobuf::WireType ToWireType(serial_atom atom);
 
+      const char* ToProtobufField(serial_atom atom);
+
       struct serialization_error :
         public ::leap::serialization_error
       {

@@ -42,6 +42,42 @@ WireType leap::internal::protobuf::ToWireType(serial_atom atom) {
   throw std::invalid_argument("Attempted to find a wire type for an unrecognized serial atom type");
 }
 
+const char* leap::internal::protobuf::ToProtobufField(serial_atom atom) {
+  switch (atom) {
+  case serial_atom::boolean:
+    return "bool";
+  case serial_atom::i8:
+  case serial_atom::i16:
+  case serial_atom::i32:
+    return "sint32";
+  case serial_atom::i64:
+    return "sint64";
+  case serial_atom::ui8:
+  case serial_atom::ui16:
+  case serial_atom::ui32:
+    return "int32";
+  case serial_atom::ui64:
+    return "int64";
+  case serial_atom::f32:
+    return "float";
+  case serial_atom::f64:
+    return "double";
+  case serial_atom::reference:
+    break;
+  case serial_atom::array:
+  case serial_atom::string:
+    return "string";
+  case serial_atom::map:
+    break;
+  case serial_atom::descriptor:
+  case serial_atom::finalized_descriptor:
+    break;
+  case serial_atom::ignored:
+    throw std::invalid_argument("Invalid serial atom type");
+  }
+  throw std::invalid_argument("Attempted to obtain the protobuf field of a non-value type");
+}
+
 static std::string FormatError(const descriptor& descriptor) {
   std::stringstream ss;
   ss << "The OArchiveProtobuf requires that all entries have identifiers" << std::endl
