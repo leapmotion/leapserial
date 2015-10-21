@@ -2,6 +2,8 @@
 #pragma once
 #include "IArray.h"
 #include "IDictionary.h"
+#include "IInputStream.h"
+#include "IOutputStream.h"
 #include <cstdint>
 #include <functional>
 #include <ios>
@@ -38,34 +40,6 @@ namespace leap {
   }
 
   /// <summary>
-  /// Stream adaptor interface for use with the Archive type
-  /// </summary>
-  class IInputStream {
-  public:
-    virtual ~IInputStream(void) {}
-
-    /// <returns>
-    /// False if the next call to Read might succeed
-    /// </returns>
-    virtual bool IsEof(void) const = 0;
-
-    /// <summary>
-    /// Reads exactly the specified number of bytes from the input stream
-    /// </summary>
-    /// <returns>
-    /// The number of bytes actually read, -1 if there was an error.  The number of bytes read
-    /// may be less than the number of bytes requested if the end of the file was encountered
-    /// before the operation completed.
-    /// </returns>
-    virtual std::streamsize Read(void* pBuf, std::streamsize ncb) = 0;
-
-    /// <summary>
-    /// Discards the specified number of bytes from the input stream
-    /// </summary>
-    virtual std::streamsize Skip(std::streamsize ncb) = 0;
-  };
-
-  /// <summary>
   /// Mapping adaptor, allows input streams to be wrapped to support Archive operations
   /// </summary>
   class InputStreamAdapter:
@@ -84,19 +58,6 @@ namespace leap {
     bool IsEof(void) const override;
     std::streamsize Read(void* pBuf, std::streamsize ncb) override;
     std::streamsize Skip(std::streamsize ncb) override;
-  };
-
-  /// <summary>
-  /// Stream adaptor interface for use with the Archive type
-  /// </summary>
-  class IOutputStream {
-  public:
-    virtual ~IOutputStream(void) {}
-
-    /// <summary>
-    /// Writes all of the specified bytes to the output stream
-    /// </summary>
-    virtual bool Write(const void* pBuf, std::streamsize ncb) = 0;
   };
 
   class OutputStreamAdapter:
