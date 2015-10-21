@@ -20,14 +20,23 @@ namespace leap {
   struct descriptor:
     field_serializer
   {
+    descriptor(const char* name, std::initializer_list<field_descriptor> field_descriptors) :
+      descriptor(name, field_descriptors.begin(), field_descriptors.end())
+    {}
     descriptor(std::initializer_list<field_descriptor> field_descriptors) :
-      descriptor(field_descriptors.begin(), field_descriptors.end())
+      descriptor(nullptr, field_descriptors.begin(), field_descriptors.end())
+    {}
+    descriptor(const field_descriptor* begin, const field_descriptor* end) :
+      descriptor(nullptr, begin, end)
     {}
 
-    descriptor(const field_descriptor* begin, const field_descriptor* end);
+    descriptor(const char* name, const field_descriptor* begin, const field_descriptor* end);
 
     // Allocation flag
     bool m_allocates = false;
+
+    // Holds the descriptor's symbolic name, if one has been provided
+    const char* const name = nullptr;
 
     // Required field descriptors
     std::vector<field_descriptor> field_descriptors;

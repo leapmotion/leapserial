@@ -6,7 +6,9 @@
 
 using namespace leap;
 
-leap::descriptor::descriptor(const field_descriptor* begin, const field_descriptor* end) {
+leap::descriptor::descriptor(const char* name, const field_descriptor* begin, const field_descriptor* end) :
+  name(name)
+{
   for (auto cur = begin; cur != end; cur++) {
     const auto& field_descriptor = *cur;
     if (field_descriptor.identifier)
