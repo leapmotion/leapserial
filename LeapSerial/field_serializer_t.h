@@ -17,6 +17,9 @@ namespace leap {
 
   template<typename T>
   struct has_serializer;
+  
+  template<typename T, typename>
+  struct is_optional;
 
   template<typename T, typename = void>
   struct field_serializer_base_t :
@@ -75,7 +78,7 @@ namespace leap {
       serial_traits<T>::deserialize(ar, *static_cast<T*>(pObj), ncb);
     }
 
-    bool is_optional(void) const override { return leap::is_optional<T>::value; }
+    bool is_optional(void) const override { return leap::is_optional<T, void>::value; }
 
     static const field_serializer& GetDescriptor(void) {
       static const field_serializer_t m{};
