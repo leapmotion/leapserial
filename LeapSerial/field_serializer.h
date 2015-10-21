@@ -80,4 +80,31 @@ namespace leap {
     virtual void deserialize(IArchiveRegistry& ar, void* pObj, uint64_t ncb) const = 0;
   };
 
+  /// <summary>
+  /// Describes a serializer concept for an embedded object
+  /// </summary>
+  struct field_serializer_object :
+    field_serializer
+  {
+    virtual const descriptor& object(void) const = 0;
+  };
+
+  /// <summary>
+  /// Describes a serializer concept for an array
+  /// </summary>
+  struct field_serializer_array :
+    field_serializer
+  {
+    virtual const field_serializer& element(void) const = 0;
+  };
+
+  /// <summary>
+  /// Describes a serializer concept for a map
+  /// </summary>
+  struct field_serializer_map:
+    field_serializer
+  {
+    virtual const field_serializer& key(void) const = 0;
+    virtual const field_serializer& mapped(void) const = 0;
+  };
 }

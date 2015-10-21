@@ -12,7 +12,24 @@ namespace leap {
   class OArchiveRegistry;
 
   template<typename T, typename>
+  struct primitive_serial_traits;
+
+  template<typename T, typename>
   struct field_serializer_t;
+
+  /// <summary>
+  /// Holds "true" if T::GetDescriptor exists
+  /// </summary>
+  template<class T>
+  struct has_getdescriptor {
+    template<class U>
+    static std::true_type select(decltype(U::GetDescriptor)*);
+
+    template<class U>
+    static std::false_type select(...);
+
+    static const bool value = decltype(select<T>(nullptr))::value;
+  };
 
   /// <summary>
   /// Provides a generic way to describe serializable fields in a class
@@ -50,5 +67,35 @@ namespace leap {
     uint64_t size(const OArchiveRegistry& ar, const void* pObj) const override;
     void serialize(OArchiveRegistry& ar, const void* pObj) const override;
     void deserialize(IArchiveRegistry& ar, void* pObj, uint64_t ncb) const override;
+  };
+
+  // Embedded object types should use their corresponding descriptors
+  template<typename T>
+  struct primitive_serial_traits<T, typename std::enable_if<has_getdescriptor<T>::value>::type>
+  {
+    static const bool is_object = true;
+
+    static ::leap::serial_atom type() {
+      return get_descriptor().type();
+    }
+
+    // Trivial serialization/deserialization operations
+    static uint64_t size(const OArchiveRegistry& ar, const T& obj) {
+      return get_descriptor().size(ar, &obj);
+    }
+
+    static void serialize(OArchiveRegistry& ar, const T& obj) {
+      get_descriptor().serialize(ar, &obj);
+    }
+
+    static void deserialize(IArchiveRegistry& ar, T& obj, uint64_t ncb) {
+      get_descriptor().deserialize(ar, &obj, ncb);
+    }
+
+    // GetDescriptor is defined for our type, we can invoke it
+    static const descriptor& get_descriptor(void) {
+      static const descriptor desc = T::GetDescriptor();
+      return desc;
+    }
   };
 }

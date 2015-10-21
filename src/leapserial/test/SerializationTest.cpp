@@ -73,7 +73,7 @@ static_assert(
   >::value,
   "Could not infer GetDescriptor return type"
 );
-static_assert(leap::internal::has_getdescriptor<MySimpleStructure>::value, "GetDescriptor not detected on MySimpleStructure");
+static_assert(leap::has_getdescriptor<MySimpleStructure>::value, "GetDescriptor not detected on MySimpleStructure");
 
 TEST_F(SerializationTest, VerifyTrivialDescriptor) {
   // Obtain the descriptor for the simple structure first, verify all properties
