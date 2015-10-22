@@ -31,7 +31,7 @@ struct SchemaWriterProtobuf::name {
       os << rhs.desc.name;
     else
       // Need to derive a locally valid name
-      os << "msg_" << std::hex << std::setfill('0') << std::setw(8) << reinterpret_cast<uint32_t>(&rhs.desc);
+      os << "msg_" << std::hex << std::setfill('0') << std::setw(8) << static_cast<uint32_t>(reinterpret_cast<size_t>(&rhs.desc));
     return os;
   }
 };
@@ -74,7 +74,7 @@ struct SchemaWriterProtobuf::type {
             std::string* pSyntheticName;
             {
               std::stringstream ss;
-              ss << "MapEntry_" << std::hex << std::setw(8) << std::setfill('0') << reinterpret_cast<uint32_t>(&pDesc);
+              ss << "MapEntry_" << std::hex << std::setw(8) << std::setfill('0') << static_cast<uint32_t>(reinterpret_cast<size_t>(&pDesc));
               parent.syntheticNames.emplace_back(ss.str());
               pSyntheticName = &parent.syntheticNames.back();
             }
