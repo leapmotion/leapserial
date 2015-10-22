@@ -3,6 +3,7 @@
 #include "SchemaWriterProtobuf.h"
 #include "Descriptor.h"
 #include "ProtobufUtil.hpp"
+#include <iomanip>
 #include <sstream>
 
 using namespace leap;
