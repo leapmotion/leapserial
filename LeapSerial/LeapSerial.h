@@ -37,7 +37,7 @@ namespace leap {
 
   template<typename archive_t, typename stream_t>
   void Serialize(stream_t&& os, const leap::descriptor& desc) {
-    archive_t::schema s{ desc };
+    typename archive_t::schema s{ desc };
     s.Write(os);
   }
 
