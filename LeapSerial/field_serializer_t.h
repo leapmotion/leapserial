@@ -2,6 +2,7 @@
 #pragma once
 #include "Archive.h"
 #include "field_serializer.h"
+#include "LeapSerialEnumerator.h"
 #include "serial_traits.h"
 #include <mutex>
 #include <unordered_set>

@@ -135,6 +135,9 @@ namespace leap {
       offset(reinterpret_cast<size_t>(&(static_cast<T*>(nullptr)->*val))),
       serializer(field_serializer_t<U, void>::GetDescriptor())
     {
+      // Instantiate serial_traits on the type object itself.  If T::GetDescriptor is provided,
+      // this has the effect of ultimately instantiating descriptor_entry_t<T>
+      (void)&serial_traits<T>::type;
       static_assert(has_serializer<U>::value, "An attempt was made to serialize type U, which does not provide a serial_traits entry or GetDescriptor function");
     }
 
