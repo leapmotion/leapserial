@@ -36,10 +36,14 @@ add_conditional_sources(
   TestObject_generated.h
 )
 
-if(LS_PROTOBUF_REQUIRED)
-  find_package(Protobuf 2.5.0 REQUIRED)
-else()
-  find_package(Protobuf 2.5.0 QUIET)
+option(LS_ENABLE_PROTOBUF_TESTS "Enable protobuf tests" ON)
+option(LS_PROTOBUF_REQUIRED "Require protobuf tests" OFF)
+if(LS_ENABLE_PROTOBUF_TESTS OR LS_PROTOBUF_REQUIRED)
+  if(LS_PROTOBUF_REQUIRED)
+    find_package(Protobuf 2.5.0 REQUIRED)
+  else()
+    find_package(Protobuf 2.5.0 QUIET)
+  endif()
 endif()
 
 if(Protobuf_FOUND)
