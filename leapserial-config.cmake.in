@@ -6,9 +6,10 @@
 # Check if local build
 if ("@CMAKE_CURRENT_BINARY_DIR@" STREQUAL CMAKE_CURRENT_LIST_DIR)
   set(LeapSerial_INCLUDE_DIR "@PROJECT_SOURCE_DIR@")
+  include("${CMAKE_CURRENT_LIST_DIR}/LeapSerialTargets.cmake")
 else()
   set(LeapSerial_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/include")
+  include("${CMAKE_CURRENT_LIST_DIR}/cmake/LeapSerialTargets.cmake")
 endif()
 
-include("${CMAKE_CURRENT_LIST_DIR}/cmake/LeapSerialTargets.cmake")
 set(LeapSerial_FOUND TRUE)
