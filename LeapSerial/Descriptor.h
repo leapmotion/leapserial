@@ -96,6 +96,7 @@ namespace leap {
     // GetDescriptor is defined for our type, we can invoke it
     static const descriptor& get_descriptor(void) {
       static const descriptor desc = T::GetDescriptor();
+      (void)descriptor_entry_t<T>::s_init;
       return desc;
     }
   };

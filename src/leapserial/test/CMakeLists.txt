@@ -7,6 +7,7 @@ set(LeapSerialTest_SRCS
   PrettyPrintTest.cpp
   SerialFormatTest.cpp
   SerializationTest.cpp
+  SerializerEnumerationTest.cpp
   TestObject.h
   TestProtobufLS.hpp
 )
