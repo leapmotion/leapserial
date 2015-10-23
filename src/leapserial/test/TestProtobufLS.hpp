@@ -40,8 +40,11 @@ namespace {
 
     static leap::descriptor GetDescriptor(void) {
       return{
-        { 1, &Pet::name },
-        { 2, &Pet::species }
+        "Pet",
+        {
+          { 1, &Pet::name },
+          { 2, &Pet::species }
+        }
       };
     }
   };
@@ -64,11 +67,14 @@ namespace {
 
     static leap::descriptor GetDescriptor(void) {
       return{
-        { 1, &Person::name },
-        { 2, &Person::id },
-        { 3, &Person::email },
-        { 4, &Person::phone },
-        { 5, &Person::pets }
+        "Person",
+        {
+          { 1, "name", &Person::name },
+          { 2, "id", &Person::id },
+          { 3, "email", &Person::email },
+          { 4, "phone", &Person::phone },
+          { 5, "pets", &Person::pets }
+        }
       };
     }
   };

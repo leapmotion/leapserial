@@ -2,10 +2,13 @@
 #pragma once
 #include "Allocation.h"
 #include "Archive.h"
-#include "IArchiveImpl.h"
-#include "OArchiveImpl.h"
 #include "Descriptor.h"
 #include "field_serializer.h"
+#include "IArchiveImpl.h"
+#include "IArchiveProtobuf.h"
+#include "OArchiveImpl.h"
+#include "OArchiveProtobuf.h"
+#include "SchemaWriterProtobuf.h"
 #include <memory>
 #include <istream>
 
@@ -15,7 +18,30 @@ namespace leap {
   template<typename T, typename>
   struct field_serializer_t;
 
-  template<class archive_t, class stream_t, class T>
+  struct leapserial {
+    typedef IArchiveImpl iarchive;
+    typedef OArchiveImpl oarchive;
+  };
+
+  struct protobuf_v1 {
+    typedef IArchiveProtobuf iarchive;
+    typedef OArchiveProtobuf oarchive;
+    typedef SchemaWriterProtobuf schema;
+  };
+
+  struct protobuf_v2 {
+    typedef IArchiveProtobuf iarchive;
+    typedef OArchiveProtobuf oarchive;
+    typedef SchemaWriterProtobuf2 schema;
+  };
+
+  template<typename archive_t, typename stream_t>
+  void Serialize(stream_t&& os, const leap::descriptor& desc) {
+    typename archive_t::schema s{ desc };
+    s.Write(os);
+  }
+
+  template<typename archive_t, typename stream_t, typename T>
   void Serialize(stream_t&& os, const T& obj) {
     static_assert(!std::is_pointer<T>::value, "Do not serialize a pointer to an object, serialize a reference");
     static_assert(

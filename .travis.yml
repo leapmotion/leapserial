@@ -20,6 +20,7 @@ matrix:
           - libc6-i386
           - protobuf-compiler
           - libprotobuf-dev
+          - libprotoc-dev
   - os: osx
     env:
     - _CC: clang

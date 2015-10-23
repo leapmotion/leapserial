@@ -29,6 +29,8 @@ set(LeapSerial_SRCS
   optional.h
   ProtobufUtil.cpp
   ProtobufUtil.hpp
+  SchemaWriterProtobuf.h
+  SchemaWriterProtobuf.cpp
   serial_traits.h
   serialization_error.h
   serialization_error.cpp
