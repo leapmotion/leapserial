@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include <atomic>
+#include <iterator>
+#include <typeinfo>
 
 namespace leap {
   struct descriptor;
