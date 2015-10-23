@@ -144,7 +144,7 @@ install(FILES
 
 # Install public header files
 install(
-  DIRECTORY ${PROJECT_SOURCE_DIR}/leapserial
+  DIRECTORY ${PROJECT_SOURCE_DIR}/LeapSerial
   DESTINATION include
   COMPONENT LeapSerial
   FILES_MATCHING PATTERN "*.h"
