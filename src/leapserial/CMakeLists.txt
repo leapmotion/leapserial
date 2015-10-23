@@ -24,8 +24,8 @@ set(LeapSerial_SRCS
   IInputStream.h
   IOutputStream.h
   LeapSerial.h
-  LeapSerialEnumerator.h
-  LeapSerialEnumerator.cpp
+  descriptors.h
+  descriptors.cpp
   OArchiveImpl.h
   OArchiveImpl.cpp
   optional.h
