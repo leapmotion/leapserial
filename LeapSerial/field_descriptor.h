@@ -135,6 +135,10 @@ namespace leap {
       offset(reinterpret_cast<size_t>(&(static_cast<T*>(nullptr)->*val))),
       serializer(field_serializer_t<U, void>::GetDescriptor())
     {
+      // Verify that we can actually serialize T--the fact that we have a descriptor does not necessarily imply this
+      // If a problem is being encountered here, verify that the type in question is actually serializable
+      static_assert(!std::is_base_of<std::false_type, serial_traits<T>>::value, "Descriptor contains an entry that is not serializable");
+
       // Instantiate serial_traits on the type object itself.  If T::GetDescriptor is provided,
       // this has the effect of ultimately instantiating descriptor_entry_t<T>
       (void)&serial_traits<T>::type;

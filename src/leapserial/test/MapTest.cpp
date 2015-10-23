@@ -5,6 +5,7 @@
 #include <sstream>
 #include <type_traits>
 
+static_assert(leap::has_serializer<int>::value, "Single primitive");
 static_assert(leap::has_serializer<std::map<int, int>>::value, "Map of primitives");
 static_assert(leap::has_serializer<std::map<std::string, std::string>>::value, "Map of nonprimitives");
 static_assert(leap::has_serializer<std::unordered_map<int, int>>::value, "Unordered map of primitives");

@@ -24,7 +24,13 @@ namespace leap {
   template<typename T, typename = void>
   struct primitive_serial_traits:
     std::false_type
-  {};
+  {
+    const bool valid = false;
+
+    static ::leap::serial_atom type() {
+      return ::leap::serial_atom::ignored;
+    }
+  };
 
   /// <summary>
   /// Holds true if T can be serialized
@@ -228,7 +234,8 @@ namespace leap {
 
   // Convenience specialization for std::vector
   template<typename T, typename Alloc>
-  struct primitive_serial_traits<std::vector<T, Alloc>, typename std::enable_if<has_serializer<T>::value>::type>
+  struct primitive_serial_traits<std::vector<T, Alloc>, void> :
+    std::integral_constant<bool, has_serializer<T>::value>
   {
     typedef std::vector<T, Alloc> serial_type;
     typedef T value_type;
@@ -277,6 +284,7 @@ namespace leap {
     typedef typename std::conditional<is_irresponsible, IArchiveRegistry, IArchive>::type iarchive;
 
     static uint64_t size(const OArchiveRegistry& ar, const serial_type& v) {
+      static_assert(has_serializer<T>::value, "Attempted to use serial traits for an std::vector<T>, but T is not serializable");
       return ar.SizeArray(CArrayImpl{ v });
     }
 
@@ -293,7 +301,12 @@ namespace leap {
   /// Mix-in type for all key/value container types
   /// </summary>
   template<typename Container>
-  struct serial_traits_map_t
+  struct serial_traits_map_t:
+    std::integral_constant<
+      bool,
+      has_serializer<typename Container::key_type>::value &&
+      has_serializer<typename Container::mapped_type>::value
+    >
   {
     static const bool is_map = true;
     static const bool is_optional = true;
@@ -366,6 +379,15 @@ namespace leap {
     };
 
     static ::leap::serial_atom type() {
+      static_assert(
+        has_serializer<key_type>::value,
+        "Attempted to use serial traits for Container<Key, Value>, but Key is not serializable"
+      );
+      static_assert(
+        has_serializer<mapped_type>::value,
+        "Attempted to use serial traits for Container<Key, Value>, but Value is not serializable"
+      );
+
       return ::leap::serial_atom::map;
     }
 
@@ -384,17 +406,19 @@ namespace leap {
   
   // Associative array types:
   template<typename Key, typename Value>
-  struct primitive_serial_traits<std::map<Key, Value>, typename std::enable_if<has_serializer<Key>::value && has_serializer<Value>::value>::type> :
+  struct primitive_serial_traits<std::map<Key, Value>, void> :
     serial_traits_map_t<std::map<Key, Value>>
   {};
 
   template<typename Key, typename Value>
-  struct primitive_serial_traits<std::unordered_map<Key, Value>, typename std::enable_if<has_serializer<Key>::value && has_serializer<Value>::value>::type> :
+  struct primitive_serial_traits<std::unordered_map<Key, Value>, void> :
     serial_traits_map_t<std::unordered_map<Key, Value>>
   {};
 
   template<typename T>
-  struct primitive_serial_traits<std::unique_ptr<T>, typename std::enable_if<has_serializer<T>::value>::type> {
+  struct primitive_serial_traits<std::unique_ptr<T>, void> :
+    std::integral_constant<bool, has_serializer<T>::value>
+  {
     typedef std::unique_ptr<T> ptr_t;
     static const bool is_optional = true;
 
@@ -430,7 +454,9 @@ namespace leap {
   };
 
   template<typename T>
-  struct primitive_serial_traits<std::shared_ptr<T>, void> {
+  struct primitive_serial_traits<std::shared_ptr<T>, void> :
+    std::integral_constant<bool, has_serializer<T>::value>
+  {
     typedef std::shared_ptr<T> ptr_t;
     static const bool is_optional = true;
 
@@ -464,7 +490,8 @@ namespace leap {
   };
 
   template<typename T, size_t N>
-  struct primitive_serial_traits<std::array<T, N>, typename std::enable_if<has_serializer<T>::value>::type>
+  struct primitive_serial_traits<std::array<T, N>, void> :
+    std::integral_constant<bool, has_serializer<T>::value>
   {
     typedef T value_type;
     static const bool is_array = true;
