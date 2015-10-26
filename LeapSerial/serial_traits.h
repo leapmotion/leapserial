@@ -343,7 +343,7 @@ namespace leap {
       typename Container::const_iterator q;
 
       size_t size(void) const override { return container.size(); }
-      bool next(void) {
+      bool next(void) override {
         if (init)
           ++q;
         else {
@@ -352,8 +352,8 @@ namespace leap {
         }
         return q != container.end();
       }
-      const void* key(void) const { return &q->first; }
-      const void* value(void) const { return &q->second; }
+      const void* key(void) const override { return &q->first; }
+      const void* value(void) const override { return &q->second; }
     };
 
     struct DictionaryInserterImpl :
