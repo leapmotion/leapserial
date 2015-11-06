@@ -12,11 +12,11 @@ namespace leap {
   // Common base type for linkage
   struct descriptor_entry
   {
-    descriptor_entry(const std::type_info& ti, const descriptor& desc);
+    descriptor_entry(const std::type_info& ti, const descriptor& (*pfnDesc)());
 
     const descriptor_entry* const Next;
     const std::type_info& ti;
-    const descriptor& desc;
+    const descriptor& (*pfnDesc)();
   };
 
   // Entry generator type
@@ -31,7 +31,7 @@ namespace leap {
     );
 
     descriptor_entry_t(void) :
-      descriptor_entry{ typeid(T), serial_traits<T>::get_descriptor() }
+      descriptor_entry{ typeid(T), &serial_traits<T>::get_descriptor }
     {}
 
     static const descriptor_entry_t s_init;
