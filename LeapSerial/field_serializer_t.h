@@ -135,8 +135,8 @@ namespace leap {
       static std::unordered_set<field_serializer_t, mem_hash<field_serializer_t>> st;
       static std::mutex lock;
 
+      field_serializer_t key{ pfn };
       std::lock_guard<std::mutex> lk(lock);
-      field_serializer_t key{pfn};
       auto q = st.find(key);
       if (q == st.end())
         q = st.insert(q, key);
@@ -199,8 +199,8 @@ namespace leap {
       static std::unordered_set<field_serializer_t, mem_hash<field_serializer_t>> st;
       static std::mutex lock;
 
+      field_serializer_t key{ getter, setter };
       std::lock_guard<std::mutex> lk(lock);
-      field_serializer_t key{getter, setter};
       auto q = st.find(key);
       if (q == st.end())
         q = st.insert(q, key);
@@ -263,8 +263,8 @@ namespace leap {
       static std::unordered_set<field_serializer_t, mem_hash<field_serializer_t>> st;
       static std::mutex lock;
  
-      std::lock_guard<std::mutex> lk(lock);
       field_serializer_t key{ getter, setter };
+      std::lock_guard<std::mutex> lk(lock);
       auto q = st.find(key);
       if (q == st.end())
         q = st.insert(q, key);

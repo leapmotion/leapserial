@@ -5,10 +5,10 @@
 
 using namespace leap;
 
-descriptor_entry::descriptor_entry(const std::type_info& ti, const descriptor& desc) :
+descriptor_entry::descriptor_entry(const std::type_info& ti, const descriptor& (*pfnDesc)()) :
   Next(descriptors::Link(*this)),
   ti(ti),
-  desc(desc)
+  pfnDesc(pfnDesc)
 {}
 
 const descriptor_entry* descriptors::s_pHead = nullptr;
