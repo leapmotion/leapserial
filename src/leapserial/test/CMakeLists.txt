@@ -5,6 +5,7 @@ set(LeapSerialTest_SRCS
   MapTest.cpp
   OptionalTest.cpp
   PrettyPrintTest.cpp
+  SerialCallbackTest.cpp
   SerialFormatTest.cpp
   SerializationTest.cpp
   SerializerEnumerationTest.cpp
