@@ -77,7 +77,7 @@ namespace leap {
     IOutputStream& os;
 
     // Output buffer used as scratch space
-    std::vector<uint8_t> buf;
+    std::vector<uint8_t> buffer;
 
     // Fail bit, used to indicate something went wrong with compression
     bool fail = false;

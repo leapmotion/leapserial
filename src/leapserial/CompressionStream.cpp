@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "CompressionStream.h"
 #include <algorithm>
+#include <memory.h>
 #include <zlib/zlib.h>
 
 using namespace leap;
@@ -25,8 +26,8 @@ ZStreamBase::~ZStreamBase(void) {
 
 DecompressionStream::DecompressionStream(IInputStream& is) :
   is(is),
-  buffer(1024),
-  inputChunk(1024)
+  buffer(1024, 0),
+  inputChunk(1024, 0)
 {
   inflateInit(strm.get());
   strm->avail_in = 0;
@@ -92,8 +93,8 @@ std::streamsize DecompressionStream::Skip(std::streamsize ncb) {
 }
 
 CompressionStream::CompressionStream(IOutputStream& os, int level) :
-  os{ os },
-  buf(1024)
+  os(os),
+  buffer(1024, 0)
 {
   if (level < -1 || 9 < level)
     throw std::invalid_argument("Compression stream level must be in the range [0, 9]");
@@ -115,11 +116,11 @@ bool CompressionStream::Write(const void* pBuf, std::streamsize ncb, int flushFl
 
   // Pump the compression routine until we are done
   do {
-    strm->avail_out = buf.size();
-    strm->next_out = buf.data();
+    strm->avail_out = buffer.size();
+    strm->next_out = buffer.data();
     int ret = deflate(strm.get(), flushFlag);
 
-    fail = !os.Write(buf.data(), strm->next_out - buf.data());
+    fail = !os.Write(buffer.data(), strm->next_out - buffer.data());
     if (fail)
       return false;
   } while (!strm->avail_out);
