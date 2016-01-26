@@ -391,6 +391,10 @@ typedef uLong FAR uLongf;
    typedef Byte       *voidp;
 #endif
 
+#ifndef _MSC_VER
+#  define HAVE_UNISTD_H
+#endif
+
 #if !defined(Z_U4) && !defined(Z_SOLO) && defined(STDC)
 #  include <limits.h>
 #  if (UINT_MAX == 0xffffffffUL)
