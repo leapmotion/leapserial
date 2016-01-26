@@ -9,9 +9,6 @@
 struct z_stream_s;
 
 namespace leap {
-  template<typename T>
-  class DecompressionStreamT;
-
   class ZStreamBase {
   public:
     ZStreamBase(void);
