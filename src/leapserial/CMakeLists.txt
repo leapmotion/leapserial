@@ -8,6 +8,8 @@ set(LeapSerial_SRCS
   ArchiveJSON.h
   ArchiveJSON.cpp
   ArchiveProtobuf.h
+  CompressionStream.h
+  CompressionStream.cpp
   IArchiveProtobuf.cpp
   OArchiveProtobuf.cpp
   base.h
@@ -43,6 +45,7 @@ set(LeapSerial_SRCS
 rewrite_header_paths(LeapSerial_SRCS)
 add_pch(LeapSerial_SRCS "stdafx.h" "stdafx.cpp")
 add_library(LeapSerial ${LeapSerial_SRCS})
+target_link_libraries(LeapSerial zlib)
 add_subdirectory(test)
 
 install(TARGETS LeapSerial EXPORT LeapSerialTargets

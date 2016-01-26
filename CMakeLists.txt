@@ -129,6 +129,8 @@ configure_file(leapserial-configVersion.cmake.in leapserial-configVersion.cmake 
 configure_file(LeapSerialConfig.h.in ${PROJECT_SOURCE_DIR}/LeapSerial/LeapSerialConfig.h @ONLY)
 
 # Recurse through source directories
+include_directories(contrib)
+add_subdirectory(contrib)
 add_subdirectory(src)
 
 # Export library
@@ -149,7 +151,7 @@ install(
   COMPONENT LeapSerial
   FILES_MATCHING PATTERN "*.h"
 )
- 
+
 # Targets file is needed in order to describe how to link LeapSerial to the rest of the system
 install(EXPORT LeapSerialTargets FILE LeapSerialTargets.cmake COMPONENT LeapSerial NAMESPACE LeapSerial:: DESTINATION cmake CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
 

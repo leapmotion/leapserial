@@ -90,7 +90,7 @@ void OArchiveImpl::WriteDescriptor(const descriptor& descriptor, const void* pOb
       // Nothing else requires that the size be written
       break;
     }
-    
+
     // Now handoff to serialization proper
     identified_descriptor.serializer.serialize(*this, pChildObj);
   }
@@ -133,7 +133,7 @@ uint64_t OArchiveImpl::SizeDescriptor(const descriptor& descriptor, const void* 
 void OArchiveImpl::WriteByteArray(const void* pBuf, uint64_t ncb, bool writeSize) {
   if(writeSize)
     WriteSize((uint32_t)ncb);
-  
+
   os.Write(pBuf, ncb);
 }
 
@@ -161,7 +161,7 @@ void OArchiveImpl::WriteInteger(int64_t value, uint8_t) {
 void OArchiveImpl::WriteArray(IArrayReader&& ary) {
   uint32_t n = (uint32_t)ary.size();
   WriteSize(n);
-  
+
   for (uint32_t i = 0; i < n; i++)
     ary.serializer.serialize(*this, ary.get(i));
 }
@@ -178,7 +178,7 @@ void OArchiveImpl::WriteDictionary(IDictionaryReader&& dictionary)
 {
   uint32_t n = dictionary.size();
   WriteSize((uint32_t)n);
-  
+
   while (dictionary.next()) {
     dictionary.key_serializer.serialize(*this, dictionary.key());
     dictionary.value_serializer.serialize(*this, dictionary.value());

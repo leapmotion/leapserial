@@ -59,7 +59,7 @@ void* IArchiveImpl::ReadObjectReference(const create_delete& cd,  const leap::fi
     // We expect to find an ID in the input stream
   uint32_t objId;
   ReadByteArray(&objId, sizeof(objId));
-  
+
   // Now we just perform a lookup into our archive and store the result here
   return Lookup(cd, sz, objId);
 }
@@ -68,7 +68,7 @@ IArchive::ReleasedMemory IArchiveImpl::ReadObjectReferenceResponsible(ReleasedMe
   // Object ID, then directed registration:
   uint32_t objId;
   ReadByteArray(&objId, sizeof(objId));
-  
+
   // Verify no unique pointer aliases:
   if (isUnique && IsReleased(objId))
     throw std::runtime_error("Attempted to map the same object into two distinct unique pointers");
@@ -167,7 +167,7 @@ void IArchiveImpl::ReadString(std::function<void*(uint64_t)> getBufferFn, uint8_
   ReadByteArray(&nEntries, sizeof(nEntries));
 
   auto* pBuf = getBufferFn(nEntries);
-  
+
   ReadByteArray(pBuf, nEntries * charSize);
 }
 
@@ -176,7 +176,7 @@ void IArchiveImpl::ReadDictionary(IDictionaryInserter&& dictionary)
   // Read the number of entries first:
   uint32_t nEntries;
   ReadByteArray(&nEntries, sizeof(nEntries));
-  
+
   // Now read in all values:
   while (nEntries--) {
     dictionary.key_serializer.deserialize(*this, dictionary.key(), 0);

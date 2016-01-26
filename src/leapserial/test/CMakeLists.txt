@@ -1,6 +1,7 @@
 set(LeapSerialTest_SRCS
   ArchiveJSONTest.cpp
   ChronoTypesTest.cpp
+  CompressionStreamTest.cpp
   LeapArchiveTest.cpp
   MapTest.cpp
   OptionalTest.cpp

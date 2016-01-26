@@ -63,11 +63,11 @@ namespace leap {
   std::shared_ptr<T> Deserialize(stream_t&& is) {
     auto retVal = std::make_shared<leap::internal::Allocation<T>>();
     T* pObj = &retVal->val;
-    
+
     // Initialize the archive with work to be done:
     archive_t ar(is);
     ar.ReadObject(field_serializer_t<T, void>::GetDescriptor(), pObj, retVal.get() );
-    
+
     // Aliasing ctor, because T is a member of Allocation<T> and not a base
     return { retVal, pObj };
   }
