@@ -11,12 +11,16 @@ bool InputStreamAdapter::IsEof(void) const {
 
 std::streamsize InputStreamAdapter::Read(void* pBuf, std::streamsize ncb) {
   is.read((char*)pBuf, ncb);
-  return is ? is.gcount() : -1;
+  if (is.fail() && !is.eof())
+      return -1;
+  return is.gcount();
 }
 
 std::streamsize InputStreamAdapter::Skip(std::streamsize ncb) {
   is.ignore(ncb);
-  return is ? is.gcount() : -1;
+  if (is.fail() && !is.eof())
+    return -1;
+  return is.gcount();
 }
 
 bool OutputStreamAdapter::Write(const void* pBuf, std::streamsize ncb) {
