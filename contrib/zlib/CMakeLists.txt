@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.4.0)
-
 project(zlib C)
 
 set(VERSION "1.2.8")
