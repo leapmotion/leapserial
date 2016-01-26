@@ -40,3 +40,4 @@ leapserial.kdev4
 CTestTestfile.cmake
 LeapSerialTargets.cmake
 leapserial/LeapSerialConfig.h
+*.opendb
