@@ -98,7 +98,7 @@ bool OutputFilterStreamBase::Write(const void* pBuf, std::streamsize ncb, bool f
 }
 
 bool OutputFilterStreamBase::Write(const void* pBuf, std::streamsize ncb) {
-  return Write(pBuf, ncb, true);
+  return Write(pBuf, ncb, false);
 }
 
 void OutputFilterStreamBase::Flush(void) {
