@@ -43,11 +43,15 @@ namespace leap {
   /// Mapping adaptor, allows input streams to be wrapped to support Archive operations
   /// </summary>
   class InputStreamAdapter:
-    public IInputStream 
+    public IInputStream
   {
   public:
     InputStreamAdapter(std::istream& is) :
       is(is)
+    {}
+
+    InputStreamAdapter(const InputStreamAdapter& rhs) :
+      is(rhs.is)
     {}
 
   private:
@@ -61,11 +65,15 @@ namespace leap {
   };
 
   class OutputStreamAdapter:
-    public IOutputStream 
+    public IOutputStream
   {
   public:
     OutputStreamAdapter(std::ostream& os) :
       os(os)
+    {}
+
+    OutputStreamAdapter(const OutputStreamAdapter& rhs) :
+      os(rhs.os)
     {}
 
     // IOutputStream overrides:
@@ -79,7 +87,7 @@ namespace leap {
   /// An enumeration of the different basic types that are handled directly by the archiver
   /// </summary>
   /// <remarks>
-  /// 'Atom' refers to a basic unit of serializablity.  Most are straightforward, but some 
+  /// 'Atom' refers to a basic unit of serializablity.  Most are straightforward, but some
   /// require documentation.
   /// Reference - Any type of pointer to another object
   /// Descriptor - A combination of one or more other atoms.  Has a degree of support for adding fields
@@ -119,7 +127,7 @@ namespace leap {
     /// Writes the specified bytes to the output stream, optionally prefixed by the size of the stream.
     /// </summary>
     virtual void WriteByteArray(const void* pBuf, uint64_t ncb, bool writeSize = false) = 0;
-    
+
     /// <summary>
     /// Writes the specified bytes as a string.
     /// </summary>
@@ -153,10 +161,10 @@ namespace leap {
     virtual void WriteInteger(uint32_t value) { WriteInteger(value, sizeof(value)); }
     virtual void WriteInteger(int64_t value) { WriteInteger(value, sizeof(value)); }
     virtual void WriteInteger(uint64_t value) { WriteInteger((int64_t)value, sizeof(value)); }
-    
+
     virtual void WriteFloat(float value) { WriteByteArray(&value, sizeof(float)); }
     virtual void WriteFloat(double value) { WriteByteArray(&value, sizeof(double)); }
-    
+
     virtual uint64_t SizeInteger(int64_t value, uint8_t ncb) const = 0;
     virtual uint64_t SizeFloat(float value) const = 0;
     virtual uint64_t SizeFloat(double value) const = 0;
@@ -177,7 +185,7 @@ namespace leap {
   {
   public:
     virtual ~OArchiveRegistry(void) {}
-    
+
     /// <summary>
     /// Registers an object for serialization, returning the ID that will be given to the object
     /// </summary>
@@ -191,17 +199,17 @@ namespace leap {
     /// root objects--IE, objects that have no context and therefore no identifiers.
     /// </remarks>
     virtual void WriteObject(const field_serializer& serializer, const void* pObj) = 0;
-    
+
     /// <summary>
     /// Writes a descriptor to the stream
     /// </summary>
     virtual void WriteDescriptor(const descriptor& descriptor, const void* pObj) = 0;
-    
+
     /// <summary>
     /// Writes out an array of entries
     /// </summary>
     virtual void WriteArray(IArrayReader&& ary) = 0;
-    
+
     /// <summary>
     /// Writes out a dictionary of entries
     /// </summary>
@@ -253,12 +261,12 @@ namespace leap {
     /// Discards the specified number of bytes from the input stream
     /// </summary>
     virtual void Skip(uint64_t ncb) = 0;
-    
+
     /// <returns>
     /// The total number of bytes read so far
     /// </returns>
     virtual uint64_t Count(void) const = 0;
-    
+
     /// <summary>
     /// Reads a described object from the stream.
     /// </summary>
@@ -268,7 +276,7 @@ namespace leap {
     /// Reads the specified number of bytes from the input stream
     /// </summary>
     virtual void ReadByteArray(void* pBuf, uint64_t ncb) = 0;
-    
+
     /// <summary>
     /// Reads out a string into the specified buffer
     /// </summary>
@@ -285,7 +293,7 @@ namespace leap {
     /// Reads the specified boolean value to the output stream
     /// </sumamry>
     virtual bool ReadBool() = 0;
-    
+
     /// <summary>
     /// Reads the specified integer from the input stream
     /// </summary>

@@ -15,5 +15,10 @@ namespace leap {
     /// Writes all of the specified bytes to the output stream
     /// </summary>
     virtual bool Write(const void* pBuf, std::streamsize ncb) = 0;
+
+    /// <summary>
+    /// Causes any unwritten data to be flushed from memory
+    /// </summary>
+    virtual void Flush(void) {}
   };
 }

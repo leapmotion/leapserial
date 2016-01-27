@@ -50,7 +50,9 @@ before_script:
 
 script:
   # Build LeapSerial, run unit tests, and install
-  - $CMAKE_DIRNAME/bin/cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=~/leapserial/ ${CMAKE_EXTRA_FLAGS}
+  - mkdir b
+  - cd b
+  - ../$CMAKE_DIRNAME/bin/cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=~/leapserial/ ${CMAKE_EXTRA_FLAGS}
   - make -j 4 || make
   - ctest --output-on-failure
   - make install > logfile || cat logfile
