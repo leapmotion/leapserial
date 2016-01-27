@@ -66,7 +66,7 @@ bool CompressionStream::Transform(const void* input, size_t& ncbIn, void* output
 
   // Compress one, update results
   strm->next_out = reinterpret_cast<uint8_t*>(output);
-  strm->avail_out = ncbOut;
+  strm->avail_out = static_cast<uint32_t>(ncbOut);
   int rs = deflate(strm.get(), flush ? Z_FULL_FLUSH : Z_NO_FLUSH);
 
   ncbIn -= strm->avail_in;
