@@ -72,16 +72,17 @@ OutputFilterStreamBase::OutputFilterStreamBase(IOutputStream& os, int level) :
     throw std::invalid_argument("Compression stream level must be in the range [0, 9]");
 }
 
-OutputFilterStreamBase::~OutputFilterStreamBase(void) {
-  if (!fail)
-    Write(nullptr, 0);
-}
+OutputFilterStreamBase::~OutputFilterStreamBase(void) {}
 
 bool OutputFilterStreamBase::Write(const void* pBuf, std::streamsize ncb, bool flush) {
   if (fail)
     throw std::runtime_error("Cannot write if compression stream is in a failed state");
 
-  while (ncb) {
+  // Trivial return check:
+  if (!ncb && !flush)
+    return true;
+
+  do {
     size_t ncbOut = buffer.size();
     size_t ncbIn = static_cast<size_t>(ncb);
     fail = !Transform(pBuf, ncbIn, buffer.data(), ncbOut, flush);
@@ -93,7 +94,7 @@ bool OutputFilterStreamBase::Write(const void* pBuf, std::streamsize ncb, bool f
     fail = !os.Write(buffer.data(), static_cast<std::streamsize>(ncbOut));
     if (fail)
       return false;
-  };
+  } while(ncb);
   return true;
 }
 
