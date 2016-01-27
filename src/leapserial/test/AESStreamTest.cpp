@@ -6,7 +6,7 @@
 #include <numeric>
 #include <vector>
 
-static const std::array<uint8_t, 32> sc_key{ 0x99, 0x84, 0x49, 0x28 };
+static const std::array<uint8_t, 32> sc_key{ {0x99, 0x84, 0x49, 0x28} };
 
 class AESStreamTest:
   public testing::Test
