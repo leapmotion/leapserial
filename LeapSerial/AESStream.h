@@ -55,6 +55,6 @@ namespace leap {
 
   protected:
     // InputFilterStreamBase overrides:
-    bool Transform(const void* input, size_t& ncbIn, void* output, size_t& ncbOut);
+    bool Transform(const void* input, size_t& ncbIn, void* output, size_t& ncbOut) override;
   };
 }
