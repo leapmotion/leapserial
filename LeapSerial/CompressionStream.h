@@ -28,7 +28,7 @@ namespace leap {
   {
   public:
     /// <summary>
-    /// Initializes the decompression stream at the specified compression level
+    /// Initializes the decompression stream
     /// </summary>
     explicit DecompressionStream(IInputStream& is);
 
