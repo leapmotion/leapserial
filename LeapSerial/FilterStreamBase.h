@@ -16,9 +16,6 @@ namespace leap {
     public IInputStream
   {
   public:
-    /// <summary>
-    /// Initializes the decompression stream at the specified compression level
-    /// </summary>
     explicit InputFilterStreamBase(IInputStream& is);
 
   private:
@@ -57,12 +54,7 @@ namespace leap {
     public IOutputStream
   {
   public:
-    /// <summary>
-    /// Initializes the compression stream at the specified compression level
-    /// </summary>
-    /// <param name="os">The underlying stream</param>
-    /// <param name="level">The compression level, a value in the range 0 to 9.  Set to -1 to use the default.</param>
-    explicit OutputFilterStreamBase(IOutputStream& os, int level = -1);
+    explicit OutputFilterStreamBase(IOutputStream& os);
 
     ~OutputFilterStreamBase(void);
 

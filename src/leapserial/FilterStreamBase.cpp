@@ -64,12 +64,10 @@ std::streamsize InputFilterStreamBase::Skip(std::streamsize ncb) {
   return 0;
 }
 
-OutputFilterStreamBase::OutputFilterStreamBase(IOutputStream& os, int level) :
+OutputFilterStreamBase::OutputFilterStreamBase(IOutputStream& os) :
   os(os),
   buffer(1024, 0)
 {
-  if (level < -1 || 9 < level)
-    throw std::invalid_argument("Compression stream level must be in the range [0, 9]");
 }
 
 OutputFilterStreamBase::~OutputFilterStreamBase(void) {}
