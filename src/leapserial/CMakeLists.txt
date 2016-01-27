@@ -18,6 +18,8 @@ set(LeapSerial_SRCS
   field_descriptor.h
   field_serializer.h
   field_serializer_t.h
+  FilterStreamBase.h
+  FilterStreamBase.cpp
   ProtobufType.h
   IArchiveImpl.h
   IArchiveImpl.cpp
