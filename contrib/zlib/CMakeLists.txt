@@ -126,3 +126,8 @@ install(TARGETS zlib EXPORT LeapSerialTargets
   COMPONENT LeapSerial
   CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
 )
+target_include_directories(
+  zlib
+  INTERFACE
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
+)
