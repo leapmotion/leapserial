@@ -9,8 +9,8 @@ using namespace leap;
 
 InputFilterStreamBase::InputFilterStreamBase(IInputStream& is) :
   is(is),
-  buffer(1024, 0),
-  inputChunk(1024, 0)
+  inputChunk(1024, 0),
+  buffer(1024, 0)
 {}
 
 bool InputFilterStreamBase::IsEof(void) const {
