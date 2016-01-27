@@ -77,8 +77,8 @@ TEST_F(CompressionStreamTest, RoundTrip) {
     leap::CompressionStream cs{ osa };
     leap::Serialize(cs, val);
   }
-  SimpleStruct reacq;
 
+  SimpleStruct reacq;
   {
     leap::InputStreamAdapter isa{ ss };
     leap::DecompressionStream ds{ isa };
@@ -86,4 +86,29 @@ TEST_F(CompressionStreamTest, RoundTrip) {
   }
 
   ASSERT_EQ(val.value, reacq.value);
+}
+
+TEST_F(CompressionStreamTest, TruncatedStreamTest) {
+  auto val = MakeSimpleStruct();
+
+  std::string str;
+  {
+    std::stringstream ss;
+    leap::OutputStreamAdapter osa{ ss };
+    leap::CompressionStream cs{ osa };
+    leap::Serialize(cs, val);
+    str = ss.str();
+  }
+
+  str.resize(str.size() / 2);
+  ASSERT_FALSE(str.empty());
+
+  // Deserialization should cause a problem
+  SimpleStruct reacq;
+  {
+    std::stringstream ss(std::move(str));
+    leap::InputStreamAdapter isa{ ss };
+    leap::DecompressionStream ds{ isa };
+    ASSERT_ANY_THROW(leap::Deserialize(ds, reacq));
+  }
 }

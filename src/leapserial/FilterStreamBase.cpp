@@ -36,14 +36,19 @@ std::streamsize InputFilterStreamBase::Read(void* pBuf, std::streamsize ncb) {
       ncb -= ncbCopy;
     } else {
       // Pump in from the underlying stream
-      auto nRead = is.Read(inputChunk.data() + inChunkRemain, inputChunk.size() - inChunkRemain) + inChunkRemain;
-      if (nRead < 0) {
+      auto nRead = is.Read(inputChunk.data() + inChunkRemain, inputChunk.size() - inChunkRemain);
+      if (nRead < 0)
+        // Treat an error condition as "zero bytes read".  It's possible that we have everything we
+        // need because we still have buffer from the prior read operation.
+        nRead = 0;
+
+      // Increment by the number of bytes unprocessed in the last filter operation
+      nRead += inChunkRemain;
+      if (nRead == 0) {
+        // Unexpected EOF, end here
         fail = true;
         throw std::runtime_error("Unexpected end of file reached");
       }
-      if (nRead == 0)
-        // Maybe EOF, short-circuit
-        return total;
 
       // Handoff to transform behavior:
       size_t ncbIn = static_cast<size_t>(nRead);
@@ -53,7 +58,7 @@ std::streamsize InputFilterStreamBase::Read(void* pBuf, std::streamsize ncb) {
 
       // Shift over what we didn't consume under decompression
       buffer.resize(ncbAvail);
-      inChunkRemain = nRead - ncbIn;
+      inChunkRemain = static_cast<size_t>(nRead) - ncbIn;
       memmove(inputChunk.data(), inputChunk.data() + nRead - inChunkRemain, inChunkRemain);
     }
 
