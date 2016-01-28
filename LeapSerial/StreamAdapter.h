@@ -48,13 +48,17 @@ namespace leap {
     OutputStreamAdapter(const OutputStreamAdapter& rhs);
     ~OutputStreamAdapter(void);
 
-    // IOutputStream overrides:
-    bool Write(const void* pBuf, std::streamsize ncb) override;
-
   private:
     std::ostream& os;
 
     // Non-null if we have taken ownership
     const std::unique_ptr<std::ostream> pos;
+
+  public:
+    // Accessor methods:
+    std::ostream& GetStdStream(void) const { return os; }
+
+    // IOutputStream overrides:
+    bool Write(const void* pBuf, std::streamsize ncb) override;
   };
 }

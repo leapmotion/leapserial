@@ -94,12 +94,14 @@ std::vector<const field_descriptor*> SortFields(const descriptor& descriptor) {
   return orderedDescriptors;
 }
 
-OArchiveFlatbuffer::OArchiveFlatbuffer(std::ostream& os) : os(os) {}
+OArchiveFlatbuffer::OArchiveFlatbuffer(leap::IOutputStream& os) :
+  OArchiveRegistry(os)
+{}
 
 void OArchiveFlatbuffer::Finish() {
   //And copy the buffer backwards into the stream...
   for (auto dataIter = m_builder.rbegin(); dataIter != m_builder.rend(); dataIter++) {
-    os.write((const char*)&*dataIter, 1);
+    os.Write((const char*)&*dataIter, 1);
   }
 }
 

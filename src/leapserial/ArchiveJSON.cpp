@@ -14,8 +14,9 @@ public:
   not_implemented_exception() : std::runtime_error("This function is not yet implemented!") {}
 };
 
-OArchiveJSON::OArchiveJSON(std::ostream& os, bool escapeSlashes) :
-  os(os),
+OArchiveJSON::OArchiveJSON(leap::OutputStreamAdapter& osa, bool escapeSlashes) :
+  OArchiveRegistry(osa),
+  os(osa.GetStdStream()),
   EscapeSlashes(escapeSlashes)
 {}
 

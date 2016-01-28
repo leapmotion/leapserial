@@ -5,6 +5,14 @@
 
 using namespace leap;
 
+OArchive::OArchive(IOutputStream& os):
+  os(os)
+{}
+
+OArchiveRegistry::OArchiveRegistry(IOutputStream& os) :
+  OArchive(os)
+{}
+
 const char* leap::ToString(serial_atom atom) {
   switch (atom) {
   case serial_atom::ignored:

@@ -10,13 +10,9 @@ namespace leap {
   {
   public:
     OArchiveImpl(IOutputStream& os);
-    OArchiveImpl(std::ostream& os);
     ~OArchiveImpl(void);
 
   private:
-    // Underlying output stream
-    IOutputStream& os;
-
     // If any additional (flat) memory was required to construct the output stream reference, this is it
     void* const pOsMem = nullptr;
     void(*const pfnDtor)(void*) = nullptr;

@@ -646,7 +646,8 @@ TEST_F(SerializationTest, AlternateDescriptor) {
     mss.b = 2;
     mss.myString = "This will not be sent";
     {
-      leap::OArchiveImpl oArch(ss);
+      leap::OutputStreamAdapter ssa{ ss };
+      leap::OArchiveImpl oArch(ssa);
       oArch.WriteObject(desc, &mss);
     }
   }

@@ -78,12 +78,29 @@ namespace leap {
   /// </summary>
   class OArchive {
   public:
+    OArchive(IOutputStream& os);
     virtual ~OArchive(void) {}
 
+  protected:
+    // Underlying output stream
+    IOutputStream& os;
+
+  public:
     /// <summary>
     /// Writes the specified bytes to the output stream, optionally prefixed by the size of the stream.
     /// </summary>
     virtual void WriteByteArray(const void* pBuf, uint64_t ncb, bool writeSize = false) = 0;
+
+    /// <returns>
+    /// The stream underlying this archive
+    /// </returns>
+    /// <remarks>
+    /// This is intended for advanced use, and allows direct, unfiltered access to the stream itself
+    /// without any interference from the output formatter.  The archiver could be outputting data in
+    /// JSON or XML; use of this routine is particularly dangerous in these cases because there is no
+    /// guarantee that raw bytes written to the stream will not break standards complaince in the file.
+    /// </remarks>
+    IOutputStream& GetStream(void) { return os; }
 
     /// <summary>
     /// Writes the specified bytes as a string.
@@ -141,6 +158,7 @@ namespace leap {
     public OArchive
   {
   public:
+    OArchiveRegistry(IOutputStream& os);
     virtual ~OArchiveRegistry(void) {}
 
     /// <summary>

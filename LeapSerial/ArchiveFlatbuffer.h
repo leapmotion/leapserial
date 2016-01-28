@@ -31,7 +31,7 @@ namespace leap {
     public OArchiveRegistry
   {
   public:
-    OArchiveFlatbuffer(std::ostream& os);
+    OArchiveFlatbuffer(leap::IOutputStream& os);
 
     // Finishes writing, since this is a buffered system. Mostly used for testing.
     void Finish();
@@ -63,8 +63,6 @@ namespace leap {
     uint64_t SizeDictionary(IDictionaryReader&& dictionary) const override;
 
   private:
-    std::ostream& os;
-
     //Flatbuffer messages are most easily built backwards, so we'll write into this,
     //Then dump it into os when we're done with the message.
     std::vector<uint8_t> m_builder;

@@ -10,17 +10,7 @@
 using namespace leap;
 
 OArchiveImpl::OArchiveImpl(IOutputStream& os) :
-  os(os)
-{
-  objMap[nullptr] = 0;
-}
-
-OArchiveImpl::OArchiveImpl(std::ostream& os) :
-  os(*new OutputStreamAdapter{ os }),
-  pOsMem(&this->os),
-  pfnDtor([](void* ptr) {
-    delete (OutputStreamAdapter*)ptr;
-  })
+  OArchiveRegistry(os)
 {
   objMap[nullptr] = 0;
 }

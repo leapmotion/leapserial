@@ -42,7 +42,8 @@ static std::vector<std::string> GeneratePrettyJson(int tabWidth) {
   std::string json;
   {
     std::ostringstream os;
-    leap::OArchiveJSON jsonAr(os);
+    leap::OutputStreamAdapter osa{ os };
+    leap::OArchiveJSON jsonAr(osa);
     jsonAr.PrettyPrint = true;
     jsonAr.TabWidth = tabWidth;
     jsonAr.WriteObject(

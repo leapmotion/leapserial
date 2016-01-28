@@ -47,8 +47,6 @@ namespace leap {
     uint64_t SizeDictionary(IDictionaryReader&& dictionary) const override;
 
   private:
-    IOutputStream& os;
-
     // Stateful:  Stores the identifier of the object presently being serialized
     mutable const std::pair<const uint64_t, field_descriptor>* curDescEntry = nullptr;
   };
