@@ -16,8 +16,8 @@ public:
 
 OArchiveJSON::OArchiveJSON(leap::OutputStreamAdapter& osa, bool escapeSlashes) :
   OArchiveRegistry(osa),
-  os(osa.GetStdStream()),
-  EscapeSlashes(escapeSlashes)
+  EscapeSlashes(escapeSlashes),
+  os(osa.GetStdStream())
 {}
 
 void OArchiveJSON::WriteByteArray(const void* pBuf, uint64_t ncb, bool writeSize) {
