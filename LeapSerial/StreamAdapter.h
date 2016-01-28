@@ -13,17 +13,9 @@ namespace leap {
     public IInputStream
   {
   public:
-    InputStreamAdapter(std::istream& is) :
-      is(is)
-    {}
-    InputStreamAdapter(std::unique_ptr<std::istream> pis) :
-      is(*pis),
-      pis(std::move(pis))
-    {}
-
-    InputStreamAdapter(const InputStreamAdapter& rhs) :
-      is(rhs.is)
-    {}
+    InputStreamAdapter(std::istream& is);
+    InputStreamAdapter(std::unique_ptr<std::istream> pis);
+    InputStreamAdapter(const InputStreamAdapter& rhs);
 
     ~InputStreamAdapter(void);
 
@@ -50,19 +42,9 @@ namespace leap {
     public IOutputStream
   {
   public:
-    OutputStreamAdapter(std::ostream& os) :
-      os(os)
-    {}
-
-    OutputStreamAdapter(std::unique_ptr<std::ostream> pos) :
-      os(*pos),
-      pos(std::move(pos))
-    {}
-
-    OutputStreamAdapter(const OutputStreamAdapter& rhs) :
-      os(rhs.os)
-    {}
-
+    OutputStreamAdapter(std::ostream& os);
+    OutputStreamAdapter(std::unique_ptr<std::ostream> pos);
+    OutputStreamAdapter(const OutputStreamAdapter& rhs);
     ~OutputStreamAdapter(void);
 
     // IOutputStream overrides:

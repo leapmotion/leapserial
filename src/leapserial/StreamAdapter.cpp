@@ -5,6 +5,19 @@
 
 using namespace leap;
 
+InputStreamAdapter::InputStreamAdapter(std::istream& is) :
+  is(is)
+{}
+
+InputStreamAdapter::InputStreamAdapter(std::unique_ptr<std::istream> pis) :
+  is(*pis),
+  pis(std::move(pis))
+{}
+
+InputStreamAdapter::InputStreamAdapter(const InputStreamAdapter& rhs) :
+  is(rhs.is)
+{}
+
 bool InputStreamAdapter::IsEof(void) const {
   return is.eof();
 }
@@ -29,6 +42,19 @@ InputStreamAdapter* InputStreamAdapter::Seek(std::streamsize off) {
   is.seekg(off, std::ios::beg);
   return this;
 }
+
+OutputStreamAdapter::OutputStreamAdapter(std::ostream& os) :
+  os(os)
+{}
+
+OutputStreamAdapter::OutputStreamAdapter(std::unique_ptr<std::ostream> pos) :
+  os(*pos),
+  pos(std::move(pos))
+{}
+
+OutputStreamAdapter::OutputStreamAdapter(const OutputStreamAdapter& rhs) :
+  os(rhs.os)
+{}
 
 OutputStreamAdapter::~OutputStreamAdapter(void) {}
 
