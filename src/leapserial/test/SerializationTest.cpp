@@ -696,24 +696,37 @@ TEST_F(SerializationTest, EnumClassTest) {
 }
 
 namespace {
+  enum MyType {
+    One,
+    Two
+  };
+
   struct StructA {
-    int member1 = 2;
-    int member2 = 3;
+    std::string hello = "Hello";
+    std::map<std::string, std::string> mymap;
+    uint64_t member1 = 2;
+    MyType member2 = MyType::One;
 
     static leap::descriptor GetDescriptor(void) {
       return{
+        &StructA::hello,
+        &StructA::mymap,
         &StructA::member1,
         &StructA::member2
       };
     }
   };
   struct StructB {
-    int member1 = 99;
-    int member2 = 101;
+    std::string world = "World";
+    std::map<std::string, std::string> mymap;
+    uint64_t member1 = 99;
+    MyType member2 = MyType::Two;
     int member3 = 229;
 
     static leap::descriptor GetDescriptor(void) {
       return {
+        &StructB::world,
+        &StructB::mymap,
         &StructB::member1,
         &StructB::member2,
         { 1, &StructB::member3 }
@@ -726,11 +739,14 @@ TEST_F(SerializationTest, FixedSizeBackwardsCompatCheck) {
   // Write as A
   std::stringstream ss;
   StructA a;
+  a.mymap = std::map<std::string, std::string>{ { "a", "b" },{ "c", "d" } };
   leap::Serialize(ss, a);
 
   StructB b;
   leap::Deserialize(ss, b);
 
+  ASSERT_EQ(a.hello, b.world);
+  ASSERT_EQ(a.mymap, b.mymap);
   ASSERT_EQ(a.member1, b.member1);
   ASSERT_EQ(a.member2, b.member2);
 }
@@ -739,11 +755,14 @@ TEST_F(SerializationTest, FixedSizeForwardsCompatCheck) {
   // Write as A
   std::stringstream ss;
   StructB b;
+  b.mymap = std::map<std::string, std::string>{ { "hello", "world" } };
   leap::Serialize(ss, b);
 
   StructA a;
   leap::Deserialize(ss, a);
 
+  ASSERT_EQ(b.world, a.hello);
+  ASSERT_EQ(b.mymap, a.mymap);
   ASSERT_EQ(b.member1, a.member1);
   ASSERT_EQ(b.member2, a.member2);
 }
