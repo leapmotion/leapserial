@@ -36,7 +36,7 @@ namespace leap {
     /// <summary>
     /// Initializes the encryption stream
     /// </summary>
-    AESEncryptionStream(IOutputStream& os, const std::array<uint8_t, 32>& key);
+    AESEncryptionStream(std::unique_ptr<IOutputStream>&& os, const std::array<uint8_t, 32>& key);
 
   protected:
     // OutputFilterStreamBase overrides:
@@ -51,7 +51,7 @@ namespace leap {
     public AES256Base
   {
   public:
-    AESDecryptionStream(IInputStream& is, const std::array<uint8_t, 32>& key);
+    AESDecryptionStream(std::unique_ptr<IInputStream>&& is, const std::array<uint8_t, 32>& key);
 
   protected:
     // InputFilterStreamBase overrides:

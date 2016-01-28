@@ -30,7 +30,7 @@ namespace leap {
     /// <summary>
     /// Initializes the decompression stream
     /// </summary>
-    explicit DecompressionStream(IInputStream& is);
+    explicit DecompressionStream(std::unique_ptr<IInputStream>&& is);
 
   protected:
     // InputFilterStreamBase overrides:
@@ -50,7 +50,7 @@ namespace leap {
     /// </summary>
     /// <param name="os">The underlying stream</param>
     /// <param name="level">The compression level, a value in the range 0 to 9.  Set to -1 to use the default.</param>
-    explicit CompressionStream(IOutputStream& os, int level = -1);
+    explicit CompressionStream(std::unique_ptr<IOutputStream>&& os, int level = -1);
 
     ~CompressionStream(void);
 

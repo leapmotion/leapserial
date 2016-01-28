@@ -7,14 +7,14 @@
 
 using namespace leap;
 
-InputFilterStreamBase::InputFilterStreamBase(IInputStream& is) :
-  is(is),
+InputFilterStreamBase::InputFilterStreamBase(std::unique_ptr<IInputStream>&& is) :
+  is(std::move(is)),
   inputChunk(1024, 0),
   buffer(1024, 0)
 {}
 
 bool InputFilterStreamBase::IsEof(void) const {
-  return is.IsEof() && buffer.empty();
+  return is->IsEof() && buffer.empty();
 }
 
 std::streamsize InputFilterStreamBase::Read(void* pBuf, std::streamsize ncb) {
@@ -36,7 +36,7 @@ std::streamsize InputFilterStreamBase::Read(void* pBuf, std::streamsize ncb) {
       ncb -= ncbCopy;
     } else {
       // Pump in from the underlying stream
-      auto nRead = is.Read(inputChunk.data() + inChunkRemain, inputChunk.size() - inChunkRemain);
+      auto nRead = is->Read(inputChunk.data() + inChunkRemain, inputChunk.size() - inChunkRemain);
       if (nRead < 0)
         // Treat an error condition as "zero bytes read".  It's possible that we have everything we
         // need because we still have buffer from the prior read operation.
@@ -69,8 +69,8 @@ std::streamsize InputFilterStreamBase::Skip(std::streamsize ncb) {
   return 0;
 }
 
-OutputFilterStreamBase::OutputFilterStreamBase(IOutputStream& os) :
-  os(os),
+OutputFilterStreamBase::OutputFilterStreamBase(std::unique_ptr<IOutputStream>&& os) :
+  os(std::move(os)),
   buffer(1024, 0)
 {
 }
@@ -94,7 +94,7 @@ bool OutputFilterStreamBase::Write(const void* pBuf, std::streamsize ncb, bool f
 
     ncb -= ncbIn;
     reinterpret_cast<const uint8_t*&>(pBuf) += ncbIn;
-    fail = !os.Write(buffer.data(), static_cast<std::streamsize>(ncbOut));
+    fail = !os->Write(buffer.data(), static_cast<std::streamsize>(ncbOut));
     if (fail)
       return false;
   } while(ncb);

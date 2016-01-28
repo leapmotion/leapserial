@@ -24,8 +24,8 @@ ZStreamBase::~ZStreamBase(void) {
     deflateEnd(strm.get());
 }
 
-DecompressionStream::DecompressionStream(IInputStream& is) :
-  InputFilterStreamBase(is)
+DecompressionStream::DecompressionStream(std::unique_ptr<IInputStream>&& is) :
+  InputFilterStreamBase(std::move(is))
 {
   inflateInit(strm.get());
   strm->avail_in = 0;
@@ -47,8 +47,8 @@ bool DecompressionStream::Transform(const void* input, size_t& ncbIn, void* outp
   return true;
 }
 
-CompressionStream::CompressionStream(IOutputStream& os, int level) :
-  OutputFilterStreamBase(os)
+CompressionStream::CompressionStream(std::unique_ptr<IOutputStream>&& os, int level) :
+  OutputFilterStreamBase(std::move(os))
 {
   if (level < -1 || 9 < level)
     throw std::invalid_argument("Compression stream level must be in the range [0, 9]");
