@@ -29,5 +29,7 @@ namespace leap {
     std::streamsize Read(void* pBuf, std::streamsize ncb) override;
     std::streamsize Skip(std::streamsize ncb) override;
     std::streamsize Length(void) override;
+
+    using leap::IOutputStream::Write;
   };
 }

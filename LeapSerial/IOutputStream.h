@@ -75,21 +75,34 @@ namespace leap {
       std::streamsize ncbRemain = ncb;
       ncb = 0;
 
-      while (ncbRemain) {
-        std::streamsize ss = is.Read(
-          scratch,
-          ncbRemain < ncbScratch ? ncbRemain : ncbScratch
-        );
-        if (!ss)
-          return CopyResult::InputStreamEof;
-        if (ss < 0)
-          return CopyResult::InputStreamError;
+      if (ncbRemain < 0)
+        for (;;) {
+          std::streamsize ss = is.Read(scratch, ncbScratch);
+          if (!ss)
+            return CopyResult::InputStreamEof;
+          if (ss < 0)
+            return CopyResult::InputStreamError;
 
-        ncb += ss;
-        ncbRemain -= ss;
-        if (!Write(scratch, ncb))
-          return CopyResult::OutputStreamWriteFail;
-      }
+          ncb += ss;
+          if (!Write(scratch, ss))
+            return CopyResult::OutputStreamWriteFail;
+        }
+      else
+        while (ncbRemain) {
+          std::streamsize ss = is.Read(
+            scratch,
+            ncbRemain < ncbScratch ? ncbRemain : ncbScratch
+          );
+          if (!ss)
+            return CopyResult::InputStreamEof;
+          if (ss < 0)
+            return CopyResult::InputStreamError;
+
+          ncb += ss;
+          ncbRemain -= ss;
+          if (!Write(scratch, ss))
+            return CopyResult::OutputStreamWriteFail;
+        }
 
       return CopyResult::Ok;
     }
