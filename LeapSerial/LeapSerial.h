@@ -78,9 +78,13 @@ namespace leap {
   }
 
   ///I/OArchiveImpl defaulted versions:
-  template<typename archive_t, class stream_t, class T>
+  template<typename archive_t, typename stream_t, typename T>
   void Serialize(stream_t&& os, const T& obj) {
     Serialize<archive_t, T>(os, obj);
+  }
+  template<typename stream_t, typename T>
+  void Serialize(stream_t&& os, const T& obj) {
+    Serialize<leap::OArchiveImpl, T>(os, obj);
   }
 
   /// <summary>
