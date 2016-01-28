@@ -1,4 +1,6 @@
 set(LeapSerial_SRCS
+  AESStream.h
+  AESStream.cpp
   Allocation.h
   Allocation.cpp
   Archive.h
@@ -47,7 +49,7 @@ set(LeapSerial_SRCS
 rewrite_header_paths(LeapSerial_SRCS)
 add_pch(LeapSerial_SRCS "stdafx.h" "stdafx.cpp")
 add_library(LeapSerial ${LeapSerial_SRCS})
-target_link_libraries(LeapSerial zlib)
+target_link_libraries(LeapSerial aes zlib)
 add_subdirectory(test)
 
 install(TARGETS LeapSerial EXPORT LeapSerialTargets
