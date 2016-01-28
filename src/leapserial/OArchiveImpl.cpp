@@ -187,7 +187,7 @@ uint64_t OArchiveImpl::SizeArray(IArrayReader&& ary) const {
 
 void OArchiveImpl::WriteDictionary(IDictionaryReader&& dictionary)
 {
-  uint32_t n = dictionary.size();
+  uint32_t n = static_cast<uint32_t>(dictionary.size());
   WriteSize((uint32_t)n);
 
   while (dictionary.next()) {

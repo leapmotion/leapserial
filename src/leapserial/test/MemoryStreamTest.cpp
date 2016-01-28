@@ -25,7 +25,7 @@ TEST_F(MemoryStreamTest, WriteAndBack) {
 
 TEST_F(MemoryStreamTest, UnboundedCopy) {
   leap::MemoryStream ms;
-  for (size_t i = 0; i < 100; i++) {
+  for (uint8_t i = 0; i < 100; i++) {
     std::array<uint8_t, 1024> buf;
     std::iota(buf.begin(), buf.end(), i);
     ms.Write(buf.data(), sizeof(buf));

@@ -35,9 +35,9 @@ DecompressionStream::DecompressionStream(std::unique_ptr<IInputStream>&& is) :
 bool DecompressionStream::Transform(const void* input, size_t& ncbIn, void* output, size_t& ncbOut) {
   // Decompress into our buffer space
   strm->next_out = reinterpret_cast<uint8_t*>(output);
-  strm->avail_out = ncbOut;
+  strm->avail_out = static_cast<uint32_t>(ncbOut);
   strm->next_in = reinterpret_cast<const uint8_t*>(input);
-  strm->avail_in = ncbIn;
+  strm->avail_in = static_cast<uint32_t>(ncbIn);
   if (inflate(strm.get(), Z_NO_FLUSH) == Z_STREAM_ERROR)
     return false;
 

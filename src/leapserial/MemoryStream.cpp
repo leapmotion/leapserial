@@ -9,7 +9,7 @@ using namespace leap;
 MemoryStream::MemoryStream(void) {}
 
 bool MemoryStream::Write(const void* pBuf, std::streamsize ncb) {
-  if (buffer.size() - m_writeOffset < ncb)
+  if (buffer.size() - m_writeOffset < static_cast<size_t>(ncb))
     // Exponential growth on the buffer:
     buffer.resize(
       std::max(

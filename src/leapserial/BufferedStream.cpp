@@ -13,7 +13,7 @@ BufferedStream::BufferedStream(void* buffer, size_t ncbBuffer) :
 
 
 bool BufferedStream::Write(const void* pBuf, std::streamsize ncb) {
-  if (ncbBuffer - m_writeOffset < ncb)
+  if (ncbBuffer - m_writeOffset < static_cast<size_t>(ncb))
     // Limit hit, no resize possible!
     return false;
 
