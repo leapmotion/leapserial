@@ -18,7 +18,7 @@ namespace leap {
   public:
     explicit InputFilterStreamBase(std::unique_ptr<IInputStream>&& is);
 
-  private:
+  protected:
     const std::unique_ptr<IInputStream> is;
 
     // Fail flag

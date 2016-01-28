@@ -30,5 +30,15 @@ namespace leap {
     /// Discards the specified number of bytes from the input stream
     /// </summary>
     virtual std::streamsize Skip(std::streamsize ncb) = 0;
+
+    /// <returns>
+    /// The number of bytes remaining in the input stream
+    /// </returns>
+    /// <remarks>
+    /// Some input streams, particularly network streams, do not support a length concept.  This
+    /// information cannot always be determined statically, especially in the case of filter
+    /// streams whose underlying stream may be determined at runtime.
+    /// </remarks>
+    virtual std::streamsize Length(void) { return -1; }
   };
 }

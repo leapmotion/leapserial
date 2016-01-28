@@ -54,6 +54,9 @@ namespace leap {
     AESDecryptionStream(std::unique_ptr<IInputStream>&& is, const std::array<uint8_t, 32>& key);
 
   protected:
+    // IInputStream overrides:
+    std::streamsize Length(void) override;
+
     // InputFilterStreamBase overrides:
     bool Transform(const void* input, size_t& ncbIn, void* output, size_t& ncbOut) override;
   };

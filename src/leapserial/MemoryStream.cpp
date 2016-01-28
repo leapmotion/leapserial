@@ -51,3 +51,7 @@ std::streamsize MemoryStream::Skip(std::streamsize ncb) {
   }
   return ncb;
 }
+
+std::streamsize MemoryStream::Length(void) {
+  return static_cast<std::streamsize>(m_writeOffset - m_readOffset);
+}
