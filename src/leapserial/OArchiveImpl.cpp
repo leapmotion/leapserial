@@ -63,8 +63,8 @@ void OArchiveImpl::WriteDescriptor(const descriptor& descriptor, const void* pOb
   // Stationary descriptors first:
   for (const auto& field_descriptor : descriptor.field_descriptors)
     field_descriptor.serializer.serialize(
-    *this,
-    static_cast<const char*>(pObj)+field_descriptor.offset
+      *this,
+      static_cast<const char*>(pObj)+field_descriptor.offset
     );
 
   // Then variable descriptors:
@@ -75,10 +75,9 @@ void OArchiveImpl::WriteDescriptor(const descriptor& descriptor, const void* pOb
     // Has identifier, need to write out the ID with the type and then the payload
     auto type = Protobuf::GetSerialType(identified_descriptor.serializer.type());
     WriteInteger(
-      (identified_descriptor.identifier << 3) |
-      static_cast<int>(type),
+      (identified_descriptor.identifier << 3) | static_cast<int>(type),
       sizeof(int)
-      );
+    );
 
     // Decide whether this is a counted sequence or not:
     switch (type) {
@@ -98,28 +97,29 @@ void OArchiveImpl::WriteDescriptor(const descriptor& descriptor, const void* pOb
 
 uint64_t OArchiveImpl::SizeDescriptor(const descriptor& descriptor, const void* pObj) const {
   uint64_t retVal = 0;
-  for (const auto& field_descriptor : descriptor.field_descriptors) {
+  for (const auto& field_descriptor : descriptor.field_descriptors)
     retVal += field_descriptor.serializer.size(
       *this,
       static_cast<const char*>(pObj)+field_descriptor.offset
     );
-  }
 
   for (const auto& cur : descriptor.identified_descriptors) {
     const auto& identified_descriptor = cur.second;
+
     // Need the type of the child object and its size proper
-    const auto type = Protobuf::GetSerialType(identified_descriptor.serializer.type());
     uint64_t ncbChild =
-      identified_descriptor.serializer.size(*this,
-      static_cast<const char*>(pObj)+identified_descriptor.offset
+      identified_descriptor.serializer.size(
+        *this,
+        static_cast<const char*>(pObj) + identified_descriptor.offset
       );
 
     // Add the size required to encode type information and identity information to the
     // size proper of the child object
+    const auto type = Protobuf::GetSerialType(identified_descriptor.serializer.type());
     retVal +=
-      leap::serial_traits<uint32_t>::size(*this,
-      (identified_descriptor.identifier << 3) |
-      static_cast<int>(type)
+      leap::serial_traits<uint32_t>::size(
+        *this,
+        (identified_descriptor.identifier << 3) | static_cast<int>(type)
       ) +
       ncbChild;
 
