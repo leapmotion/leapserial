@@ -69,7 +69,7 @@ namespace leap {
   void Serialize(std::ostream& os, const T& obj) {
     leap::OutputStreamAdapter osa{ os };
     leap::OArchiveImpl ar(osa);
-    SerializeWithArchive(ar, std::forward<const T&>(obj));
+    SerializeWithArchive(ar, obj);
   }
   template<typename T>
   void Serialize(IOutputStream& os, const T& obj) {
