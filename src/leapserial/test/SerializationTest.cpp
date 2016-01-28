@@ -326,7 +326,7 @@ TEST_F(SerializationTest, EmbeddedNativeArray) {
 
   std::stringstream ss;
   leap::Serialize(ss, heaos);
-  
+
   HasEmbeddedArrayOfString ret;
   leap::Deserialize(ss, ret);
 
@@ -509,25 +509,25 @@ struct ConstMember {
   ConstMember(int* val):
     value(val)
   {}
-  
+
   static leap::descriptor GetDescriptor(void) {
     return {
       &ConstMember::value
     };
   }
-  
+
   const int* value;
 };
 
 TEST_F(SerializationTest, ConstSerialize) {
   int value = 42;
   std::stringstream ss;
-  
+
   ConstMember mem(&value);
   leap::Serialize(ss, mem);
-  
+
   auto otherMem = leap::Deserialize<ConstMember>(ss);
-  
+
   ASSERT_EQ(42, *otherMem->value) << "Didn't deserialize const pointer member correctly";
 }
 struct InheritanceTestBase
@@ -634,7 +634,7 @@ TEST_F(SerializationTest, DiamondInheritanceTest) {
 }
 
 TEST_F(SerializationTest, AlternateDescriptor) {
-  leap::descriptor desc = { 
+  leap::descriptor desc = {
     {&MySimpleStructure::a},
     {&MySimpleStructure::b}
   };
@@ -693,4 +693,57 @@ TEST_F(SerializationTest, EnumClassTest) {
 
   auto x = leap::Deserialize<SimpleEnum>(ss);
   ASSERT_EQ(SimpleEnum::Four, *x) << "Round-trip serialization of an enum class yielded an incorrect result";
+}
+
+namespace {
+  struct StructA {
+    int member1 = 2;
+    int member2 = 3;
+
+    static leap::descriptor GetDescriptor(void) {
+      return{
+        &StructA::member1,
+        &StructA::member2
+      };
+    }
+  };
+  struct StructB {
+    int member1 = 99;
+    int member2 = 101;
+    int member3 = 229;
+
+    static leap::descriptor GetDescriptor(void) {
+      return {
+        &StructB::member1,
+        &StructB::member2,
+        { 1, &StructB::member3 }
+      };
+    }
+  };
+}
+
+TEST_F(SerializationTest, FixedSizeBackwardsCompatCheck) {
+  // Write as A
+  std::stringstream ss;
+  StructA a;
+  leap::Serialize(ss, a);
+
+  StructB b;
+  leap::Deserialize(ss, b);
+
+  ASSERT_EQ(a.member1, b.member1);
+  ASSERT_EQ(a.member2, b.member2);
+}
+
+TEST_F(SerializationTest, FixedSizeForwardsCompatCheck) {
+  // Write as A
+  std::stringstream ss;
+  StructB b;
+  leap::Serialize(ss, b);
+
+  StructA a;
+  leap::Deserialize(ss, a);
+
+  ASSERT_EQ(b.member1, a.member1);
+  ASSERT_EQ(b.member2, a.member2);
 }
