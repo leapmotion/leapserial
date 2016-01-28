@@ -33,6 +33,10 @@ std::streamsize AESDecryptionStream::Length(void) {
   return is->Length();
 }
 
+std::streampos AESDecryptionStream::Tell(void) {
+  return is->Tell();
+}
+
 bool AESDecryptionStream::Transform(const void* input, size_t& ncbIn, void* output, size_t& ncbOut) {
   size_t nWritten = 0;
   while (nWritten < ncbIn && nWritten < ncbOut) {

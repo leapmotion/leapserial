@@ -56,6 +56,7 @@ namespace leap {
   protected:
     // IInputStream overrides:
     std::streamsize Length(void) override;
+    std::streampos Tell(void) override;
 
     // InputFilterStreamBase overrides:
     bool Transform(const void* input, size_t& ncbIn, void* output, size_t& ncbOut) override;
