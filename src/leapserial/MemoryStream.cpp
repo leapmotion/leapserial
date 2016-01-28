@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "MemoryStream.h"
 #include <algorithm>
+#include <memory.h>
 
 using namespace leap;
 
