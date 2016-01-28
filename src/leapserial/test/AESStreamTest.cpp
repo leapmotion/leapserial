@@ -41,15 +41,19 @@ TEST_F(AESStreamTest, KnownValueRoundTrip) {
   std::stringstream ss;
 
   {
-    leap::OutputStreamAdapter osa(ss);
-    leap::AESEncryptionStream cs(osa, sc_key);
+    leap::AESEncryptionStream cs(
+      leap::make_unique<leap::OutputStreamAdapter>(ss),
+      sc_key
+    );
     cs.Write(vec.data(), vec.size());
   }
 
   ss.seekg(0);
 
-  leap::InputStreamAdapter isa{ ss };
-  leap::AESDecryptionStream ds{ isa, sc_key };
+  leap::AESDecryptionStream ds{
+    leap::make_unique<leap::InputStreamAdapter>(ss),
+    sc_key
+  };
 
   std::vector<uint8_t> read(vec.size());
   ASSERT_EQ(vec.size(), ds.Read(read.data(), read.size())) << "Did not read expected number of bytes";
@@ -60,8 +64,10 @@ TEST_F(AESStreamTest, ExactSizeCheck) {
   std::vector<uint8_t> vec(45, 0);
 
   std::stringstream ss;
-  leap::OutputStreamAdapter osa(ss);
-  leap::AESEncryptionStream cs(osa, sc_key);
+  leap::AESEncryptionStream cs(
+    leap::make_unique<leap::OutputStreamAdapter>(ss),
+    sc_key
+  );
   cs.Write(vec.data(), vec.size());
 
   std::string str = ss.str();
@@ -73,15 +79,19 @@ TEST_F(AESStreamTest, RoundTrip) {
 
   std::stringstream ss;
   {
-    leap::OutputStreamAdapter osa{ ss };
-    leap::AESEncryptionStream cs{ osa, sc_key };
+    leap::AESEncryptionStream cs{
+      leap::make_unique<leap::OutputStreamAdapter>(ss),
+      sc_key
+    };
     leap::Serialize(cs, val);
   }
   SimpleStruct reacq;
 
   {
-    leap::InputStreamAdapter isa{ ss };
-    leap::AESDecryptionStream ds{ isa, sc_key };
+    leap::AESDecryptionStream ds{
+      leap::make_unique<leap::InputStreamAdapter>(ss),
+      sc_key
+    };
     leap::Deserialize(ds, reacq);
   }
 

@@ -39,15 +39,17 @@ TEST_F(CompressionStreamTest, KnownValueRoundTrip) {
   std::stringstream ss;
 
   {
-    leap::OutputStreamAdapter osa(ss);
-    leap::CompressionStream cs(osa);
+    leap::CompressionStream cs(
+      leap::make_unique<leap::OutputStreamAdapter>(ss)
+    );
     cs.Write(vec.data(), vec.size());
   }
 
   ss.seekg(0);
 
-  leap::InputStreamAdapter isa{ ss };
-  leap::DecompressionStream ds{ isa };
+  leap::DecompressionStream ds{
+    leap::make_unique<leap::InputStreamAdapter>(ss)
+  };
 
   std::vector<uint8_t> read(vec.size());
   ASSERT_EQ(vec.size(), ds.Read(read.data(), read.size())) << "Did not read expected number of bytes";
@@ -59,8 +61,10 @@ TEST_F(CompressionStreamTest, CompressionPropCheck) {
 
   std::stringstream ss;
   {
-    leap::OutputStreamAdapter osa{ ss };
-    leap::CompressionStream cs{ osa, 9 };
+    leap::CompressionStream cs{
+      leap::make_unique<leap::OutputStreamAdapter>(ss),
+      9
+    };
     leap::Serialize(cs, val);
   }
 
@@ -73,15 +77,17 @@ TEST_F(CompressionStreamTest, RoundTrip) {
 
   std::stringstream ss;
   {
-    leap::OutputStreamAdapter osa{ ss };
-    leap::CompressionStream cs{ osa };
+    leap::CompressionStream cs{
+      leap::make_unique<leap::OutputStreamAdapter>(ss)
+    };
     leap::Serialize(cs, val);
   }
 
   SimpleStruct reacq;
   {
-    leap::InputStreamAdapter isa{ ss };
-    leap::DecompressionStream ds{ isa };
+    leap::DecompressionStream ds{
+      leap::make_unique<leap::InputStreamAdapter>(ss)
+    };
     leap::Deserialize(ds, reacq);
   }
 
@@ -94,8 +100,9 @@ TEST_F(CompressionStreamTest, TruncatedStreamTest) {
   std::string str;
   {
     std::stringstream ss;
-    leap::OutputStreamAdapter osa{ ss };
-    leap::CompressionStream cs{ osa };
+    leap::CompressionStream cs{
+      leap::make_unique<leap::OutputStreamAdapter>(ss)
+    };
     leap::Serialize(cs, val);
     str = ss.str();
   }
@@ -107,8 +114,9 @@ TEST_F(CompressionStreamTest, TruncatedStreamTest) {
   SimpleStruct reacq;
   {
     std::stringstream ss(std::move(str));
-    leap::InputStreamAdapter isa{ ss };
-    leap::DecompressionStream ds{ isa };
+    leap::DecompressionStream ds{
+      leap::make_unique<leap::InputStreamAdapter>(ss)
+    };
     ASSERT_ANY_THROW(leap::Deserialize(ds, reacq));
   }
 }

@@ -99,4 +99,10 @@ namespace leap {
   void Serialize(stream_t&& os, const T& obj) {
     Serialize<OArchiveImpl, stream_t, T>(std::forward<stream_t&&>(os), obj);
   }
+
+  // Utility method until everyone moves to C++14
+  template<typename T, typename... Args>
+  std::unique_ptr<T> make_unique(Args&&... args) {
+    return std::unique_ptr<T>{new T{ std::forward<Args&&>(args)... }};
+  }
 }

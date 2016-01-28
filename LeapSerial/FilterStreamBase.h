@@ -16,10 +16,10 @@ namespace leap {
     public IInputStream
   {
   public:
-    explicit InputFilterStreamBase(IInputStream& is);
+    explicit InputFilterStreamBase(std::unique_ptr<IInputStream>&& is);
 
   private:
-    IInputStream& is;
+    const std::unique_ptr<IInputStream> is;
 
     // Fail flag
     bool fail = false;
@@ -54,13 +54,13 @@ namespace leap {
     public IOutputStream
   {
   public:
-    explicit OutputFilterStreamBase(IOutputStream& os);
+    explicit OutputFilterStreamBase(std::unique_ptr<IOutputStream>&& os);
 
     ~OutputFilterStreamBase(void);
 
   private:
     // Base output stream, where our data goes
-    IOutputStream& os;
+    const std::unique_ptr<IOutputStream> os;
 
     // Output buffer used as scratch space
     std::vector<uint8_t> buffer;

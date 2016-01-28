@@ -22,8 +22,8 @@ void AES256Base::NextBlock(void) {
   blockByte = 0;
 }
 
-AESDecryptionStream::AESDecryptionStream(IInputStream& is, const std::array<uint8_t, 32>& key) :
-  InputFilterStreamBase(is),
+AESDecryptionStream::AESDecryptionStream(std::unique_ptr<IInputStream>&& is, const std::array<uint8_t, 32>& key) :
+  InputFilterStreamBase(std::move(is)),
   AES256Base(key)
 {}
 
@@ -47,8 +47,8 @@ bool AESDecryptionStream::Transform(const void* input, size_t& ncbIn, void* outp
   return true;
 }
 
-AESEncryptionStream::AESEncryptionStream(IOutputStream& os, const std::array<uint8_t, 32>& key) :
-  OutputFilterStreamBase(os),
+AESEncryptionStream::AESEncryptionStream(std::unique_ptr<IOutputStream>&& os, const std::array<uint8_t, 32>& key) :
+  OutputFilterStreamBase(std::move(os)),
   AES256Base(key)
 {}
 
