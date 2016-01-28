@@ -752,7 +752,7 @@ TEST_F(SerializationTest, FixedSizeBackwardsCompatCheck) {
 }
 
 TEST_F(SerializationTest, FixedSizeForwardsCompatCheck) {
-  // Write as A
+  // Write as B
   std::stringstream ss;
   StructB b;
   b.mymap = std::map<std::string, std::string>{ { "hello", "world" } };
