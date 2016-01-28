@@ -6,6 +6,7 @@ set(LeapSerialTest_SRCS
   CompressionStreamTest.cpp
   LeapArchiveTest.cpp
   MapTest.cpp
+  MemoryStreamTest.cpp
   OptionalTest.cpp
   PrettyPrintTest.cpp
   SerialCallbackTest.cpp
