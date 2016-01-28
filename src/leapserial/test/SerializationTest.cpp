@@ -282,7 +282,7 @@ TEST_F(SerializationTest, InlineDeserializationTest) {
 
 TEST_F(SerializationTest, StlArray) {
   std::stringstream ss;
-  leap::Serialize(ss, std::array<int, 5>{1, 2, 3, 4, 5});
+  leap::Serialize(ss, std::array<int, 5>{ { 1, 2, 3, 4, 5 } });
 
   std::array<int, 5> ary;
   leap::Deserialize(ss, ary);
