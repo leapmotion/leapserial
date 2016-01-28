@@ -76,7 +76,8 @@ namespace leap {
     }
 
     void deserialize(IArchiveRegistry& ar, void* pObj, uint64_t ncb) const override {
-      serial_traits<T>::deserialize(ar, *static_cast<T*>(pObj), ncb);
+      typedef typename std::remove_const<T>::type U;
+      serial_traits<U>::deserialize(ar, *static_cast<U*>(pObj), ncb);
     }
 
     bool is_optional(void) const override { return leap::is_optional<T, void>::value; }

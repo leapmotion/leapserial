@@ -24,6 +24,7 @@ set(LeapSerial_SRCS
   field_serializer_t.h
   FilterStreamBase.h
   FilterStreamBase.cpp
+  ForwardingStream.h
   IArchiveProtobuf.cpp
   OArchiveProtobuf.cpp
   IArchiveImpl.h
