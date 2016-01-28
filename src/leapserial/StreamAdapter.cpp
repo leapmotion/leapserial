@@ -46,7 +46,15 @@ std::streamsize InputStreamAdapter::Length(void) {
   return retVal;
 }
 
-InputStreamAdapter* InputStreamAdapter::Seek(std::streamsize off) {
+std::streampos InputStreamAdapter::Tell(void) {
+  return is.tellg();
+}
+
+void InputStreamAdapter::Clear(void) {
+  is.clear();
+}
+
+InputStreamAdapter* InputStreamAdapter::Seek(std::streampos off) {
   is.seekg(off, std::ios::beg);
   return this;
 }

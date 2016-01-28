@@ -40,5 +40,22 @@ namespace leap {
     /// streams whose underlying stream may be determined at runtime.
     /// </remarks>
     virtual std::streamsize Length(void) { return -1; }
+
+    /// <summary>
+    /// Gets the stream offset
+    /// </summary>
+    /// <returns>The current offset, if supported, otherwise -1</returns>
+    virtual std::streampos Tell(void) { return -1; }
+
+    /// <summary>
+    /// Clears all error conditions possibly set on the underlying stream, if they exist
+    /// </summary>
+    virtual void Clear(void) {}
+
+    /// <summary>
+    /// Sets the stream offset
+    /// </summary>
+    /// <returns>This, if the operation is supported, otherwise nullptr</returns>
+    virtual IInputStream* Seek(std::streampos off) { return nullptr; }
   };
 }

@@ -31,12 +31,14 @@ namespace leap {
     std::streamsize Read(void* pBuf, std::streamsize ncb) override;
     std::streamsize Skip(std::streamsize ncb) override;
     std::streamsize Length(void) override;
+    std::streampos Tell(void) override;
+    void Clear(void) override;
 
     /// <summary>
     /// Sets the offset on the underlying input stream
     /// </summary>
     /// <returns>this</returns>
-    InputStreamAdapter* Seek(std::streamsize off);
+    InputStreamAdapter* Seek(std::streampos off) override;
   };
 
   class OutputStreamAdapter :
