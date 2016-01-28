@@ -32,4 +32,3 @@ namespace leap {
     virtual std::streamsize Skip(std::streamsize ncb) = 0;
   };
 }
-
