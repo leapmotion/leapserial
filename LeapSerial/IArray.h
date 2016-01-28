@@ -15,6 +15,28 @@ namespace leap {
     /// </summary>
     const field_serializer& serializer;
 
+    /// <summary>
+    /// Reports whether the size of the element type is immutable
+    /// </summary>
+    /// <returns>The immutable size, or zero if no such size exists</returns>
+    /// <remarks>
+    /// If elements in the array have a immutable size derived from the type, this value is nonzero.
+    /// Broadly speaking, all primitive types have a immutable size, and almost no user types have
+    /// a immutable size.
+    ///
+    /// The cases where a user type is considered immutable are cases where the user type represents
+    /// a fixed concept; in the case where more complex concepts are desired, the old type would be
+    /// totally deprecated rather than being extended.  For instance, a type to represent a vector3
+    /// might be given an immutable size by the user, because if the user desires a fourth entry,
+    /// they would simply create a new vector4 type.
+    ///
+    /// Note that the concept of a immutable size refers to a property of the type itself, NOT
+    /// the serialized representation of the type.  For instance, while an int32_t is a
+    /// type that has a immutable_size, the size of an instance of this type on the wire depends
+    /// on the archiver's encoding choices.
+    /// </remarks>
+    virtual size_t immutable_size(void) const = 0;
+
     /// <returns>
     /// The ith item in the specified array
     /// </returns>

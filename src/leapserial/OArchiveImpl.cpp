@@ -160,17 +160,36 @@ void OArchiveImpl::WriteInteger(int64_t value, uint8_t) {
 
 void OArchiveImpl::WriteArray(IArrayReader&& ary) {
   uint32_t n = (uint32_t)ary.size();
-  WriteSize(n);
 
-  for (uint32_t i = 0; i < n; i++)
-    ary.serializer.serialize(*this, ary.get(i));
+  if(ary.immutable_size()) {
+    WriteSize(n);
+    for (uint32_t i = 0; i < n; i++)
+      ary.serializer.serialize(*this, ary.get(i));
+  }
+  else {
+    // OR with 0x80000000 to signal mode 2 for array writing
+    WriteSize(n | 0x80000000);
+    for (uint32_t i = 0; i < n; i++) {
+      const void* const pObj = ary.get(i);
+      uint64_t ncb = ary.serializer.size(*this, pObj);
+      WriteInteger(ncb);
+      ary.serializer.serialize(*this, pObj);
+    }
+  }
 }
 
 uint64_t OArchiveImpl::SizeArray(IArrayReader&& ary) const {
   uint64_t sz = sizeof(uint32_t);
   size_t n = ary.size();
-  for (size_t i = 0; i < n; i++)
-    sz += ary.serializer.size(*this, ary.get(i));
+
+  if (ary.immutable_size())
+    for (size_t i = 0; i < n; i++)
+      sz += ary.serializer.size(*this, ary.get(i));
+  else
+    for (size_t i = 0; i < n; i++) {
+      uint64_t ncb = ary.serializer.size(*this, ary.get(i));
+      sz += ncb + SizeInteger(ncb, 8);
+    }
   return sz;
 }
 

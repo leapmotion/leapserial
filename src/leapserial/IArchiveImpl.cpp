@@ -137,9 +137,9 @@ void IArchiveImpl::ReadDescriptor(const descriptor& descriptor, void* pObj, uint
     else
       // Hand off to child class
       q->second.serializer.deserialize(
-      *this,
-      static_cast<char*>(pObj)+q->second.offset,
-      static_cast<size_t>(ncbChild)
+        *this,
+        static_cast<char*>(pObj)+q->second.offset,
+        static_cast<size_t>(ncbChild)
       );
   }
 
@@ -154,11 +154,23 @@ void IArchiveImpl::ReadArray(IArrayAppender&& ary) {
   // Read the number of entries first:
   uint32_t nEntries;
   ReadByteArray(&nEntries, sizeof(nEntries));
-  ary.reserve(nEntries);
+  uint32_t n = nEntries & 0x7FFFFFFF;
+  ary.reserve(n);
 
-  // Now loop until we get the desired number of entries from the stream
-  for (size_t i = 0; i < nEntries; i++)
-    ary.serializer.deserialize(*this, ary.allocate(), 0);
+  if(nEntries & 0x80000000) {
+    // Counted-size fields
+    for (size_t i = n; i--;)
+      ary.serializer.deserialize(
+        *this,
+        ary.allocate(),
+        ReadInteger(8)
+      );
+  }
+  else {
+    // Fixed-size fields, just read everything in
+    for (size_t i = n; i--;)
+      ary.serializer.deserialize(*this, ary.allocate(), 0);
+  }
 }
 
 void IArchiveImpl::ReadString(std::function<void*(uint64_t)> getBufferFn, uint8_t charSize, uint64_t ncb) {

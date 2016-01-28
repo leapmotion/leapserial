@@ -7,13 +7,13 @@ namespace leap {
     enum class serial_type {
       // Null type, this type is never serialized
       ignored = -1,
-  
+
       varint = 0,
       b64 = 1,
       string = 2,
       b32 = 5
     };
-    
+
     inline serial_type GetSerialType(::leap::serial_atom prim) {
       switch(prim) {
         case serial_atom::ignored:

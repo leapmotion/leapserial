@@ -90,9 +90,9 @@ namespace leap {
     /// </summary>
     void Process(const deserialization_task& task);
   public:
-    
+
     void* ReadObjectReference(const create_delete& cd, const field_serializer& sz) override;
-    
+
     // IArchive overrides:
     void Skip(uint64_t ncb) override;
     uint64_t Count(void) const override { return m_count; }
