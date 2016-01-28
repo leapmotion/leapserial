@@ -27,6 +27,16 @@ AESDecryptionStream::AESDecryptionStream(std::unique_ptr<IInputStream>&& is, con
   AES256Base(key)
 {}
 
+std::streamsize AESDecryptionStream::Length(void) {
+  // We do not add any bytes relative to the underlying stream, we can just return its
+  // byte count directly
+  return is->Length();
+}
+
+std::streampos AESDecryptionStream::Tell(void) {
+  return is->Tell();
+}
+
 bool AESDecryptionStream::Transform(const void* input, size_t& ncbIn, void* output, size_t& ncbOut) {
   size_t nWritten = 0;
   while (nWritten < ncbIn && nWritten < ncbOut) {

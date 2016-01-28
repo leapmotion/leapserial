@@ -646,7 +646,8 @@ TEST_F(SerializationTest, AlternateDescriptor) {
     mss.b = 2;
     mss.myString = "This will not be sent";
     {
-      leap::OArchiveImpl oArch(ss);
+      leap::OutputStreamAdapter ssa{ ss };
+      leap::OArchiveImpl oArch(ssa);
       oArch.WriteObject(desc, &mss);
     }
   }
@@ -733,6 +734,23 @@ namespace {
       };
     }
   };
+}
+
+TEST_F(SerializationTest, VectorRoundTrip) {
+  std::vector<StructB> all{ 4 };
+  all[0].world = "A";
+  all[1].world = "B";
+  all[2].world = "C";
+  all[3].world = "D";
+
+  std::stringstream ss;
+  leap::Serialize(ss, all);
+
+  std::vector<StructB> next;
+  leap::Deserialize(ss, next);
+
+  for (size_t i = 0; i < all.size(); i++)
+    ASSERT_EQ(all[i].member3, next[i].member3);
 }
 
 TEST_F(SerializationTest, FixedSizeBackwardsCompatCheck) {

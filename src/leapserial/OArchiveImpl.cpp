@@ -10,17 +10,7 @@
 using namespace leap;
 
 OArchiveImpl::OArchiveImpl(IOutputStream& os) :
-  os(os)
-{
-  objMap[nullptr] = 0;
-}
-
-OArchiveImpl::OArchiveImpl(std::ostream& os) :
-  os(*new OutputStreamAdapter{ os }),
-  pOsMem(&this->os),
-  pfnDtor([](void* ptr) {
-    delete (OutputStreamAdapter*)ptr;
-  })
+  OArchiveRegistry(os)
 {
   objMap[nullptr] = 0;
 }
@@ -160,23 +150,44 @@ void OArchiveImpl::WriteInteger(int64_t value, uint8_t) {
 
 void OArchiveImpl::WriteArray(IArrayReader&& ary) {
   uint32_t n = (uint32_t)ary.size();
-  WriteSize(n);
 
-  for (uint32_t i = 0; i < n; i++)
-    ary.serializer.serialize(*this, ary.get(i));
+  if(ary.immutable_size()) {
+    if (n & 0x80000000)
+      throw std::runtime_error("Cannot serialize fixed arrays of more than 0x7FFFFFFF bytes");
+    WriteSize(n);
+    for (uint32_t i = 0; i < n; i++)
+      ary.serializer.serialize(*this, ary.get(i));
+  }
+  else {
+    // OR with 0x80000000 to signal mode 2 for array writing
+    WriteSize(n | 0x80000000);
+    for (uint32_t i = 0; i < n; i++) {
+      const void* const pObj = ary.get(i);
+      uint64_t ncb = ary.serializer.size(*this, pObj);
+      WriteInteger(ncb);
+      ary.serializer.serialize(*this, pObj);
+    }
+  }
 }
 
 uint64_t OArchiveImpl::SizeArray(IArrayReader&& ary) const {
   uint64_t sz = sizeof(uint32_t);
   size_t n = ary.size();
-  for (size_t i = 0; i < n; i++)
-    sz += ary.serializer.size(*this, ary.get(i));
+
+  if (ary.immutable_size())
+    for (size_t i = 0; i < n; i++)
+      sz += ary.serializer.size(*this, ary.get(i));
+  else
+    for (size_t i = 0; i < n; i++) {
+      uint64_t ncb = ary.serializer.size(*this, ary.get(i));
+      sz += ncb + SizeInteger(ncb, 8);
+    }
   return sz;
 }
 
 void OArchiveImpl::WriteDictionary(IDictionaryReader&& dictionary)
 {
-  uint32_t n = dictionary.size();
+  uint32_t n = static_cast<uint32_t>(dictionary.size());
   WriteSize((uint32_t)n);
 
   while (dictionary.next()) {

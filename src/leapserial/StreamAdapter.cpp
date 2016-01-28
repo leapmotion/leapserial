@@ -38,7 +38,23 @@ std::streamsize InputStreamAdapter::Skip(std::streamsize ncb) {
   return is.gcount();
 }
 
-InputStreamAdapter* InputStreamAdapter::Seek(std::streamsize off) {
+std::streamsize InputStreamAdapter::Length(void) {
+  auto pos = is.tellg();
+  is.seekg(0, std::ios::end);
+  auto retVal = is.tellg();
+  is.seekg(pos, std::ios::beg);
+  return retVal;
+}
+
+std::streampos InputStreamAdapter::Tell(void) {
+  return is.tellg();
+}
+
+void InputStreamAdapter::Clear(void) {
+  is.clear();
+}
+
+InputStreamAdapter* InputStreamAdapter::Seek(std::streampos off) {
   is.seekg(off, std::ios::beg);
   return this;
 }

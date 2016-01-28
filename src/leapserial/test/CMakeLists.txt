@@ -2,10 +2,12 @@ set(LeapSerialTest_SRCS
   AESStreamTest.cpp
   ArchiveJSONTest.cpp
   BoundedStreamTest.cpp
+  BufferedStreamTest.cpp
   ChronoTypesTest.cpp
   CompressionStreamTest.cpp
   LeapArchiveTest.cpp
   MapTest.cpp
+  MemoryStreamTest.cpp
   OptionalTest.cpp
   PrettyPrintTest.cpp
   SerialCallbackTest.cpp

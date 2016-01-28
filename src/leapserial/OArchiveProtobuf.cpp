@@ -14,7 +14,7 @@ using leap::internal::protobuf::WireType;
 using leap::internal::protobuf::ToWireType;
 
 OArchiveProtobuf::OArchiveProtobuf(IOutputStream& os):
-  os(os)
+  OArchiveRegistry(os)
 {}
 
 void OArchiveProtobuf::WriteByteArray(const void* pBuf, uint64_t ncb, bool writeSize) {

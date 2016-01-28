@@ -30,5 +30,32 @@ namespace leap {
     /// Discards the specified number of bytes from the input stream
     /// </summary>
     virtual std::streamsize Skip(std::streamsize ncb) = 0;
+
+    /// <returns>
+    /// The number of bytes remaining in the input stream
+    /// </returns>
+    /// <remarks>
+    /// Some input streams, particularly network streams, do not support a length concept.  This
+    /// information cannot always be determined statically, especially in the case of filter
+    /// streams whose underlying stream may be determined at runtime.
+    /// </remarks>
+    virtual std::streamsize Length(void) { return -1; }
+
+    /// <summary>
+    /// Gets the stream offset
+    /// </summary>
+    /// <returns>The current offset, if supported, otherwise -1</returns>
+    virtual std::streampos Tell(void) { return -1; }
+
+    /// <summary>
+    /// Clears all error conditions possibly set on the underlying stream, if they exist
+    /// </summary>
+    virtual void Clear(void) {}
+
+    /// <summary>
+    /// Sets the stream offset
+    /// </summary>
+    /// <returns>This, if the operation is supported, otherwise nullptr</returns>
+    virtual IInputStream* Seek(std::streampos off) { return nullptr; }
   };
 }

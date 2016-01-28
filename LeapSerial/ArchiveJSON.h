@@ -8,7 +8,7 @@ namespace leap {
     public OArchiveRegistry
   {
   public:
-    OArchiveJSON(std::ostream& os, bool escapeSlashes = false);
+    OArchiveJSON(leap::OutputStreamAdapter& osa, bool escapeSlashes = false);
 
     // Controls whether the forward slash character should be escaped
     const bool EscapeSlashes;

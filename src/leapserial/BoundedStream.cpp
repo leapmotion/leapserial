@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "BoundedStream.h"
+#include <algorithm>
 
 using namespace leap;
 
@@ -34,6 +35,13 @@ std::streamsize BoundedInputStream::Skip(std::streamsize ncb) {
   if (0 < rs)
     m_totalRead += rs;
   return rs;
+}
+
+std::streamsize BoundedInputStream::Length(void) {
+  auto underlying = is->Length();
+  if(underlying == -1)
+    return -1;
+  return std::min(underlying, ReadLimit - m_totalRead);
 }
 
 BoundedOutputStream::BoundedOutputStream(std::unique_ptr<IOutputStream>&& os, std::streamsize writeLimit) :

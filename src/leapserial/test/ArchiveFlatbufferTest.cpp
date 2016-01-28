@@ -85,7 +85,8 @@ TEST_F(ArchiveFlatbufferTest, WriteAlignment) {
   auto bufferPointer = (const char*)fbb.GetBufferPointer();
   fbString.assign(bufferPointer, bufferPointer + fbb.GetSize());
 
-  leap::OArchiveFlatbuffer oarchive(ss);
+  leap::OutputStreamAdapter ssa{ ss };
+  leap::OArchiveFlatbuffer oarchive(ssa);
   oarchive.WriteInteger(1, 1);
   oarchive.WriteInteger(20, 4);
   oarchive.WriteInteger(123, 8);

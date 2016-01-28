@@ -59,6 +59,7 @@ endif()
 # Also need position-independent code to make things work correctly on certain 64-bit machines
 if(NOT WIN32 AND LeapSerial_BUILD_64)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)

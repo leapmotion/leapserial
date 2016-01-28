@@ -126,7 +126,7 @@ namespace leap {
       val = static_cast<T>(ar.ReadInteger(sizeof(T)));
     }
   };
-  
+
   template<typename T, size_t N>
   struct primitive_serial_traits<T[N], typename std::enable_if<has_serializer<T>::value>::type>
   {
@@ -144,6 +144,7 @@ namespace leap {
 
       const T* const pAry;
 
+      size_t immutable_size(void) const override { return std::is_arithmetic<T>::value ? sizeof(T) : 0; }
       const void* get(size_t i) const override { return pAry + i; }
       size_t size(void) const override { return N; }
     };
@@ -252,6 +253,7 @@ namespace leap {
 
       const serial_type& obj;
 
+      size_t immutable_size(void) const override { return std::is_arithmetic<T>::value ? sizeof(T) : 0; }
       const void* get(size_t i) const override { return &obj[i]; }
       size_t size(void) const override { return obj.size(); }
     };
@@ -314,7 +316,7 @@ namespace leap {
     typedef typename Container::mapped_type mapped_type;
     typedef serial_traits<key_type> key_traits;
     typedef serial_traits<mapped_type> mapped_traits;
-    
+
     // Convenience static.  We need to make allocations if either our key or value type
     // needs to make allocations.
     static const bool sc_needsAllocation =
@@ -403,7 +405,7 @@ namespace leap {
       ar.ReadDictionary(DictionaryInserterImpl{ obj });
     }
   };
-  
+
   // Associative array types:
   template<typename Key, typename Value>
   struct primitive_serial_traits<std::map<Key, Value>, void> :
@@ -448,7 +450,7 @@ namespace leap {
         field_serializer_t<T, void>::GetDescriptor(),
         true
       );
-      
+
       obj.reset(static_cast<T*>(released.pObject));
     }
   };

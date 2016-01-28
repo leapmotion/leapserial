@@ -25,6 +25,7 @@ namespace leap {
     bool IsEof(void) const override;
     std::streamsize Read(void* pBuf, std::streamsize ncb) override;
     std::streamsize Skip(std::streamsize ncb) override;
+    std::streamsize Length(void) override;
   };
 
   class BoundedOutputStream :

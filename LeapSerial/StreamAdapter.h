@@ -30,12 +30,15 @@ namespace leap {
     bool IsEof(void) const override;
     std::streamsize Read(void* pBuf, std::streamsize ncb) override;
     std::streamsize Skip(std::streamsize ncb) override;
+    std::streamsize Length(void) override;
+    std::streampos Tell(void) override;
+    void Clear(void) override;
 
     /// <summary>
     /// Sets the offset on the underlying input stream
     /// </summary>
     /// <returns>this</returns>
-    InputStreamAdapter* Seek(std::streamsize off);
+    InputStreamAdapter* Seek(std::streampos off) override;
   };
 
   class OutputStreamAdapter :
@@ -47,13 +50,17 @@ namespace leap {
     OutputStreamAdapter(const OutputStreamAdapter& rhs);
     ~OutputStreamAdapter(void);
 
-    // IOutputStream overrides:
-    bool Write(const void* pBuf, std::streamsize ncb) override;
-
   private:
     std::ostream& os;
 
     // Non-null if we have taken ownership
     const std::unique_ptr<std::ostream> pos;
+
+  public:
+    // Accessor methods:
+    std::ostream& GetStdStream(void) const { return os; }
+
+    // IOutputStream overrides:
+    bool Write(const void* pBuf, std::streamsize ncb) override;
   };
 }

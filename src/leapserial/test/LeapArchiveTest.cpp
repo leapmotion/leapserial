@@ -59,7 +59,8 @@ TEST_F(LeapArchiveTest, ExpectedByteCount) {
   mss.y = nullptr;
 
   std::ostringstream os;
-  leap::OArchiveImpl oarch(os);
+  leap::OutputStreamAdapter osa{ os };
+  leap::OArchiveImpl oarch(osa);
 
   // Predict the number of bytes required to serialize:
   leap::descriptor desc = MySimpleStructure::GetDescriptor();
@@ -76,8 +77,10 @@ TEST_F(LeapArchiveTest, ExpectedByteCount) {
 
 void TestVarint(int64_t testNumber) {
   std::stringstream ss(std::ios::in | std::ios::out | std::ios::binary);
-  leap::OArchiveImpl oArch(ss);
-  leap::IArchiveImpl iArch(ss);
+  leap::OutputStreamAdapter ssao{ ss };
+  leap::OArchiveImpl oArch(ssao);
+  leap::InputStreamAdapter ssai{ ss };
+  leap::IArchiveImpl iArch(ssai);
 
   oArch.WriteInteger(testNumber);
   auto output = iArch.ReadInteger(8);
@@ -86,8 +89,8 @@ void TestVarint(int64_t testNumber) {
 
 TEST_F(LeapArchiveTest, VarintTest) {
   std::stringstream ss(std::ios::in | std::ios::out | std::ios::binary);
-
-  leap::OArchiveImpl oArch(ss);
+  leap::OutputStreamAdapter ssa{ ss };
+  leap::OArchiveImpl oArch(ssa);
 
   ASSERT_EQ(10, oArch.SizeInteger(-43));
 
@@ -101,7 +104,8 @@ TEST_F(LeapArchiveTest, VarintTest) {
 
 TEST_F(LeapArchiveTest, VarintDoubleCheck) {
   std::stringstream ss;
-  leap::OArchiveImpl oarch(ss);
+  leap::OutputStreamAdapter ssa{ ss };
+  leap::OArchiveImpl oarch(ssa);
 
   oarch.WriteInteger(150, 8);
 
@@ -119,37 +123,38 @@ TEST_F(LeapArchiveTest, VarintSizeExpectationCheck) {
   ASSERT_EQ(
     29,
     __builtin_clzll(0x7FFFFFFFF)
-    );
+  );
   ASSERT_EQ(
     28,
     __builtin_clzll(0x800000000)
-    );
+  );
 #endif
   std::stringstream ss;
-  leap::OArchiveImpl oarch(ss);
+  leap::OutputStreamAdapter ssa{ ss };
+  leap::OArchiveImpl oarch(ssa);
 
   ASSERT_EQ(
     10,
     oarch.SizeInteger(-1)
-    ) << "-1 should have maxed out the varint size requirement";
+  ) << "-1 should have maxed out the varint size requirement";
 
   ASSERT_EQ(
     1,
     oarch.SizeInteger(0)
-    ) << "Boundary case failure";
+  ) << "Boundary case failure";
 
   ASSERT_EQ(
     2,
     oarch.SizeInteger(128)
-    ) << "Boundary case failure";
+  ) << "Boundary case failure";
 
   ASSERT_EQ(
     6,
     oarch.SizeInteger(0x800000000ULL)
-    ) << "Boundary case failure";
+  ) << "Boundary case failure";
 
   ASSERT_EQ(
     5,
     oarch.SizeInteger(0x7FFFFFFFFULL)
-    ) << "Boundary case failure";
+  ) << "Boundary case failure";
 }

@@ -14,9 +14,10 @@ public:
   not_implemented_exception() : std::runtime_error("This function is not yet implemented!") {}
 };
 
-OArchiveJSON::OArchiveJSON(std::ostream& os, bool escapeSlashes) :
-  os(os),
-  EscapeSlashes(escapeSlashes)
+OArchiveJSON::OArchiveJSON(leap::OutputStreamAdapter& osa, bool escapeSlashes) :
+  OArchiveRegistry(osa),
+  EscapeSlashes(escapeSlashes),
+  os(osa.GetStdStream())
 {}
 
 void OArchiveJSON::WriteByteArray(const void* pBuf, uint64_t ncb, bool writeSize) {

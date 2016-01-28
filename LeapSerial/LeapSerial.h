@@ -35,25 +35,56 @@ namespace leap {
     typedef SchemaWriterProtobuf2 schema;
   };
 
-  template<typename archive_t, typename stream_t>
-  void Serialize(stream_t&& os, const leap::descriptor& desc) {
-    typename archive_t::schema s{ desc };
-    s.Write(os);
-  }
-
-  template<typename archive_t, typename stream_t, typename T>
-  void Serialize(stream_t&& os, const T& obj) {
+  template<typename archive_t, typename T>
+  void SerializeWithArchive(archive_t& ar, const T& obj) {
     static_assert(!std::is_pointer<T>::value, "Do not serialize a pointer to an object, serialize a reference");
     static_assert(
       !std::is_base_of<std::false_type, field_serializer_t<T, void>>::value,
       "serial_traits is not specialized on the specified type, and this type also doesn't provide a GetDescriptor routine"
     );
 
-    archive_t ar(os);
     ar.WriteObject(
       field_serializer_t<T, void>::GetDescriptor(),
       &obj
     );
+  }
+
+  template<typename archive_t, typename stream_t>
+  void Serialize(stream_t& os, const leap::descriptor& desc) {
+    typename archive_t::schema s{ desc };
+    s.Write(os);
+  }
+  template<typename archive_t, typename T>
+  void Serialize(std::ostream& os, const T& obj) {
+    leap::OutputStreamAdapter osa{ os };
+    archive_t ar(osa);
+    SerializeWithArchive<archive_t, T>(ar, obj);
+  }
+  template<typename archive_t, typename T>
+  void Serialize(IOutputStream& os, const T& obj) {
+    archive_t ar(os);
+    SerializeWithArchive(ar, obj);
+  }
+  template<typename T>
+  void Serialize(std::ostream& os, const T& obj) {
+    leap::OutputStreamAdapter osa{ os };
+    leap::OArchiveImpl ar(osa);
+    SerializeWithArchive(ar, obj);
+  }
+  template<typename T>
+  void Serialize(IOutputStream& os, const T& obj) {
+    leap::OArchiveImpl ar(os);
+    SerializeWithArchive(ar, obj);
+  }
+
+  ///I/OArchiveImpl defaulted versions:
+  template<typename archive_t, typename stream_t, typename T>
+  void Serialize(stream_t&& os, const T& obj) {
+    Serialize<archive_t, T>(os, obj);
+  }
+  template<typename stream_t, typename T>
+  void Serialize(stream_t&& os, const T& obj) {
+    Serialize<leap::OArchiveImpl, T>(os, obj);
   }
 
   /// <summary>
@@ -92,12 +123,6 @@ namespace leap {
       Deserialize<archive_t, T>(is, collection.back());
     }
     return collection;
-  }
-
-  ///I/OArchiveImpl defaulted versions:
-  template<class stream_t, class T>
-  void Serialize(stream_t&& os, const T& obj) {
-    Serialize<OArchiveImpl, stream_t, T>(std::forward<stream_t&&>(os), obj);
   }
 
   // Utility method until everyone moves to C++14

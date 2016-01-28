@@ -10,21 +10,25 @@ set(LeapSerial_SRCS
   ArchiveJSON.h
   ArchiveJSON.cpp
   ArchiveProtobuf.h
+  base.h
   BoundedStream.h
   BoundedStream.cpp
+  BufferedStream.h
+  BufferedStream.cpp
   CompressionStream.h
   CompressionStream.cpp
-  IArchiveProtobuf.cpp
-  OArchiveProtobuf.cpp
-  base.h
   Descriptor.h
   Descriptor.cpp
+  descriptors.h
+  descriptors.cpp
   field_descriptor.h
   field_serializer.h
   field_serializer_t.h
   FilterStreamBase.h
   FilterStreamBase.cpp
-  ProtobufType.h
+  ForwardingStream.h
+  IArchiveProtobuf.cpp
+  OArchiveProtobuf.cpp
   IArchiveImpl.h
   IArchiveImpl.cpp
   IArray.h
@@ -32,11 +36,12 @@ set(LeapSerial_SRCS
   IInputStream.h
   IOutputStream.h
   LeapSerial.h
-  descriptors.h
-  descriptors.cpp
+  MemoryStream.h
+  MemoryStream.cpp
   OArchiveImpl.h
   OArchiveImpl.cpp
   optional.h
+  ProtobufType.h
   ProtobufUtil.cpp
   ProtobufUtil.hpp
   SchemaWriterProtobuf.h

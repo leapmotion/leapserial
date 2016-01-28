@@ -10,13 +10,9 @@ namespace leap {
   {
   public:
     OArchiveImpl(IOutputStream& os);
-    OArchiveImpl(std::ostream& os);
     ~OArchiveImpl(void);
 
   private:
-    // Underlying output stream
-    IOutputStream& os;
-
     // If any additional (flat) memory was required to construct the output stream reference, this is it
     void* const pOsMem = nullptr;
     void(*const pfnDtor)(void*) = nullptr;
@@ -77,12 +73,12 @@ namespace leap {
     void WriteInteger(int64_t value, uint8_t ncb) override;
     void WriteArray(IArrayReader&& ary) override;
     void WriteDictionary(IDictionaryReader&& dictionary) override;
-    
+
     uint64_t SizeDescriptor(const descriptor& desc, const void* pObj) const override;
     uint64_t SizeObjectReference(const field_serializer&, const void*) const override { return sizeof(uint32_t); }
     uint64_t SizeArray(IArrayReader&& ary) const override;
     uint64_t SizeDictionary(IDictionaryReader&& dictionary) const override;
-    
+
     inline uint64_t SizeString(const void* pBuf, uint64_t charCount, uint8_t charSize) const override { return (size_t)(sizeof(uint32_t) + (charCount*charSize)); }
     uint64_t SizeInteger(int64_t value, uint8_t ncb) const override;
     uint64_t SizeFloat(float value) const override { return sizeof(float); }

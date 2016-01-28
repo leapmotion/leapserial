@@ -18,7 +18,7 @@ namespace leap {
 
   template<typename T>
   struct has_serializer;
-  
+
   template<typename T, typename>
   struct is_optional;
 
@@ -76,7 +76,8 @@ namespace leap {
     }
 
     void deserialize(IArchiveRegistry& ar, void* pObj, uint64_t ncb) const override {
-      serial_traits<T>::deserialize(ar, *static_cast<T*>(pObj), ncb);
+      typedef typename std::remove_const<T>::type U;
+      serial_traits<U>::deserialize(ar, *static_cast<U*>(pObj), ncb);
     }
 
     bool is_optional(void) const override { return leap::is_optional<T, void>::value; }
@@ -210,7 +211,7 @@ namespace leap {
 
   template<typename T, typename U, typename V>
   struct field_getter_setter_extern{};
- 
+
   template<typename T, typename U, typename V>
   struct field_serializer_t <
     field_getter_setter_extern<T, U, V>,
@@ -224,29 +225,29 @@ namespace leap {
     field_serializer
   {
     typedef typename std::decay<U>::type field_type;
- 
+
     field_serializer_t(U(*pfnGetter)(const T&), void(*pfnSetter)(T&,V)) :
       pfnGetter(pfnGetter),
       pfnSetter(pfnSetter)
     {}
- 
+
     U(*pfnGetter)(const T&);
     void(*pfnSetter)(T&, V);
- 
+
     bool allocates(void) const override { return false; }
- 
+
     serial_atom type(void) const override {
       return serial_traits<field_type>::type();
     }
- 
+
     uint64_t size(const OArchiveRegistry& ar, const void* pObj) const override {
       return serial_traits<field_type>::size(ar, pfnGetter(*static_cast<const T*>(pObj)));
     }
- 
+
     void serialize(OArchiveRegistry& ar, const void* pObj) const override {
       serial_traits<field_type>::serialize(ar, pfnGetter(*static_cast<const T*>(pObj)));
     }
- 
+
     void deserialize(IArchiveRegistry& ar, void* pObj, uint64_t ncb) const override {
       field_type val;
       serial_traits<field_type>::deserialize(ar, val, ncb);
@@ -254,15 +255,15 @@ namespace leap {
     }
 
     bool is_optional(void) const override { return true; }
- 
+
     bool operator==(const field_serializer_t& rhs) const {
       return pfnGetter == rhs.pfnGetter && pfnSetter == rhs.pfnSetter;
     }
- 
+
     static const field_serializer& GetDescriptor(U(*getter)(const T&), void(*setter)(T&,V)) {
       static std::unordered_set<field_serializer_t, mem_hash<field_serializer_t>> st;
       static std::mutex lock;
- 
+
       field_serializer_t key{ getter, setter };
       std::lock_guard<std::mutex> lk(lock);
       auto q = st.find(key);
