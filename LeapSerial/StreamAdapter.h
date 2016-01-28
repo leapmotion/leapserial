@@ -25,6 +25,8 @@ namespace leap {
       is(rhs.is)
     {}
 
+    ~InputStreamAdapter(void);
+
   private:
     std::istream& is;
 
@@ -60,6 +62,8 @@ namespace leap {
     OutputStreamAdapter(const OutputStreamAdapter& rhs) :
       os(rhs.os)
     {}
+
+    ~OutputStreamAdapter(void);
 
     // IOutputStream overrides:
     bool Write(const void* pBuf, std::streamsize ncb) override;

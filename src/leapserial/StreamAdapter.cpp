@@ -1,12 +1,15 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "StreamAdapter.h"
+#include <iostream>
 
 using namespace leap;
 
 bool InputStreamAdapter::IsEof(void) const {
   return is.eof();
 }
+
+InputStreamAdapter::~InputStreamAdapter(void) {}
 
 std::streamsize InputStreamAdapter::Read(void* pBuf, std::streamsize ncb) {
   is.read((char*)pBuf, ncb);
@@ -26,6 +29,8 @@ InputStreamAdapter* InputStreamAdapter::Seek(std::streamsize off) {
   is.seekg(off, std::ios::beg);
   return this;
 }
+
+OutputStreamAdapter::~OutputStreamAdapter(void) {}
 
 bool OutputStreamAdapter::Write(const void* pBuf, std::streamsize ncb) {
   return (bool)os.write((const char*)pBuf, ncb);
