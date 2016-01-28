@@ -42,6 +42,8 @@ set(LeapSerial_SRCS
   serial_traits.h
   serialization_error.h
   serialization_error.cpp
+  StreamAdapter.h
+  StreamAdapter.cpp
   Utility.hpp
   Utility.cpp
 )

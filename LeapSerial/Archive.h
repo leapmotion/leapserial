@@ -4,6 +4,7 @@
 #include "IDictionary.h"
 #include "IInputStream.h"
 #include "IOutputStream.h"
+#include "StreamAdapter.h"
 #include <cstdint>
 #include <functional>
 #include <ios>
@@ -38,50 +39,6 @@ namespace leap {
       T prior;
     };
   }
-
-  /// <summary>
-  /// Mapping adaptor, allows input streams to be wrapped to support Archive operations
-  /// </summary>
-  class InputStreamAdapter:
-    public IInputStream
-  {
-  public:
-    InputStreamAdapter(std::istream& is) :
-      is(is)
-    {}
-
-    InputStreamAdapter(const InputStreamAdapter& rhs) :
-      is(rhs.is)
-    {}
-
-  private:
-    std::istream& is;
-
-  public:
-    // IInputStream overrides:
-    bool IsEof(void) const override;
-    std::streamsize Read(void* pBuf, std::streamsize ncb) override;
-    std::streamsize Skip(std::streamsize ncb) override;
-  };
-
-  class OutputStreamAdapter:
-    public IOutputStream
-  {
-  public:
-    OutputStreamAdapter(std::ostream& os) :
-      os(os)
-    {}
-
-    OutputStreamAdapter(const OutputStreamAdapter& rhs) :
-      os(rhs.os)
-    {}
-
-    // IOutputStream overrides:
-    bool Write(const void* pBuf, std::streamsize ncb) override;
-
-  private:
-    std::ostream& os;
-  };
 
   /// <summary>
   /// An enumeration of the different basic types that are handled directly by the archiver
