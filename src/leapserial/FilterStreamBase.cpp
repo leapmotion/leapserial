@@ -45,6 +45,10 @@ std::streamsize InputFilterStreamBase::Read(void* pBuf, std::streamsize ncb) {
       // Increment by the number of bytes unprocessed in the last filter operation
       nRead += inChunkRemain;
       if (nRead == 0) {
+        if (total)
+          // We got some bytes, we can safely return here
+          return total;
+
         // Unexpected EOF, end here
         fail = true;
         throw std::runtime_error("Unexpected end of file reached");
