@@ -4,7 +4,7 @@ set(
   aes256.c
 )
 
-add_library(aes STATIC ${aes_srcs})
+add_library(aes ${aes_srcs})
 
 install(TARGETS aes EXPORT LeapSerialTargets
   DESTINATION lib
