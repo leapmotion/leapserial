@@ -152,6 +152,8 @@ void OArchiveImpl::WriteArray(IArrayReader&& ary) {
   uint32_t n = (uint32_t)ary.size();
 
   if(ary.immutable_size()) {
+    if (n & 0x80000000)
+      throw std::runtime_error("Cannot serialize fixed arrays of more than 0x7FFFFFFF bytes");
     WriteSize(n);
     for (uint32_t i = 0; i < n; i++)
       ary.serializer.serialize(*this, ary.get(i));
