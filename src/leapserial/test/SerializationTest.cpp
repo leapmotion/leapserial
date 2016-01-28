@@ -282,7 +282,7 @@ TEST_F(SerializationTest, InlineDeserializationTest) {
 
 TEST_F(SerializationTest, StlArray) {
   std::stringstream ss;
-  leap::Serialize(ss, std::array<int, 5>{1, 2, 3, 4, 5});
+  leap::Serialize(ss, std::array<int, 5>{ { 1, 2, 3, 4, 5 } });
 
   std::array<int, 5> ary;
   leap::Deserialize(ss, ary);
@@ -326,7 +326,7 @@ TEST_F(SerializationTest, EmbeddedNativeArray) {
 
   std::stringstream ss;
   leap::Serialize(ss, heaos);
-  
+
   HasEmbeddedArrayOfString ret;
   leap::Deserialize(ss, ret);
 
@@ -509,25 +509,25 @@ struct ConstMember {
   ConstMember(int* val):
     value(val)
   {}
-  
+
   static leap::descriptor GetDescriptor(void) {
     return {
       &ConstMember::value
     };
   }
-  
+
   const int* value;
 };
 
 TEST_F(SerializationTest, ConstSerialize) {
   int value = 42;
   std::stringstream ss;
-  
+
   ConstMember mem(&value);
   leap::Serialize(ss, mem);
-  
+
   auto otherMem = leap::Deserialize<ConstMember>(ss);
-  
+
   ASSERT_EQ(42, *otherMem->value) << "Didn't deserialize const pointer member correctly";
 }
 struct InheritanceTestBase
@@ -634,7 +634,7 @@ TEST_F(SerializationTest, DiamondInheritanceTest) {
 }
 
 TEST_F(SerializationTest, AlternateDescriptor) {
-  leap::descriptor desc = { 
+  leap::descriptor desc = {
     {&MySimpleStructure::a},
     {&MySimpleStructure::b}
   };
@@ -693,4 +693,76 @@ TEST_F(SerializationTest, EnumClassTest) {
 
   auto x = leap::Deserialize<SimpleEnum>(ss);
   ASSERT_EQ(SimpleEnum::Four, *x) << "Round-trip serialization of an enum class yielded an incorrect result";
+}
+
+namespace {
+  enum MyType {
+    One,
+    Two
+  };
+
+  struct StructA {
+    std::string hello = "Hello";
+    std::map<std::string, std::string> mymap;
+    uint64_t member1 = 2;
+    MyType member2 = MyType::One;
+
+    static leap::descriptor GetDescriptor(void) {
+      return{
+        &StructA::hello,
+        &StructA::mymap,
+        &StructA::member1,
+        &StructA::member2
+      };
+    }
+  };
+  struct StructB {
+    std::string world = "World";
+    std::map<std::string, std::string> mymap;
+    uint64_t member1 = 99;
+    MyType member2 = MyType::Two;
+    int member3 = 229;
+
+    static leap::descriptor GetDescriptor(void) {
+      return {
+        &StructB::world,
+        &StructB::mymap,
+        &StructB::member1,
+        &StructB::member2,
+        { 1, &StructB::member3 }
+      };
+    }
+  };
+}
+
+TEST_F(SerializationTest, FixedSizeBackwardsCompatCheck) {
+  // Write as A
+  std::stringstream ss;
+  StructA a;
+  a.mymap = std::map<std::string, std::string>{ { "a", "b" },{ "c", "d" } };
+  leap::Serialize(ss, a);
+
+  StructB b;
+  leap::Deserialize(ss, b);
+
+  ASSERT_EQ(a.hello, b.world);
+  ASSERT_EQ(a.mymap, b.mymap);
+  ASSERT_EQ(a.member1, b.member1);
+  ASSERT_EQ(a.member2, b.member2);
+}
+
+TEST_F(SerializationTest, FixedSizeForwardsCompatCheck) {
+  // Write as B
+  std::stringstream ss;
+  StructB b;
+  b.mymap = std::map<std::string, std::string>{ { "hello", "world" } };
+  leap::Serialize(ss, b);
+
+  StructA a;
+  leap::Deserialize(ss, a);
+
+  ASSERT_EQ(b.world, a.hello);
+  ASSERT_EQ(b.mymap, a.mymap);
+  ASSERT_EQ(b.member1, a.member1);
+  ASSERT_EQ(b.member2, a.member2);
 }
