@@ -40,7 +40,7 @@ std::streamsize BufferedStream::Read(void* pBuf, std::streamsize ncb) {
 std::streamsize BufferedStream::Skip(std::streamsize ncb) {
   ncb = std::min(
     ncb,
-    static_cast<std::streamsize>(ncbBuffer - m_readOffset)
+    static_cast<std::streamsize>(m_writeOffset - m_readOffset)
   );
   m_readOffset += static_cast<size_t>(ncb);
 
