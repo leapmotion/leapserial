@@ -10,6 +10,8 @@ set(LeapSerial_SRCS
   ArchiveJSON.h
   ArchiveJSON.cpp
   ArchiveProtobuf.h
+  BoundedStream.h
+  BoundedStream.cpp
   CompressionStream.h
   CompressionStream.cpp
   IArchiveProtobuf.cpp
