@@ -71,7 +71,7 @@ namespace leap {
     /// stream could not be transferred to the output stream.  These bytes will be contained
     /// in the scratch space.
     /// </remarks>
-    virtual CopyResult Write(IInputStream& is, void* scratch, size_t ncbScratch, std::streamsize& ncb) {
+    virtual CopyResult Write(IInputStream& is, void* scratch, std::streamsize ncbScratch, std::streamsize& ncb) {
       std::streamsize ncbRemain = ncb;
       ncb = 0;
 
