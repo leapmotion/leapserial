@@ -3,6 +3,8 @@
 #include "Benchmark.h"
 #include <chrono>
 #include <iosfwd>
+#include <vector>
+#include <cstddef>
 
 class Encryption :
   public IBenchmark
