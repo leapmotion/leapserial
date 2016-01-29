@@ -4,6 +4,7 @@
 #include "Encryption.h"
 #include <iostream>
 #include <memory>
+#include <string.h>
 
 struct BenchmarkEntry {
   BenchmarkEntry(const char* name, IBenchmark* benchmark) :
