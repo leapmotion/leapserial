@@ -30,3 +30,24 @@ TEST_F(BufferedStreamTest, ReadWithNoWrite) {
   ASSERT_EQ(sizeof(helloWorld) - 1, bs.Read(buf, sizeof(buf)));
   ASSERT_STREQ(helloWorld, buf);
 }
+
+TEST_F(BufferedStreamTest, EofCheck) {
+  char buf[200];
+  leap::BufferedStream bs{ buf, sizeof(buf) };
+
+  // EOF not initially set until a read is attempted
+  ASSERT_FALSE(bs.IsEof());
+  ASSERT_EQ(0, bs.Read(buf, 1));
+  ASSERT_TRUE(bs.IsEof());
+
+  // Write, but EOF flag should be sticky
+  ASSERT_TRUE(bs.Write("a", 1));
+  ASSERT_TRUE(bs.IsEof());
+  ASSERT_EQ(1, bs.Read(buf, 1));
+  ASSERT_FALSE(bs.IsEof());
+
+  // Write again and attempt to read more than is available--this should also set EOF
+  bs.Write("abc", 3);
+  ASSERT_EQ(3, bs.Read(buf, sizeof(buf)));
+  ASSERT_TRUE(bs.IsEof());
+}

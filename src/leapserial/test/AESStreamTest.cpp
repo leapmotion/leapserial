@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "LeapSerial.h"
 #include "AESStream.h"
+#include "BufferedStream.h"
 #include "ForwardingStream.h"
 #include "MemoryStream.h"
 #include <gtest/gtest.h>
@@ -121,4 +122,31 @@ TEST_F(AESStreamTest, OverReadTest) {
   ASSERT_NO_THROW(n = dec.Read(buf, sizeof(buf)));
   ASSERT_EQ(4, n);
   ASSERT_STREQ("abcd", buf);
+  ASSERT_EQ(0, dec.Read(buf, sizeof(buf)));
+  ASSERT_TRUE(dec.IsEof());
+}
+
+TEST_F(AESStreamTest, EofCheck) {
+  char buf[200];
+  leap::BufferedStream bs(buf, sizeof(buf));
+  leap::AESDecryptionStream aes{
+    leap::make_unique<leap::ForwardingInputStream>(bs),
+    sc_key
+  };
+
+  // EOF not initially set until a read is attempted
+  ASSERT_FALSE(aes.IsEof());
+  ASSERT_EQ(0, aes.Read(buf, 1));
+  ASSERT_TRUE(aes.IsEof());
+
+  // Write, but EOF flag should be sticky
+  ASSERT_TRUE(bs.Write("a", 1));
+  ASSERT_TRUE(aes.IsEof());
+  ASSERT_EQ(1, aes.Read(buf, 1));
+  ASSERT_FALSE(aes.IsEof());
+
+  // Write again and attempt to read more than is available--this should also set EOF
+  bs.Write("abc", 3);
+  ASSERT_EQ(3, aes.Read(buf, sizeof(buf)));
+  ASSERT_TRUE(aes.IsEof());
 }

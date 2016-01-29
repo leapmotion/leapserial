@@ -27,10 +27,6 @@ bool MemoryStream::Write(const void* pBuf, std::streamsize ncb) {
   return true;
 }
 
-bool MemoryStream::IsEof(void) const {
-  return m_readOffset >= buffer.size();
-}
-
 std::streamsize MemoryStream::Read(void* pBuf, std::streamsize ncb) {
   const void* pSrcData = buffer.data() + m_readOffset;
   ncb = Skip(ncb);
@@ -39,18 +35,19 @@ std::streamsize MemoryStream::Read(void* pBuf, std::streamsize ncb) {
 }
 
 std::streamsize MemoryStream::Skip(std::streamsize ncb) {
-  ncb = std::min(
+  std::streamsize nSkipped = std::min(
     ncb,
     static_cast<std::streamsize>(m_writeOffset - m_readOffset)
   );
-  m_readOffset += static_cast<size_t>(ncb);
+  m_eof = nSkipped != ncb;
+  m_readOffset += static_cast<size_t>(nSkipped);
 
-  if (m_readOffset == buffer.size()) {
+  if (m_readOffset == m_writeOffset) {
     // Reset criteria, no data left in the buffer
     m_readOffset = 0;
     m_writeOffset = 0;
   }
-  return ncb;
+  return nSkipped;
 }
 
 std::streamsize MemoryStream::Length(void) {
