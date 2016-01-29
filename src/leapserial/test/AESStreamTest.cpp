@@ -2,6 +2,8 @@
 #include "stdafx.h"
 #include "LeapSerial.h"
 #include "AESStream.h"
+#include "ForwardingStream.h"
+#include "MemoryStream.h"
 #include <gtest/gtest.h>
 #include <numeric>
 #include <vector>
@@ -96,4 +98,27 @@ TEST_F(AESStreamTest, RoundTrip) {
   }
 
   ASSERT_EQ(val.value, reacq.value);
+}
+
+TEST_F(AESStreamTest, OverReadTest) {
+  std::array<uint8_t, 32> key = { 0x99, 0x88 };
+
+  leap::MemoryStream ms;
+  {
+    leap::AESEncryptionStream enc{
+      std::unique_ptr<leap::IOutputStream> { new leap::ForwardingOutputStream{ ms } },
+      key
+    };
+    enc.Write("abcd", 4);
+  }
+
+  leap::AESDecryptionStream dec{
+    std::unique_ptr<leap::IInputStream> { new leap::ForwardingInputStream{ ms } },
+    key
+  };
+  char buf[25] = {};
+  std::streamsize n;
+  ASSERT_NO_THROW(n = dec.Read(buf, sizeof(buf)));
+  ASSERT_EQ(4, n);
+  ASSERT_STREQ("abcd", buf);
 }
