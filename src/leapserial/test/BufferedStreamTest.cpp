@@ -21,3 +21,12 @@ TEST_F(BufferedStreamTest, WriteAndBack) {
   ASSERT_STREQ(helloWorld, reread);
   ASSERT_STREQ(helloWorld, buf);
 }
+
+TEST_F(BufferedStreamTest, ReadWithNoWrite) {
+  char helloWorld[] = "Hello world!";
+  leap::BufferedStream bs{ helloWorld, sizeof(helloWorld), sizeof(helloWorld) - 1 };
+
+  char buf[sizeof(helloWorld) * 2] = {};
+  ASSERT_EQ(sizeof(helloWorld) - 1, bs.Read(buf, sizeof(buf)));
+  ASSERT_STREQ(helloWorld, buf);
+}

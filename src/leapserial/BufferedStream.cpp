@@ -6,9 +6,10 @@
 
 using namespace leap;
 
-BufferedStream::BufferedStream(void* buffer, size_t ncbBuffer) :
+BufferedStream::BufferedStream(void* buffer, size_t ncbBuffer, size_t ncbInitialValid) :
   buffer(buffer),
-  ncbBuffer(ncbBuffer)
+  ncbBuffer(ncbBuffer),
+  m_writeOffset(ncbInitialValid)
 {}
 
 
