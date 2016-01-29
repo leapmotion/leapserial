@@ -32,7 +32,7 @@ std::streamsize InputStreamAdapter::Read(void* pBuf, std::streamsize ncb) {
 }
 
 std::streamsize InputStreamAdapter::Skip(std::streamsize ncb) {
-  is.ignore(ncb);
+  is.seekg(ncb, std::ios::cur);
   if (is.fail() && !is.eof())
     return -1;
   return is.gcount();
