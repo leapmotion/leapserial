@@ -21,6 +21,9 @@ namespace leap {
   protected:
     const std::unique_ptr<IInputStream> is;
 
+    // EOF flag
+    bool eof = false;
+
     // Fail flag
     bool fail = false;
 
@@ -42,7 +45,7 @@ namespace leap {
 
   public:
     // IInputStream overrides:
-    bool IsEof(void) const override;
+    bool IsEof(void) const override { return eof; }
     std::streamsize Read(void* pBuf, std::streamsize ncb) override;
     std::streamsize Skip(std::streamsize ncb) override;
   };

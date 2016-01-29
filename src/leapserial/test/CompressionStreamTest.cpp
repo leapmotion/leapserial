@@ -1,7 +1,9 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "LeapSerial.h"
+#include "BufferedStream.h"
 #include "CompressionStream.h"
+#include "ForwardingStream.h"
 #include <gtest/gtest.h>
 #include <numeric>
 #include <vector>
@@ -119,4 +121,29 @@ TEST_F(CompressionStreamTest, TruncatedStreamTest) {
     };
     ASSERT_ANY_THROW(leap::Deserialize(ds, reacq));
   }
+}
+
+TEST_F(CompressionStreamTest, EofCheck) {
+  char buf[200];
+  leap::BufferedStream bs(buf, sizeof(buf));
+  leap::CompressionStream cs{ leap::make_unique<leap::ForwardingOutputStream>(bs) };
+  leap::DecompressionStream dcs{ leap::make_unique<leap::ForwardingInputStream>(bs) };
+
+  // EOF not initially set until a read is attempted
+  ASSERT_FALSE(dcs.IsEof());
+  ASSERT_EQ(0, dcs.Read(buf, 1));
+  ASSERT_TRUE(dcs.IsEof());
+
+  // Write, but EOF flag should be sticky
+  ASSERT_TRUE(cs.Write("a", 1));
+  cs.Flush();
+  ASSERT_TRUE(dcs.IsEof());
+  ASSERT_EQ(1, dcs.Read(buf, 1));
+  ASSERT_FALSE(dcs.IsEof());
+
+  // Write again and attempt to read more than is available--this should also set EOF
+  cs.Write("abc", 3);
+  cs.Flush();
+  ASSERT_EQ(3, dcs.Read(buf, sizeof(buf)));
+  ASSERT_TRUE(dcs.IsEof());
 }

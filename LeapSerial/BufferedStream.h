@@ -4,7 +4,7 @@
 #include "IOutputStream.h"
 
 namespace leap {
-  class BufferedStream :
+  class BufferedStream final :
     public leap::IInputStream,
     public leap::IOutputStream
   {
@@ -29,9 +29,12 @@ namespace leap {
     // A pointer to our WRITE offset in the buffer
     size_t m_writeOffset;
 
+    // True if the last read operation resulted in EOF
+    bool m_eof = false;
+
   public:
     bool Write(const void* pBuf, std::streamsize ncb) override;
-    bool IsEof(void) const override;
+    bool IsEof(void) const override { return m_eof; }
     std::streamsize Read(void* pBuf, std::streamsize ncb) override;
     std::streamsize Skip(std::streamsize ncb) override;
     std::streamsize Length(void) override;

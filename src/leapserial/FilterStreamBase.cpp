@@ -13,13 +13,9 @@ InputFilterStreamBase::InputFilterStreamBase(std::unique_ptr<IInputStream>&& is)
   buffer(1024, 0)
 {}
 
-bool InputFilterStreamBase::IsEof(void) const {
-  return is->IsEof() && buffer.empty();
-}
-
 std::streamsize InputFilterStreamBase::Read(void* pBuf, std::streamsize ncb) {
   if (fail)
-    throw std::runtime_error("Cannot read, stream corrupt");
+    return -1;
 
   std::streamsize total = 0;
   while (ncb)
@@ -45,13 +41,8 @@ std::streamsize InputFilterStreamBase::Read(void* pBuf, std::streamsize ncb) {
       // Increment by the number of bytes unprocessed in the last filter operation
       nRead += inChunkRemain;
       if (nRead == 0) {
-        if (total)
-          // We got some bytes, we can safely return here
-          return total;
-
-        // Unexpected EOF, end here
-        fail = true;
-        throw std::runtime_error("Unexpected end of file reached");
+        eof = true;
+        return total;
       }
 
       // Handoff to transform behavior:
@@ -66,6 +57,8 @@ std::streamsize InputFilterStreamBase::Read(void* pBuf, std::streamsize ncb) {
       memmove(inputChunk.data(), inputChunk.data() + nRead - inChunkRemain, inChunkRemain);
     }
 
+  // EOF if we hit the end prematurely
+  eof = ncb != 0;
   return total;
 }
 

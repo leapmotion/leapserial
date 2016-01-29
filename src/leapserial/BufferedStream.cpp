@@ -12,7 +12,6 @@ BufferedStream::BufferedStream(void* buffer, size_t ncbBuffer, size_t ncbInitial
   m_writeOffset(ncbInitialValid)
 {}
 
-
 bool BufferedStream::Write(const void* pBuf, std::streamsize ncb) {
   if (ncbBuffer - m_writeOffset < static_cast<size_t>(ncb))
     // Limit hit, no resize possible!
@@ -27,10 +26,6 @@ bool BufferedStream::Write(const void* pBuf, std::streamsize ncb) {
   return true;
 }
 
-bool BufferedStream::IsEof(void) const {
-  return m_readOffset >= ncbBuffer;
-}
-
 std::streamsize BufferedStream::Read(void* pBuf, std::streamsize ncb) {
   const void* pSrcData = static_cast<uint8_t*>(buffer) + m_readOffset;
   ncb = Skip(ncb);
@@ -39,18 +34,19 @@ std::streamsize BufferedStream::Read(void* pBuf, std::streamsize ncb) {
 }
 
 std::streamsize BufferedStream::Skip(std::streamsize ncb) {
-  ncb = std::min(
+  auto skipCount = std::min(
     ncb,
     static_cast<std::streamsize>(m_writeOffset - m_readOffset)
   );
-  m_readOffset += static_cast<size_t>(ncb);
+  m_eof = skipCount != ncb;
+  m_readOffset += static_cast<size_t>(skipCount);
 
-  if (m_readOffset == ncbBuffer) {
+  if (m_readOffset == m_writeOffset) {
     // Reset criteria, no data left in the buffer
     m_readOffset = 0;
     m_writeOffset = 0;
   }
-  return ncb;
+  return skipCount;
 }
 
 std::streamsize BufferedStream::Length(void) {
