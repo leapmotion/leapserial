@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "AESStream.h"
 #include <aes/rijndael-alg-fst.h>
+#include <memory.h>
 
 using namespace leap;
 
