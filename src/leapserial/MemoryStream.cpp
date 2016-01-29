@@ -42,7 +42,7 @@ std::streamsize MemoryStream::Skip(std::streamsize ncb) {
   m_eof = nSkipped != ncb;
   m_readOffset += static_cast<size_t>(nSkipped);
 
-  if (m_readOffset == buffer.size()) {
+  if (m_readOffset == m_writeOffset) {
     // Reset criteria, no data left in the buffer
     m_readOffset = 0;
     m_writeOffset = 0;
