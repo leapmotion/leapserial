@@ -1,15 +1,15 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "AESStream.h"
-#include <aes/aes256.h>
+#include <aes/rijndael-alg-fst.h>
 
 using namespace leap;
 
 AES256Base::AES256Base(const std::array<uint8_t, 32>& key) :
-  ctx(new aes256_context)
+  ctx(new rijndael_context)
 {
-  aes256_init(ctx.get(), key.data());
-  lastBlock = {};
+  rijndaelKeySetup(ctx.get(), key.data(), 256);
+  memset(feedback, 0, sizeof(feedback));
   NextBlock();
 }
 
@@ -17,14 +17,40 @@ AES256Base::~AES256Base(void) {}
 
 void AES256Base::NextBlock(void) {
   // Encrypt the last fully encrypted block, we will use this as the basis for xoring the next one
-  chained = lastBlock;
-  aes256_encrypt_ecb(ctx.get(), chained.data());
-  blockByte = 0;
+  rijndaelEncrypt(ctx.get(), feedback, feedback);
+  feedbackPtr = feedback;
 }
 
-AESDecryptionStream::AESDecryptionStream(std::unique_ptr<IInputStream>&& is, const std::array<uint8_t, 32>& key) :
-  InputFilterStreamBase(std::move(is)),
+AESEncryptionStream::AESEncryptionStream(std::unique_ptr<IOutputStream>&& os, const std::array<uint8_t, 32>& key) :
+  OutputFilterStreamBase(std::move(os)),
   AES256Base(key)
+{}
+
+bool AESEncryptionStream::Transform(const void* input, size_t& ncbIn, void* output, size_t& ncbOut, bool) {
+  size_t nWritten = 0;
+  while (nWritten < ncbIn && nWritten < ncbOut) {
+    // Instantiate a block if we have to:
+    if (feedbackPtr == feedbackEnd)
+      NextBlock();
+
+    // XOR to implement our CBC mode
+    *feedbackPtr ^= static_cast<const uint8_t*>(input)[nWritten];
+    reinterpret_cast<uint8_t*>(output)[nWritten] = *feedbackPtr;
+
+    // Advance
+    feedbackPtr++;
+    nWritten++;
+  }
+  ncbOut = nWritten;
+  ncbIn = nWritten;
+
+  return true;
+}
+
+
+AESDecryptionStream::AESDecryptionStream(std::unique_ptr<IInputStream>&& is, const std::array<uint8_t, 32>& key) :
+  AES256Base(key),
+  is(std::move(is))
 {}
 
 std::streamsize AESDecryptionStream::Length(void) {
@@ -37,48 +63,36 @@ std::streampos AESDecryptionStream::Tell(void) {
   return is->Tell();
 }
 
-bool AESDecryptionStream::Transform(const void* input, size_t& ncbIn, void* output, size_t& ncbOut) {
-  size_t nWritten = 0;
-  while (nWritten < ncbIn && nWritten < ncbOut) {
-    // Instantiate a block if we have to:
-    if (blockByte == chained.size())
+std::streamsize AESDecryptionStream::Read(void* pBuf, std::streamsize ncb) {
+  std::streamsize nRead = is->Read(pBuf, ncb);
+
+  for (std::streamsize i = 0; i < nRead; i++) {
+    // Generate next block if needed:
+    if (feedbackPtr == feedbackEnd)
       NextBlock();
 
-    // XOR to implement our CBC mode
-    lastBlock[blockByte] = reinterpret_cast<const uint8_t*>(input)[nWritten];
-    reinterpret_cast<uint8_t*>(output)[nWritten] = chained[blockByte] ^ lastBlock[blockByte];
-
-    // Advance
-    blockByte++;
-    nWritten++;
+    uint8_t encrypted = static_cast<uint8_t*>(pBuf)[i];
+    static_cast<uint8_t*>(pBuf)[i] ^= *feedbackPtr;
+    *feedbackPtr++ = encrypted;
   }
-  ncbOut = nWritten;
-  ncbIn = nWritten;
-  return true;
+
+  return nRead;
 }
 
-AESEncryptionStream::AESEncryptionStream(std::unique_ptr<IOutputStream>&& os, const std::array<uint8_t, 32>& key) :
-  OutputFilterStreamBase(std::move(os)),
-  AES256Base(key)
-{}
-
-bool AESEncryptionStream::Transform(const void* input, size_t& ncbIn, void* output, size_t& ncbOut, bool) {
-  size_t nWritten = 0;
-  while (nWritten < ncbIn && nWritten < ncbOut) {
-    // Instantiate a block if we have to:
-    if (blockByte == chained.size())
-      NextBlock();
-
-    // XOR to implement our CBC mode
-    lastBlock[blockByte] = chained[blockByte] ^ reinterpret_cast<const uint8_t*>(input)[nWritten];
-    reinterpret_cast<uint8_t*>(output)[nWritten] = lastBlock[blockByte];
-
-    // Advance
-    blockByte++;
-    nWritten++;
+std::streamsize AESDecryptionStream::Skip(std::streamsize ncb) {
+  uint8_t dump[1024];
+  std::streamsize nReadRemain;
+  for (nReadRemain = ncb; nReadRemain > 1024;) {
+    std::streamsize nRead = Read(dump, sizeof(dump));
+    if (nRead <= 0)
+      return ncb - nReadRemain;
+    nReadRemain -= nRead;
   }
-  ncbOut = nWritten;
-  ncbIn = nWritten;
 
-  return true;
+  if(nReadRemain) {
+    std::streamsize lastRead = Read(dump, nReadRemain);
+    if (0 < lastRead)
+      nReadRemain += lastRead;
+  }
+  return nReadRemain;
 }

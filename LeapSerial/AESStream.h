@@ -3,7 +3,7 @@
 #include "FilterStreamBase.h"
 #include <array>
 
-struct _aes256_context;
+struct _rijndael_context;
 
 namespace leap {
   class AES256Base
@@ -13,14 +13,12 @@ namespace leap {
     ~AES256Base(void);
 
   protected:
-    std::unique_ptr<_aes256_context> ctx;
+    std::unique_ptr<_rijndael_context> ctx;
 
-    // Number of transform bytes remaining, and the chained-forward block itself
-    size_t blockByte = 16;
-    std::array<uint8_t, 16> chained;
-
-    // Previously encrypted bytes
-    std::array<uint8_t, 16> lastBlock;
+    // Feedback block and our offset into it:
+    uint8_t feedback[16];
+    uint8_t* feedbackPtr = feedback;
+    uint8_t* const feedbackEnd = feedback + 16;
 
     void NextBlock(void);
   };
@@ -47,18 +45,21 @@ namespace leap {
   /// Implements an AES stream decryption cipher in CFB mode
   /// </summary>
   class AESDecryptionStream :
-    public InputFilterStreamBase,
+    public IInputStream,
     public AES256Base
   {
   public:
     AESDecryptionStream(std::unique_ptr<IInputStream>&& is, const std::array<uint8_t, 32>& key);
 
-  protected:
+  private:
+    const std::unique_ptr<IInputStream> is;
+
+  public:
     // IInputStream overrides:
+    bool IsEof(void) const override { return is->IsEof(); }
     std::streamsize Length(void) override;
     std::streampos Tell(void) override;
-
-    // InputFilterStreamBase overrides:
-    bool Transform(const void* input, size_t& ncbIn, void* output, size_t& ncbOut) override;
+    std::streamsize Read(void* pBuf, std::streamsize ncb) override;
+    std::streamsize Skip(std::streamsize ncb) override;
   };
 }
