@@ -6,3 +6,4 @@ include_directories(
 )
 
 add_subdirectory(leapserial)
+add_subdirectory(leapserialbench)
