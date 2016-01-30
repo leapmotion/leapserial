@@ -65,8 +65,6 @@ std::chrono::nanoseconds Encryption::EncryptedRead(void) {
 }
 
 int Encryption::Benchmark(std::ostream& os) {
-  nanoseconds dt;
-
   os << (buffer.size() / (1024 * 1024)) << "MB buffer size" << std::endl;
   os << "Trivial read:   " << std::flush;
   os << format_duration(SimpleRead()) << std::endl;
@@ -76,6 +74,5 @@ int Encryption::Benchmark(std::ostream& os) {
   os << format_duration(DirectEncryptCFB()) << std::endl;
   os << "Encrypted read: " << std::flush;
   os << format_duration(EncryptedRead()) << std::endl;
-
   return 0;
 }
