@@ -150,3 +150,14 @@ TEST_F(AESStreamTest, EofCheck) {
   ASSERT_EQ(3, aes.Read(buf, sizeof(buf)));
   ASSERT_TRUE(aes.IsEof());
 }
+
+TEST_F(AESStreamTest, SkipBytes) {
+  char buf[200];
+  leap::BufferedStream bs(buf, sizeof(buf), sizeof(buf));
+  leap::AESDecryptionStream aes{
+    leap::make_unique<leap::ForwardingInputStream>(bs),
+    sc_key
+  };
+
+  ASSERT_EQ(10, aes.Skip(10));
+}

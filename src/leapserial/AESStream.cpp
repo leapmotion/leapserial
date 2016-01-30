@@ -93,7 +93,7 @@ std::streamsize AESDecryptionStream::Skip(std::streamsize ncb) {
   if(nReadRemain) {
     std::streamsize lastRead = Read(dump, nReadRemain);
     if (0 < lastRead)
-      nReadRemain += lastRead;
+      nReadRemain -= lastRead;
   }
-  return nReadRemain;
+  return ncb - nReadRemain;
 }
