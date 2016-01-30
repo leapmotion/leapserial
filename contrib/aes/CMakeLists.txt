@@ -1,7 +1,5 @@
 set(
   aes_srcs
-  aes256.h
-  aes256.c
   rijndael-alg-fst.h
   rijndael-alg-fst.c
 )
