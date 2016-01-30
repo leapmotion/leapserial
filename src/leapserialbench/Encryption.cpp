@@ -9,7 +9,7 @@
 
 using namespace std::chrono;
 
-static const std::array<uint8_t, 32> sc_key = { 0x44, 0x99, 0x66 };
+static const std::array<uint8_t, 32> sc_key = { { 0x44, 0x99, 0x66 } };
 
 Encryption::Encryption(void) {
   buffer.resize(ncbRead);
