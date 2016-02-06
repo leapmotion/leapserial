@@ -18,7 +18,7 @@ namespace leap {
     /// <param name="is">The underlying input stream</param>
     IArchiveImpl(IInputStream& is);
     IArchiveImpl(std::istream& is);
-    ~IArchiveImpl(void);
+    virtual ~IArchiveImpl(void);
 
     struct deserialization_task {
       deserialization_task(
