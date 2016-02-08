@@ -31,6 +31,8 @@ set(LeapSerial_SRCS
   OArchiveProtobuf.cpp
   IArchiveImpl.h
   IArchiveImpl.cpp
+  IArchiveImplV0.h
+  IArchiveImplV0.cpp
   IArray.h
   IDictionary.h
   IInputStream.h
@@ -38,6 +40,8 @@ set(LeapSerial_SRCS
   LeapSerial.h
   MemoryStream.h
   MemoryStream.cpp
+  OArchiveImplV0.h
+  OArchiveImplV0.cpp
   OArchiveImpl.h
   OArchiveImpl.cpp
   optional.h
