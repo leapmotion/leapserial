@@ -5,7 +5,7 @@ set(PACKAGE_VERSION_PATCH "@LeapSerial_VERSION_PATCH@")
 
 if(LeapSerial_DEBUG)
   message(STATUS "Debug mode on")
-  message(STATUS "Installed LeapSerial_VERSION: @LeapSerial_VERSION@")
+  message(STATUS "Installed LeapSerial_VERSION: ${PACKAGE_VERSION}")
 
   message(STATUS "Installed LeapSerial_BUILD_ARCHITECTURES: @LeapSerial_BUILD_ARCHITECTURES@")
   message(STATUS "Configured LeapSerial_BUILD_ARCHITECTURES: ${LeapSerial_BUILD_ARCHITECTURES}")
@@ -96,7 +96,7 @@ else()
   if (PACKAGE_VERSION VERSION_EQUAL PACKAGE_FIND_VERSION)
     set(PACKAGE_VERSION_EXACT TRUE)
   endif()
-  
+
   if(LeapSerial_DEBUG)
     message(STATUS "Using LeapSerial in ${CMAKE_CURRENT_SOURCE_DIR}")
   endif()
