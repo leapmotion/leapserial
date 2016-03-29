@@ -88,6 +88,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib)
 # position-independent
 if(LeapSerial_BUILD_ARM)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 
   foreach(config IN LISTS CMAKE_CONFIGURATION_TYPES)
     string(TOUPPER ${config} config)
