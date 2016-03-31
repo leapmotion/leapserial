@@ -39,6 +39,6 @@ namespace leap {
   public:
     bool Write(const void* pBuf, std::streamsize ncb) override { return os.Write(pBuf, ncb); }
     CopyResult Write(IInputStream& is, void* scratch, std::streamsize ncbScratch, std::streamsize& ncb) override { return os.Write(is, scratch, ncbScratch, ncb); }
-    void Flush(void) { os.Flush(); }
+    void Flush(void) override { os.Flush(); }
   };
 }
