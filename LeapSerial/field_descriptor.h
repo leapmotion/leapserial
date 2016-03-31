@@ -159,7 +159,7 @@ namespace leap {
       offset(0),
       serializer(field_serializer_t<field_getter_setter<T,U,V>, void>::GetDescriptor(pGetFn, pSetFn))
     {}
-    
+
     /// <summary>
     /// A descriptor for a field with nonmember getter and setters
     /// </summary>
@@ -195,7 +195,7 @@ namespace leap {
     field_descriptor(int identifier, U T::*val) :
       field_descriptor(identifier, nullptr, val)
     {}
-    
+
     template<typename T, typename U, typename V>
     field_descriptor(int identifier, U(T::*pGetFn)() const, void(T::*pSetFn)(V)) :
       field_descriptor(identifier, nullptr, pGetFn, pSetFn)
@@ -210,7 +210,7 @@ namespace leap {
     field_descriptor(const char* name, U T::*val) :
       field_descriptor(0, name, val)
     {}
-    
+
     template<typename T, typename U, typename V>
     field_descriptor(const char* name, U(T::*pGetFn)() const, void(T::*pSetFn)(V)) :
       field_descriptor(0, name, pGetFn, pSetFn)
