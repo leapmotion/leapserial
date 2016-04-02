@@ -66,6 +66,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules")
 include(AddPCH)
 include(ConditionalSources)
+include(InstallHeaders)
 
 get_filename_component(LEAPSERIAL_ROOT_DIR . ABSOLUTE)
 

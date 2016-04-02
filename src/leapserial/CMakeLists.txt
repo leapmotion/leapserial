@@ -74,14 +74,8 @@ target_include_directories(
 add_subdirectory(test)
 
 # Install public header files
-install(
-  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/LeapSerial
-  DESTINATION include
-  COMPONENT LeapSerial
-  FILES_MATCHING PATTERN "*.h"
-)
+install_headers(TARGET LeapSerial DESTINATION include/leapserial COMPONENT LeapSerial)
 
-# Install the actual targets too, obviously
 install(TARGETS LeapSerial EXPORT LeapSerialTargets
   DESTINATION lib
   COMPONENT LeapSerial
