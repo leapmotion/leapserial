@@ -13,6 +13,8 @@ set(LeapSerial_SRCS
   base.h
   BoundedStream.h
   BoundedStream.cpp
+  BufferedInputStream.h
+  BufferedInputStream.cpp
   BufferedStream.h
   BufferedStream.cpp
   CompressionStream.h
