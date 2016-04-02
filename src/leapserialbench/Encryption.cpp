@@ -3,9 +3,9 @@
 #include "Encryption.h"
 #include "Utility.h"
 #include "aes/rijndael-alg-fst.h"
-#include "LeapSerial/AESStream.h"
-#include "LeapSerial/BufferedStream.h"
-#include "LeapSerial/LeapSerial.h"
+#include <leapserial/AESStream.h>
+#include <leapserial/BufferedStream.h>
+#include <leapserial/LeapSerial.h>
 
 using namespace std::chrono;
 
