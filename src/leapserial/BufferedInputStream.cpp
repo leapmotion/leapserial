@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <cmath>
+#include <memory.h>
 
 using namespace leap;
 
