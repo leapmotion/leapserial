@@ -1,11 +1,11 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "LeapSerial.h"
 #include "TestProtobufLS.hpp"
 #include <gtest/gtest.h>
 #include <google/protobuf/compiler/importer.h>
 #include <google/protobuf/io/zero_copy_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <leapserial/LeapSerial.h>
 #include <array>
 #include <iomanip>
 #include <sstream>
@@ -61,7 +61,7 @@ TEST(SchemaTest, BasicDescriptorSerialization) {
   // This step is the only step that's required to dump a full schema in proto1
   // format.  The rest of this function is just to parse it
   leap::Serialize<leap::protobuf_v1>(ss, Person::GetDescriptor());
-  
+
   // Now we have to parse the protobuf file
   const google::protobuf::FileDescriptor* fd;
   CountsErrors error_collector;

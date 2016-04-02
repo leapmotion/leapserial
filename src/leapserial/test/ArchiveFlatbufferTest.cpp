@@ -1,15 +1,15 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "ArchiveFlatbuffer.h"
-#include "LeapSerial.h"
 #include "TestObject.h"
 #include "TestObject_generated.h"
 #include <flatbuffers/flatbuffers.h>
+#include <leapserial/ArchiveFlatbuffer.h>
+#include <leapserial/LeapSerial.h>
 #include <gtest/gtest.h>
 #include <sstream>
 
 class ArchiveFlatbufferTest :
-  public testing::Test 
+  public testing::Test
 {};
 
 using namespace Test;
@@ -43,7 +43,7 @@ TEST_F(ArchiveFlatbufferTest, ReadFromFlatbufferMessage) {
     );
 
   fbb.Finish(testObj);
-  
+
   std::string fbString;
   auto bufferPointer = (const char*)fbb.GetBufferPointer();
   fbString.assign(bufferPointer, bufferPointer + fbb.GetSize());
