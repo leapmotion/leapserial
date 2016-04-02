@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "BoundedStream.h"
-#include "LeapSerial.h"
+#include <leapserial/BoundedStream.h>
+#include <leapserial/LeapSerial.h>
 #include <gtest/gtest.h>
 
 class BoundedStreamTest:

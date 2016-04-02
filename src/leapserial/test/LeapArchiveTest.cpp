@@ -1,13 +1,13 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "OArchiveImpl.h"
-#include "IArchiveImpl.h"
-#include "LeapSerial.h"
+#include <leapserial/OArchiveImpl.h>
+#include <leapserial/IArchiveImpl.h>
+#include <leapserial/LeapSerial.h>
 #include <gtest/gtest.h>
 #include <sstream>
 
 class LeapArchiveTest :
-  public testing::Test 
+  public testing::Test
 {};
 
 struct MyRepeatedStructure {

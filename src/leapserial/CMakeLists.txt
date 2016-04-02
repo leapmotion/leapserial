@@ -61,21 +61,29 @@ set(LeapSerial_SRCS
   Utility.cpp
 )
 
-rewrite_header_paths(LeapSerial_SRCS)
 add_pch(LeapSerial_SRCS "stdafx.h" "stdafx.cpp")
 add_library(LeapSerial ${LeapSerial_SRCS})
 target_link_libraries(LeapSerial aes zlib)
+target_include_directories(
+  LeapSerial
+  INTERFACE
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>"
+  "$<INSTALL_INTERFACE:include>"
+)
+
 add_subdirectory(test)
 
+# Install public header files
+install(
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/LeapSerial
+  DESTINATION include
+  COMPONENT LeapSerial
+  FILES_MATCHING PATTERN "*.h"
+)
+
+# Install the actual targets too, obviously
 install(TARGETS LeapSerial EXPORT LeapSerialTargets
   DESTINATION lib
   COMPONENT LeapSerial
   CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
-)
-
-target_include_directories(
-  LeapSerial
-  INTERFACE
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
-  "$<INSTALL_INTERFACE:include>"
 )

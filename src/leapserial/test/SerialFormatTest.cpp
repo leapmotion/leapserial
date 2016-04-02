@@ -1,10 +1,8 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include <gtest/gtest.h>
-
-#include "LeapSerial.h"
-
 #include "TestObject.h"
+#include <leapserial/LeapSerial.h>
+#include <gtest/gtest.h>
 
 using namespace Test;
 
@@ -43,7 +41,7 @@ TEST_F(SerialFormatTest, ReadFromLeapArchive) {
 
   ss.write(LeapArchiveString, 142);
   leap::Serialize(ss2, s_nativeObj);
-  
+
   leap::Deserialize(ss, testObj);
   leap::Deserialize(ss2, testObj2);
   ASSERT_TRUE(testObj.unserialized.empty());

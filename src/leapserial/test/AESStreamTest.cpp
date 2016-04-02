@@ -1,11 +1,11 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "LeapSerial.h"
-#include "AESStream.h"
-#include "BufferedStream.h"
-#include "ForwardingStream.h"
-#include "MemoryStream.h"
 #include <gtest/gtest.h>
+#include <leapserial/LeapSerial.h>
+#include <leapserial/AESStream.h>
+#include <leapserial/BufferedStream.h>
+#include <leapserial/ForwardingStream.h>
+#include <leapserial/MemoryStream.h>
 #include <numeric>
 #include <vector>
 

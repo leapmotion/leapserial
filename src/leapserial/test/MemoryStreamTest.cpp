@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "MemoryStream.h"
+#include <leapserial/MemoryStream.h>
 #include <gtest/gtest.h>
 #include <algorithm>
 #include <array>

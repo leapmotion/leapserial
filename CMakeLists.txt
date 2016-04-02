@@ -107,21 +107,6 @@ endif()
 # Postfix on all debug libraries should be "d"
 set(CMAKE_DEBUG_POSTFIX d${CMAKE_DEBUG_POSTFIX})
 
-function(rewrite_header_paths target_SRC_VAR)
-  # All include files are located in /LeapSerial from here, so prepend that to all sources
-  set(SRCS_TEMP ${${target_SRC_VAR}})
-  set(SRCS)
-  foreach(i ${SRCS_TEMP})
-    string(REGEX MATCH ".*\\.h$" hfile ${i})
-    if(hfile)
-      list(APPEND SRCS ${PROJECT_SOURCE_DIR}/LeapSerial/${i})
-    else()
-      list(APPEND SRCS ${i})
-    endif()
-  endforeach()
-  set(${target_SRC_VAR} ${SRCS} PARENT_SCOPE)
-endfunction()
-
 # We have unit test projects via googletest, they're added in the places where they are defined
 enable_testing()
 
@@ -144,14 +129,6 @@ install(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/leapserial-configVersion.cmake"
   DESTINATION "."
   COMPONENT LeapSerial
-)
-
-# Install public header files
-install(
-  DIRECTORY ${PROJECT_SOURCE_DIR}/LeapSerial
-  DESTINATION include
-  COMPONENT LeapSerial
-  FILES_MATCHING PATTERN "*.h"
 )
 
 # Targets file is needed in order to describe how to link LeapSerial to the rest of the system

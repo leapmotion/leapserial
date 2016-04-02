@@ -1,8 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-
-#include "serial_traits.h"
-
+#include <leapserial/serial_traits.h>
 #include <cstdint>
 #include <string>
 #include <vector>
