@@ -19,6 +19,7 @@ namespace leap {
     void WriteInteger(int64_t value, uint8_t) override;
     void WriteFloat(float value) override;
     void WriteFloat(double value) override;
+    void WriteFloat(long double value) override;
     void WriteObjectReference(const field_serializer& serializer, const void* pObj) override;
     void WriteObject(const field_serializer& serializer, const void* pObj) override;
 
@@ -39,6 +40,7 @@ namespace leap {
     uint64_t SizeInteger(int64_t value, uint8_t) const override;
     uint64_t SizeFloat(float value) const override { return 4; }
     uint64_t SizeFloat(double value) const override { return 8; }
+    uint64_t SizeFloat(long double value) const override { return 8; }
     uint64_t SizeBool(bool value) const override { return 1; }
     uint64_t SizeString(const void* pBuf, uint64_t ncb, uint8_t charSize) const override;
     uint64_t SizeObjectReference(const field_serializer& serializer, const void* pObj) const override;

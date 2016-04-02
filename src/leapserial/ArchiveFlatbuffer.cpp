@@ -13,14 +13,14 @@ using namespace leap;
 //// https://google.github.io/flatbuffers/md__internals.html
 ///
 /// offsets are always written as 32 bit integers
-/// 
+///
 /// Structs are all aligned to their size and are written in order.
 ///
 /// Tables start with soffset_t (a int32_t) to the vtable for the object,
 /// followed by all fields as aligned scalars. not all fields need to be present.
-/// 
+///
 /// Vtables are constructed of voffset_ts(a uint16_t).
-/// 
+///
 /// Strings are vectors of bytes, always null terminated
 /// vectors are stored as contiguous aligned scalars with a uint32_t element count.
 /// The standard implementation writes buffers backwards as this reduces the amount
@@ -34,7 +34,7 @@ using namespace leap;
 /// uint16_t size of object in bytes (including vtable offset)
 /// for N elements in the vtable
 /// uint16_t offset of Nth field
-/// 
+///
 
 struct not_implemented_exception :
   public std::runtime_error
@@ -133,7 +133,7 @@ void OArchiveFlatbuffer::WriteByteArray(const void* pBuf, uint64_t ncb, bool wri
   throw not_implemented_exception();
 }
 
-void OArchiveFlatbuffer::WriteString(const void* pBuf, uint64_t charCount, uint8_t charSize) { 
+void OArchiveFlatbuffer::WriteString(const void* pBuf, uint64_t charCount, uint8_t charSize) {
   if (charSize != 1)
     throw std::runtime_error("Flatbuffers does not support non ASCII/UTF-8 strings");
 
@@ -152,13 +152,13 @@ void OArchiveFlatbuffer::WriteString(const void* pBuf, uint64_t charCount, uint8
   SaveOffset(m_currentFieldPtr, (uint32_t)m_builder.size());
 }
 
-void OArchiveFlatbuffer::WriteBool(bool value) { 
+void OArchiveFlatbuffer::WriteBool(bool value) {
   WriteInteger((uint8_t)value);
 }
 
 void OArchiveFlatbuffer::WriteInteger(int64_t value, uint8_t ncb) {
   Align(ncb);
-  
+
   uint64_t bits = *reinterpret_cast<uint64_t*>(&value);
   for (int i = ncb-1; i >= 0; --i) {
     const uint8_t lowerBits = (uint8_t)(bits >> (i * 8) & 0x0000000000000FF);
@@ -166,15 +166,20 @@ void OArchiveFlatbuffer::WriteInteger(int64_t value, uint8_t ncb) {
   }
 }
 
-void OArchiveFlatbuffer::WriteFloat(float value) { 
+void OArchiveFlatbuffer::WriteFloat(float value) {
   WriteInteger(*reinterpret_cast<uint32_t*>(&value));
 }
 
-void OArchiveFlatbuffer::WriteFloat(double value) { 
+void OArchiveFlatbuffer::WriteFloat(double value) {
   WriteInteger(*reinterpret_cast<uint64_t*>(&value));
 }
 
-void OArchiveFlatbuffer::WriteObjectReference(const field_serializer& serializer, const void* pObj) { 
+void OArchiveFlatbuffer::WriteFloat(long double value) {
+  for (size_t i = 0; i < sizeof(value); i++)
+    WriteInteger(reinterpret_cast<uint8_t*>(&value)[i]);
+}
+
+void OArchiveFlatbuffer::WriteObjectReference(const field_serializer& serializer, const void* pObj) {
   throw not_implemented_exception();
 }
 
@@ -192,7 +197,7 @@ void OArchiveFlatbuffer::WriteObject(const field_serializer& serializer, const v
   Finish();
 }
 
-void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const void* pObj) { 
+void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const void* pObj) {
 
   const auto orderedDescriptors = SortFields(descriptor);
 
@@ -221,7 +226,7 @@ void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const voi
     }
     vTable.offsets.push_back(static_cast<uint16_t>((uint32_t)m_builder.size() - tableEnd));
   }
-  
+
   //If there are no identified descriptors, then we are a struct and do not care about vtable stuff.
   if (descriptor.identified_descriptors.empty())
     return;
@@ -235,7 +240,7 @@ void OArchiveFlatbuffer::WriteDescriptor(const descriptor& descriptor, const voi
   vTable.offset = tableStart + vTable.size;
 
   auto insertionResult = m_vTables.insert(vTable);
-  
+
   //Final entry for the table
   WriteInteger((int32_t)(insertionResult.first->offset - tableStart));
 
@@ -278,29 +283,32 @@ void OArchiveFlatbuffer::WriteArray(IArrayReader&& ary) {
 }
 
 void OArchiveFlatbuffer::WriteDictionary(IDictionaryReader&& dictionary)
-{ 
+{
   throw not_implemented_exception();
 }
 
-uint64_t OArchiveFlatbuffer::SizeInteger(int64_t value, uint8_t ncb) const { 
+uint64_t OArchiveFlatbuffer::SizeInteger(int64_t value, uint8_t ncb) const {
   return ncb;
 }
-uint64_t OArchiveFlatbuffer::SizeFloat(float value) const { 
+uint64_t OArchiveFlatbuffer::SizeFloat(float value) const {
   return sizeof(float);
 }
-uint64_t OArchiveFlatbuffer::SizeFloat(double value) const { 
+uint64_t OArchiveFlatbuffer::SizeFloat(double value) const {
   return sizeof(double);
 }
-uint64_t OArchiveFlatbuffer::SizeBool(bool value) const { 
+uint64_t OArchiveFlatbuffer::SizeFloat(long double value) const {
+  return sizeof(long double);
+}
+uint64_t OArchiveFlatbuffer::SizeBool(bool value) const {
   return sizeof(bool);
 }
-uint64_t OArchiveFlatbuffer::SizeString(const void* pBuf, uint64_t ncb, uint8_t charSize) const { 
+uint64_t OArchiveFlatbuffer::SizeString(const void* pBuf, uint64_t ncb, uint8_t charSize) const {
   return sizeof(uint32_t);
 }
-uint64_t OArchiveFlatbuffer::SizeObjectReference(const field_serializer& serializer, const void* pObj) const { 
+uint64_t OArchiveFlatbuffer::SizeObjectReference(const field_serializer& serializer, const void* pObj) const {
   return sizeof(uint32_t);
 }
-uint64_t OArchiveFlatbuffer::SizeDescriptor(const descriptor& descriptor, const void* pObj) const { 
+uint64_t OArchiveFlatbuffer::SizeDescriptor(const descriptor& descriptor, const void* pObj) const {
   // If stored as a struct, return the size of the struct
   if (descriptor.identified_descriptors.empty()) {
     uint64_t size = 0;
@@ -308,17 +316,17 @@ uint64_t OArchiveFlatbuffer::SizeDescriptor(const descriptor& descriptor, const 
       size += field_descriptor.serializer.size(*this, pObj);
     return size;
   }
-  
+
   // If stored as a table, return the offset size.
   return sizeof(uint32_t);
 }
 
-uint64_t OArchiveFlatbuffer::SizeArray(IArrayReader&& ary) const { 
+uint64_t OArchiveFlatbuffer::SizeArray(IArrayReader&& ary) const {
   return sizeof(uint32_t);
 }
 
 uint64_t OArchiveFlatbuffer::SizeDictionary(IDictionaryReader&& dictionary) const
-{ 
+{
   throw not_implemented_exception();
 }
 
@@ -339,7 +347,7 @@ void IArchiveFlatbuffer::ReadObject(const field_serializer& sz, void* pObj, inte
   sz.deserialize(*this, pObj, 0); //The root entry is an offset to a table.
 }
 
-IArchive::ReleasedMemory IArchiveFlatbuffer::ReadObjectReferenceResponsible(IArchive::ReleasedMemory(*pfnAlloc)(), const field_serializer& sz, bool isUnique) { 
+IArchive::ReleasedMemory IArchiveFlatbuffer::ReadObjectReferenceResponsible(IArchive::ReleasedMemory(*pfnAlloc)(), const field_serializer& sz, bool isUnique) {
   throw not_implemented_exception();
 }
 
@@ -390,7 +398,7 @@ void IArchiveFlatbuffer::ReadByteArray(void* pBuf, uint64_t ncb) {
 void IArchiveFlatbuffer::ReadString(std::function<void*(uint64_t)> getBufferFn, uint8_t charSize, uint64_t ncb) {
   const auto baseOffset = m_offset;
   const auto stringOffset = baseOffset + GetValue<uint32_t>(baseOffset);
-  
+
   const auto size = GetValue<uint32_t>(stringOffset);
 
   auto* dstString = getBufferFn(size);
@@ -400,9 +408,9 @@ void IArchiveFlatbuffer::ReadString(std::function<void*(uint64_t)> getBufferFn, 
   m_offset = baseOffset + sizeof(uint32_t);
 }
 
-bool IArchiveFlatbuffer::ReadBool() { 
+bool IArchiveFlatbuffer::ReadBool() {
   const auto offset = m_offset;
-  m_offset += sizeof(uint8_t); 
+  m_offset += sizeof(uint8_t);
   return !!GetValue<uint8_t>(offset);
 }
 
@@ -430,7 +438,12 @@ void IArchiveFlatbuffer::ReadFloat(float& value) {
 
 void IArchiveFlatbuffer::ReadFloat(double& value) {
   value = GetValue<double>(m_offset);
-  m_offset += sizeof(float);
+  m_offset += sizeof(double);
+}
+
+void IArchiveFlatbuffer::ReadFloat(long double& value) {
+  value = GetValue<long double>(m_offset);
+  m_offset += sizeof(long double);
 }
 
 void IArchiveFlatbuffer::ReadArray(IArrayAppender&& ary) {

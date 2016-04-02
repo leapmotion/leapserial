@@ -45,6 +45,11 @@ void OArchiveProtobuf::WriteFloat(double value) {
   os.Write(&value, sizeof(value));
 }
 
+void OArchiveProtobuf::WriteFloat(long double value) {
+  // No support in protobuf for long double, we have to go down to 64 bits
+  WriteFloat((double)value);
+}
+
 void OArchiveProtobuf::WriteObjectReference(const field_serializer& serializer, const void* pObj) {
 
 }
@@ -156,7 +161,7 @@ void OArchiveProtobuf::WriteDictionary(IDictionaryReader&& dictionary) {
       valSize + (valueType == WireType::LenDelimit ? leap::SizeBase128(valSize) : 0),
       8
     );
-    
+
     WriteInteger(keyID, 8);
     if (keyType == WireType::LenDelimit)
       WriteInteger(dictionary.key_serializer.size(*this, dictionary.key()), 8);
@@ -182,7 +187,7 @@ uint64_t OArchiveProtobuf::SizeObjectReference(const field_serializer& serialize
 
 uint64_t OArchiveProtobuf::SizeDescriptor(const descriptor& descriptor, const void* pObj) const {
   leap::internal::Pusher<decltype(curDescEntry)> p(curDescEntry);
-  
+
   // Context-free.  We just write out the identified fields in order.
   uint64_t retVal = 0;
   for (const auto& identified_descriptor : descriptor.identified_descriptors) {
@@ -215,7 +220,7 @@ uint64_t OArchiveProtobuf::SizeDescriptor(const descriptor& descriptor, const vo
     case serial_atom::ignored:
       throw std::runtime_error("Invalid serialization atom type returned");
     }
-    
+
     uint64_t ncb = member_field.serializer.size(
       *this,
       reinterpret_cast<const uint8_t*>(pObj) + member_field.offset

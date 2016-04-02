@@ -114,6 +114,20 @@ uint64_t IArchiveProtobuf::ReadInteger(uint8_t) {
   return leap::FromBase128(buf, ncb);
 }
 
+void IArchiveProtobuf::ReadFloat(float& value) {
+  is.Read(&value, sizeof(value));
+}
+
+void IArchiveProtobuf::ReadFloat(double& value) {
+  is.Read(&value, sizeof(value));
+}
+
+void IArchiveProtobuf::ReadFloat(long double& value) {
+  double temp;
+  ReadFloat(temp);
+  value = temp;
+}
+
 void IArchiveProtobuf::ReadArray(IArrayAppender&& ary) {
   // Protobuf array deserialization is funny, it's just a bunch of single entries repeated
   // over and over again.

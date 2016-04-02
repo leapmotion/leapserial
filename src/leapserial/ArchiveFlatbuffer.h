@@ -44,6 +44,7 @@ namespace leap {
     using OArchive::WriteInteger;
     void WriteFloat(float value) override;
     void WriteFloat(double value) override;
+    void WriteFloat(long double value) override;
     void WriteObjectReference(const field_serializer& serializer, const void* pObj) override;
     void WriteObject(const field_serializer& serializer, const void* pObj) override;
     void WriteDescriptor(const descriptor& descriptor, const void* pObj) override;
@@ -55,6 +56,7 @@ namespace leap {
     uint64_t SizeInteger(int64_t value, uint8_t ncb) const override;
     uint64_t SizeFloat(float value) const override;
     uint64_t SizeFloat(double value) const override;
+    uint64_t SizeFloat(long double value) const override;
     uint64_t SizeBool(bool value) const override;
     uint64_t SizeString(const void* pBuf, uint64_t ncb, uint8_t charSize) const override;
     uint64_t SizeObjectReference(const field_serializer& serializer, const void* pObj) const override;
@@ -105,6 +107,7 @@ namespace leap {
     uint64_t ReadInteger(uint8_t ncb) override;
     void ReadFloat(float& value) override;
     void ReadFloat(double& value) override;
+    void ReadFloat(long double& value) override;
     void ReadArray(IArrayAppender&& ary) override;
     void ReadDictionary(IDictionaryInserter&& dictionary) override;
 

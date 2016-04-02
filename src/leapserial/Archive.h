@@ -138,10 +138,12 @@ namespace leap {
 
     virtual void WriteFloat(float value) { WriteByteArray(&value, sizeof(float)); }
     virtual void WriteFloat(double value) { WriteByteArray(&value, sizeof(double)); }
+    virtual void WriteFloat(long double value) { WriteByteArray(&value, sizeof(double)); }
 
     virtual uint64_t SizeInteger(int64_t value, uint8_t ncb) const = 0;
     virtual uint64_t SizeFloat(float value) const = 0;
     virtual uint64_t SizeFloat(double value) const = 0;
+    virtual uint64_t SizeFloat(long double value) const = 0;
     virtual uint64_t SizeBool(bool value) const = 0;
     virtual uint64_t SizeString(const void* pBuf, uint64_t ncb, uint8_t charSize) const = 0;
 
@@ -280,8 +282,9 @@ namespace leap {
     /// It is an error for (value & ~(1 << (ncb * 8))) to be nonzero.
     /// </remarks>
     virtual uint64_t ReadInteger(uint8_t ncb) = 0;
-    virtual void ReadFloat(float& value) { ReadByteArray(&value, sizeof(float)); }
-    virtual void ReadFloat(double& value) { ReadByteArray(&value, sizeof(double)); }
+    virtual void ReadFloat(float& value) = 0;
+    virtual void ReadFloat(double& value) = 0;
+    virtual void ReadFloat(long double& value) = 0;
     virtual void ReadDictionary(IDictionaryInserter&& dictionary) = 0;
   };
 

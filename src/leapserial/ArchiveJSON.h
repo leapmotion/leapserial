@@ -38,6 +38,7 @@ namespace leap {
     void WriteInteger(uint64_t value) override;
     void WriteFloat(float value) override;
     void WriteFloat(double value) override;
+    void WriteFloat(long double value) override;
     void WriteObjectReference(const field_serializer& serializer, const void* pObj) override;
     void WriteObject(const field_serializer& serializer, const void* pObj) override;
     void WriteDescriptor(const descriptor& descriptor, const void* pObj) override;
@@ -49,6 +50,7 @@ namespace leap {
     uint64_t SizeInteger(int64_t value, uint8_t ncb) const override;
     uint64_t SizeFloat(float value) const override;
     uint64_t SizeFloat(double value) const override;
+    uint64_t SizeFloat(long double value) const override;
     uint64_t SizeBool(bool value) const override;
     uint64_t SizeString(const void* pBuf, uint64_t ncb, uint8_t charSize) const override;
     uint64_t SizeObjectReference(const field_serializer& serializer, const void* pObj) const override;
@@ -60,7 +62,7 @@ namespace leap {
     // Current tab level, if pretty printing is turned on, otherwise ignored
     size_t currentTabLevel = 0;
     std::ostream& os;
-    
+
     // Prints TabLevel spaces to the output stream
     void TabOut(void) const;
   };
