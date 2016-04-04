@@ -61,7 +61,7 @@ namespace leap {
   ///    class MyType {
   ///      static leap::descriptor GetDescriptor(void) { return {}; }
   ///    };
-  /// 
+  ///
   /// ...will not be enumerated by this collection.
   /// </remarks>
   class descriptors

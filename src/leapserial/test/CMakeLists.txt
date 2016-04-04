@@ -5,6 +5,7 @@ set(LeapSerialTest_SRCS
   BufferedStreamTest.cpp
   ChronoTypesTest.cpp
   CompressionStreamTest.cpp
+  InheritanceTest.cpp
   LeapArchiveTest.cpp
   MapTest.cpp
   MemoryStreamTest.cpp
