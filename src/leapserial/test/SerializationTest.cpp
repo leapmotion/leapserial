@@ -784,3 +784,34 @@ TEST_F(SerializationTest, FixedSizeForwardsCompatCheck) {
   ASSERT_EQ(b.member1, a.member1);
   ASSERT_EQ(b.member2, a.member2);
 }
+
+namespace {
+  class HasManyFloats {
+  public:
+    float a = 99.0f;
+    double b = 99.0;
+    long double c = 99.0;
+
+    static leap::descriptor GetDescriptor(void) {
+      return{
+        &HasManyFloats::a,
+        &HasManyFloats::b,
+        &HasManyFloats::c
+      };
+    }
+  };
+}
+
+TEST_F(SerializationTest, FloatingTypesTest) {
+  HasManyFloats hmf;
+  hmf.a = 0.22f;
+  hmf.b = 9299.222;
+  hmf.c = 40000.0004;
+
+  std::stringstream ss;
+  leap::Serialize(ss, hmf);
+  auto deserialized = leap::Deserialize<HasManyFloats>(ss);
+  ASSERT_EQ(hmf.a, deserialized->a) << "Float datatype not properly round-trip serialized";
+  ASSERT_EQ(hmf.b, deserialized->b) << "Double datatype not properly round-trip serialized";
+  ASSERT_EQ(hmf.c, deserialized->c) << "Long double datatype not properly round-trip serialized";
+}
