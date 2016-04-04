@@ -36,7 +36,7 @@ struct InheritanceTestDerived:
   }
 };
 
-TEST_F(InheritanceTest, InheritanceTest) {
+TEST_F(InheritanceTest, SingleInheritanceTest) {
   InheritanceTestDerived x;
   x.a = 1002;
   x.name = "George";
