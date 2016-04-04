@@ -3,6 +3,7 @@
 #include <leapserial/LeapSerial.h>
 #include <gtest/gtest.h>
 #include <array>
+#include <cmath>
 #include <sstream>
 #include <type_traits>
 
