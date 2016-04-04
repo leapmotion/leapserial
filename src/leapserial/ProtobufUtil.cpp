@@ -24,6 +24,7 @@ WireType leap::internal::protobuf::ToWireType(serial_atom atom) {
   case serial_atom::f32:
     return WireType::DoubleWord;
   case serial_atom::f64:
+  case serial_atom::f80:
     return WireType::QuadWord;
   case serial_atom::reference:
   case serial_atom::array:
