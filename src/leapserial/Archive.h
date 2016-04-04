@@ -136,9 +136,9 @@ namespace leap {
     virtual void WriteInteger(int64_t value) { WriteInteger(value, sizeof(value)); }
     virtual void WriteInteger(uint64_t value) { WriteInteger((int64_t)value, sizeof(value)); }
 
-    virtual void WriteFloat(float value) { WriteByteArray(&value, sizeof(float)); }
-    virtual void WriteFloat(double value) { WriteByteArray(&value, sizeof(double)); }
-    virtual void WriteFloat(long double value) { WriteByteArray(&value, sizeof(double)); }
+    virtual void WriteFloat(float value) { WriteByteArray(&value, sizeof(value)); }
+    virtual void WriteFloat(double value) { WriteByteArray(&value, sizeof(value)); }
+    virtual void WriteFloat(long double value) { WriteByteArray(&value, sizeof(value)); }
 
     virtual uint64_t SizeInteger(int64_t value, uint8_t ncb) const = 0;
     virtual uint64_t SizeFloat(float value) const = 0;
