@@ -73,12 +73,13 @@ namespace leap {
         return ::leap::serial_atom::f32;
       if (std::is_same<T, double>::value)
         return ::leap::serial_atom::f64;
-      if (std::is_same<T, long double>::value)
+      if (std::is_same<T, long double>::value) {
         if(sizeof(long double) == sizeof(double))
           // Special case for certain compilers which treat long double as a synonym for double
           return ::leap::serial_atom::f64;
         else
           return ::leap::serial_atom::f80;
+      }
     }
 
     // Trivial serialization/deserialization operations
