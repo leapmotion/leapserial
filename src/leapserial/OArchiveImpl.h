@@ -71,6 +71,9 @@ namespace leap {
     void WriteString(const void* pbuf, uint64_t charCount, uint8_t charSize) override;
     void WriteBool(bool value) override;
     void WriteInteger(int64_t value, uint8_t ncb) override;
+    void WriteFloat(float value) override { WriteByteArray(&value, sizeof(value)); }
+    void WriteFloat(double value) override { WriteByteArray(&value, sizeof(value)); }
+    void WriteFloat(long double value) override { WriteByteArray(&value, sizeof(value)); }
     void WriteArray(IArrayReader&& ary) override;
     void WriteDictionary(IDictionaryReader&& dictionary) override;
 
