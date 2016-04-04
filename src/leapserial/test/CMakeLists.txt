@@ -10,6 +10,7 @@ set(LeapSerialTest_SRCS
   MapTest.cpp
   MemoryStreamTest.cpp
   OptionalTest.cpp
+  PolymorphicClassTest.cpp
   PrettyPrintTest.cpp
   SerialCallbackTest.cpp
   SerialFormatTest.cpp

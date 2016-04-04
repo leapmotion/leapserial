@@ -130,10 +130,10 @@ namespace leap {
   struct field_descriptor {
     template<typename T, typename U>
     field_descriptor(int identifier, const char* name, U T::*val) :
-      identifier(identifier),
+      serializer(field_serializer_t<U, void>::GetDescriptor()),
       name(name),
-      offset(reinterpret_cast<size_t>(&(static_cast<T*>(nullptr)->*val))),
-      serializer(field_serializer_t<U, void>::GetDescriptor())
+      identifier(identifier),
+      offset(reinterpret_cast<size_t>(&(static_cast<T*>(nullptr)->*val)))
     {
       // Instantiate serial_traits on the type object itself.  If T::GetDescriptor is provided,
       // this has the effect of ultimately instantiating descriptor_entry_t<T>.  Sometimes, though,
@@ -145,19 +145,19 @@ namespace leap {
 
     template<typename T>
     field_descriptor(void (T::*pMemfn)()) :
-      identifier(0),
+      serializer(field_serializer_t<void(T::*)(), void>::GetDescriptor(pMemfn)),
       name(nullptr),
-      offset(0),
-      serializer(field_serializer_t<void(T::*)(), void>::GetDescriptor(pMemfn))
+      identifier(0),
+      offset(0)
     {}
 
     //Member getter/setters
     template<typename T, typename U, typename V>
     field_descriptor(int identifier, const char* name, U(T::*pGetFn)() const, void(T::*pSetFn)(V)) :
-      identifier(identifier),
+      serializer(field_serializer_t<field_getter_setter<T, U, V>, void>::GetDescriptor(pGetFn, pSetFn)),
       name(name),
-      offset(0),
-      serializer(field_serializer_t<field_getter_setter<T,U,V>, void>::GetDescriptor(pGetFn, pSetFn))
+      identifier(identifier),
+      offset(0)
     {}
 
     /// <summary>
@@ -171,9 +171,6 @@ namespace leap {
       T&& get,
       U&& set
     ) :
-      identifier(identifier),
-      name(name),
-      offset(0),
       serializer(
         field_serializer_t<
           field_getter_setter_extern<
@@ -183,7 +180,10 @@ namespace leap {
           >,
           void
         >::GetDescriptor(get, set)
-      )
+      ),
+      name(name),
+      identifier(identifier),
+      offset(0)
     {}
 
     template<typename T, typename U>
@@ -223,6 +223,8 @@ namespace leap {
 
     template<typename Base, typename Derived>
     field_descriptor(base<Base, Derived>):
+      serializer(field_serializer_t<Base, void>::GetDescriptor()),
+      name(nullptr),
       identifier(0),
       offset(
         static_cast<int>(
@@ -230,8 +232,7 @@ namespace leap {
             static_cast<Base*>(reinterpret_cast<Derived*>(1))
           ) - 1
         )
-      ),
-      serializer(field_serializer_t<Base, void>::GetDescriptor())
+      )
     {}
 
     field_descriptor(const field_serializer& serializer, const char* name, int identifier, size_t offset) :
