@@ -67,15 +67,19 @@ void OArchiveJSON::WriteInteger(uint64_t value) {
   os << value;
 }
 
-void OArchiveJSON::WriteFloat(float value) {
-  os << value;
-}
-
 void OArchiveJSON::WriteInteger(int64_t value, uint8_t) {
   os << value;
 }
 
+void OArchiveJSON::WriteFloat(float value) {
+  os << value;
+}
+
 void OArchiveJSON::WriteFloat(double value) {
+  os << value;
+}
+
+void OArchiveJSON::WriteFloat(long double value) {
   os << value;
 }
 
@@ -103,7 +107,7 @@ void OArchiveJSON::WriteDescriptor(const descriptor& descriptor, const void* pOb
     os << "\"" << field_descriptor.name << "\":";
     if (PrettyPrint)
       os << ' ';
-    
+
     const void* pChildObj = pBase + field_descriptor.offset;
     field_descriptor.serializer.serialize(*this, pChildObj);
 
@@ -162,6 +166,9 @@ uint64_t OArchiveJSON::SizeFloat(float value) const {
 uint64_t OArchiveJSON::SizeFloat(double value) const {
   throw not_implemented_exception();
 }
+uint64_t OArchiveJSON::SizeFloat(long double value) const {
+  throw not_implemented_exception();
+}
 uint64_t OArchiveJSON::SizeBool(bool value) const {
   throw not_implemented_exception();
 }
@@ -194,7 +201,7 @@ void OArchiveJSON::TabOut(void) const {
 }
 
 IArchiveJSON::IArchiveJSON(std::istream& is) {
-  
+
 }
 
 void IArchiveJSON::Skip(uint64_t ncb) {

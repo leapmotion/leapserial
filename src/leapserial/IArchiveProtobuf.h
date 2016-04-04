@@ -20,8 +20,9 @@ namespace leap {
     void ReadString(std::function<void*(uint64_t)> getBufferFn, uint8_t charSize, uint64_t ncb) override;
     bool ReadBool(void) override;
     uint64_t ReadInteger(uint8_t) override;
-    void ReadFloat(float& value) override { is.Read(&value, sizeof(value)); }
-    void ReadFloat(double& value) override { is.Read(&value, sizeof(value)); }
+    void ReadFloat(float& value) override;
+    void ReadFloat(double& value) override;
+    void ReadFloat(long double& value) override;
     void ReadArray(IArrayAppender&& ary) override;
     void ReadDictionary(IDictionaryInserter&& rdr) override;
 

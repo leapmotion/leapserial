@@ -27,6 +27,7 @@ namespace leap {
         case serial_atom::f32:
           return serial_type::b32;
         case serial_atom::f64:
+        case serial_atom::f80:
           return serial_type::b64;
         default:
           return serial_type::string;

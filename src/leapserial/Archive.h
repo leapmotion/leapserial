@@ -63,6 +63,7 @@ namespace leap {
     ui64,
     f32,
     f64,
+    f80,
     reference,
     array,
     string,
@@ -136,12 +137,14 @@ namespace leap {
     virtual void WriteInteger(int64_t value) { WriteInteger(value, sizeof(value)); }
     virtual void WriteInteger(uint64_t value) { WriteInteger((int64_t)value, sizeof(value)); }
 
-    virtual void WriteFloat(float value) { WriteByteArray(&value, sizeof(float)); }
-    virtual void WriteFloat(double value) { WriteByteArray(&value, sizeof(double)); }
+    virtual void WriteFloat(float value) = 0;
+    virtual void WriteFloat(double value) = 0;
+    virtual void WriteFloat(long double value) = 0;
 
     virtual uint64_t SizeInteger(int64_t value, uint8_t ncb) const = 0;
     virtual uint64_t SizeFloat(float value) const = 0;
     virtual uint64_t SizeFloat(double value) const = 0;
+    virtual uint64_t SizeFloat(long double value) const = 0;
     virtual uint64_t SizeBool(bool value) const = 0;
     virtual uint64_t SizeString(const void* pBuf, uint64_t ncb, uint8_t charSize) const = 0;
 
@@ -280,8 +283,9 @@ namespace leap {
     /// It is an error for (value & ~(1 << (ncb * 8))) to be nonzero.
     /// </remarks>
     virtual uint64_t ReadInteger(uint8_t ncb) = 0;
-    virtual void ReadFloat(float& value) { ReadByteArray(&value, sizeof(float)); }
-    virtual void ReadFloat(double& value) { ReadByteArray(&value, sizeof(double)); }
+    virtual void ReadFloat(float& value) = 0;
+    virtual void ReadFloat(double& value) = 0;
+    virtual void ReadFloat(long double& value) = 0;
     virtual void ReadDictionary(IDictionaryInserter&& dictionary) = 0;
   };
 

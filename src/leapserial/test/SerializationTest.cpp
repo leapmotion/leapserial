@@ -3,6 +3,7 @@
 #include <leapserial/LeapSerial.h>
 #include <gtest/gtest.h>
 #include <array>
+#include <cmath>
 #include <sstream>
 #include <type_traits>
 
@@ -681,4 +682,35 @@ TEST_F(SerializationTest, FixedSizeForwardsCompatCheck) {
   ASSERT_EQ(b.mymap, a.mymap);
   ASSERT_EQ(b.member1, a.member1);
   ASSERT_EQ(b.member2, a.member2);
+}
+
+namespace {
+  class HasManyFloats {
+  public:
+    float a = 99.0f;
+    double b = 99.0;
+    long double c = 99.0;
+
+    static leap::descriptor GetDescriptor(void) {
+      return{
+        &HasManyFloats::a,
+        &HasManyFloats::b,
+        &HasManyFloats::c
+      };
+    }
+  };
+}
+
+TEST_F(SerializationTest, FloatingTypesTest) {
+  HasManyFloats hmf;
+  hmf.a = std::nextafter(10000.0f, 10000.1f);
+  hmf.b = std::nextafter(20000.0, 20000.1);
+  hmf.c = std::nextafter(30000.0L, 30000.1L);
+
+  std::stringstream ss;
+  leap::Serialize(ss, hmf);
+  auto deserialized = leap::Deserialize<HasManyFloats>(ss);
+  ASSERT_EQ(hmf.a, deserialized->a) << "Float datatype not properly round-trip serialized";
+  ASSERT_EQ(hmf.b, deserialized->b) << "Double datatype not properly round-trip serialized";
+  ASSERT_EQ(hmf.c, deserialized->c) << "Long double datatype not properly round-trip serialized";
 }

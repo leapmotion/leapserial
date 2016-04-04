@@ -71,6 +71,9 @@ namespace leap {
     void WriteString(const void* pbuf, uint64_t charCount, uint8_t charSize) override;
     void WriteBool(bool value) override;
     void WriteInteger(int64_t value, uint8_t ncb) override;
+    void WriteFloat(float value) override { WriteByteArray(&value, sizeof(value)); }
+    void WriteFloat(double value) override { WriteByteArray(&value, sizeof(value)); }
+    void WriteFloat(long double value) override { WriteByteArray(&value, sizeof(value)); }
     void WriteArray(IArrayReader&& ary) override;
     void WriteDictionary(IDictionaryReader&& dictionary) override;
 
@@ -83,6 +86,7 @@ namespace leap {
     uint64_t SizeInteger(int64_t value, uint8_t ncb) const override;
     uint64_t SizeFloat(float value) const override { return sizeof(float); }
     uint64_t SizeFloat(double value) const override { return sizeof(double); }
+    uint64_t SizeFloat(long double value) const override { return sizeof(long double); }
     uint64_t SizeBool(bool) const override { return 1; }
   };
 }
