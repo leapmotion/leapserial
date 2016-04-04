@@ -4,30 +4,31 @@ sudo: false
 matrix:
   include:
   - os: linux
+    dist: trusty
     env:
-    - _CC: gcc-4.8
-    - _CXX: g++-4.8
-    - CMAKE_URL=http://cmake.org/files/v3.1/cmake-3.1.0-Linux-i386.tar.gz
-    - CMAKE_DIRNAME=cmake-3.1.0-Linux-i386
     - CMAKE_EXTRA_FLAGS=-DLS_PROTOBUF_REQUIRED:BOOL=ON
     addons:
       apt:
         sources:
-          - ubuntu-toolchain-r-test
+          - george-edison55-precise-backports
         packages:
-          - gcc-4.8
-          - g++-4.8
-          - libc6-i386
+          - cmake-data
+          - cmake
           - protobuf-compiler
           - libprotobuf-dev
           - libprotoc-dev
+          - g++-4.8
+          - gcc-4.8
   - os: osx
     env:
-    - _CC: clang
-    - _CXX: clang++
-    - CMAKE_URL=http://cmake.org/files/v3.1/cmake-3.1.0-Darwin64.tar.gz
-    - CMAKE_DIRNAME=cmake-3.1.0-Darwin64/CMake.app/Contents
     - CMAKE_EXTRA_FLAGS=
+    addons:
+      apt:
+        packages:
+          - protobuf-compiler
+          - libprotobuf-dev
+          - libprotoc-dev
+          - cmake
 
 before_install:
   # Enforce whitespace guidelines
@@ -36,23 +37,11 @@ before_install:
   # Enforce Leap Motion copyright notice
   - ./scripts/copyright_check.sh
 
-install:
-  # CMake 3.1
-  - curl -L $CMAKE_URL | tar xz
-
-before_script:
-  - export CC=$_CC
-  - export CXX=$_CXX
-  - $CXX --version
-  - export CPATH=/usr/include/c++/4.8:/usr/include/x86_64-linux-gnu/c++/4.8/:$CPATH
-  - export LD_LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.8:$LD_LIBRARY_PATH
-  - ${BREW_COMMAND}
-
 script:
   # Build LeapSerial, run unit tests, and install
   - mkdir b
   - cd b
-  - ../$CMAKE_DIRNAME/bin/cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=~/leapserial/ ${CMAKE_EXTRA_FLAGS}
+  - cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=~/leapserial/ ${CMAKE_EXTRA_FLAGS}
   - make -j 4 || make
   - ctest --output-on-failure
   - make install > logfile || cat logfile
