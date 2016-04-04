@@ -804,9 +804,9 @@ namespace {
 
 TEST_F(SerializationTest, FloatingTypesTest) {
   HasManyFloats hmf;
-  hmf.a = 0.22f;
-  hmf.b = 9299.222;
-  hmf.c = 40000.0004;
+  hmf.a = std::nextafter(10000.0, 10000.1);
+  hmf.b = std::nextafter(20000.0, 20000.1);
+  hmf.c = std::nextafter(30000.0L, 30000.1L);
 
   std::stringstream ss;
   leap::Serialize(ss, hmf);
