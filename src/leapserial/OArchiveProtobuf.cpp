@@ -91,6 +91,7 @@ void OArchiveProtobuf::WriteDescriptor(const descriptor& descriptor, const void*
     case serial_atom::ui64:
     case serial_atom::f32:
     case serial_atom::f64:
+    case serial_atom::f80:
       // These types are all context-free, we are responsible for writing the identifier here, and the
       // type itself will handle things from there.
       WriteInteger((member_field.identifier << 3) | (size_t)ToWireType(member_field.serializer.type()), 8);
@@ -205,6 +206,7 @@ uint64_t OArchiveProtobuf::SizeDescriptor(const descriptor& descriptor, const vo
     case serial_atom::ui64:
     case serial_atom::f32:
     case serial_atom::f64:
+    case serial_atom::f80:
     case serial_atom::string:
     case serial_atom::descriptor:
     case serial_atom::finalized_descriptor:

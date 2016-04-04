@@ -39,6 +39,8 @@ const char* leap::ToString(serial_atom atom) {
     return "f32";
   case serial_atom::f64:
     return "f64";
+  case serial_atom::f80:
+    return "f80";
   case serial_atom::reference:
     return "ref";
   case serial_atom::array:

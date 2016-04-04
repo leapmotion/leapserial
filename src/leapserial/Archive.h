@@ -63,6 +63,7 @@ namespace leap {
     ui64,
     f32,
     f64,
+    f80,
     reference,
     array,
     string,

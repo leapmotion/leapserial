@@ -69,10 +69,16 @@ namespace leap {
     static const bool is_optional = false;
 
     static ::leap::serial_atom type() {
-      if (sizeof(T) == sizeof(float))
+      if (std::is_same<T, float>::value)
         return ::leap::serial_atom::f32;
-      else if (sizeof(T) == sizeof(double))
+      if (std::is_same<T, double>::value)
         return ::leap::serial_atom::f64;
+      if (std::is_same<T, long double>::value)
+        if(sizeof(long double) == sizeof(double))
+          // Special case for certain compilers which treat long double as a synonym for double
+          return ::leap::serial_atom::f64;
+        else
+          return ::leap::serial_atom::f80;
     }
 
     // Trivial serialization/deserialization operations

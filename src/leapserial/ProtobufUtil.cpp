@@ -61,6 +61,7 @@ const char* leap::internal::protobuf::ToProtobufField(serial_atom atom) {
   case serial_atom::f32:
     return "float";
   case serial_atom::f64:
+  case serial_atom::f80:
     return "double";
   case serial_atom::reference:
     break;
