@@ -546,14 +546,14 @@ TEST_F(SerializationTest, AlternateDescriptor) {
     mss.myString = "This will not be sent";
     {
       leap::OutputStreamAdapter ssa{ ss };
-      leap::OArchiveImpl oArch(ssa);
+      leap::OArchiveLeapSerial oArch(ssa);
       oArch.WriteObject(desc, &mss);
     }
   }
 
   {
     MySimpleStructure mss;
-    leap::IArchiveImpl iArch(ss);
+    leap::IArchiveLeapSerial iArch(ss);
     iArch.ReadObject(desc, &mss, nullptr);
     ASSERT_EQ(mss.a, 1) << "Field a was not restored correctly";
     ASSERT_EQ(mss.b, 2) << "Field b was not restored correctly";

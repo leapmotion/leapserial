@@ -7,6 +7,8 @@ set(LeapSerial_SRCS
   Archive.cpp
   ArchiveFlatbuffer.h
   ArchiveFlatbuffer.cpp
+  ArchiveLeapSerial.h
+  ArchiveLeapSerial.cpp
   ArchiveJSON.h
   ArchiveJSON.cpp
   ArchiveProtobuf.h
@@ -31,10 +33,6 @@ set(LeapSerial_SRCS
   ForwardingStream.h
   IArchiveProtobuf.cpp
   OArchiveProtobuf.cpp
-  IArchiveImpl.h
-  IArchiveImpl.cpp
-  IArchiveImplV0.h
-  IArchiveImplV0.cpp
   IArray.h
   IDictionary.h
   IInputStream.h
@@ -42,10 +40,8 @@ set(LeapSerial_SRCS
   LeapSerial.h
   MemoryStream.h
   MemoryStream.cpp
-  OArchiveImplV0.h
-  OArchiveImplV0.cpp
-  OArchiveImpl.h
-  OArchiveImpl.cpp
+  ArchiveLeapSerialV0.h
+  ArchiveLeapSerialV0.cpp
   optional.h
   ProtobufType.h
   ProtobufUtil.cpp

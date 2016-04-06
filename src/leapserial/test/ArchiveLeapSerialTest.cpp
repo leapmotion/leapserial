@@ -1,12 +1,11 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include <leapserial/OArchiveImpl.h>
-#include <leapserial/IArchiveImpl.h>
+#include <leapserial/ArchiveLeapSerial.h>
 #include <leapserial/LeapSerial.h>
 #include <gtest/gtest.h>
 #include <sstream>
 
-class LeapArchiveTest :
+class ArchiveLeapSerialTest :
   public testing::Test
 {};
 
@@ -48,7 +47,7 @@ struct MySimpleStructure {
   }
 };
 
-TEST_F(LeapArchiveTest, ExpectedByteCount) {
+TEST_F(ArchiveLeapSerialTest, ExpectedByteCount) {
   MySimpleStructure mss;
   mss.a = 909;
   mss.b = -1;
@@ -60,7 +59,7 @@ TEST_F(LeapArchiveTest, ExpectedByteCount) {
 
   std::ostringstream os;
   leap::OutputStreamAdapter osa{ os };
-  leap::OArchiveImpl oarch(osa);
+  leap::OArchiveLeapSerial oarch(osa);
 
   // Predict the number of bytes required to serialize:
   leap::descriptor desc = MySimpleStructure::GetDescriptor();
@@ -78,19 +77,19 @@ TEST_F(LeapArchiveTest, ExpectedByteCount) {
 void TestVarint(int64_t testNumber) {
   std::stringstream ss(std::ios::in | std::ios::out | std::ios::binary);
   leap::OutputStreamAdapter ssao{ ss };
-  leap::OArchiveImpl oArch(ssao);
+  leap::OArchiveLeapSerial oArch(ssao);
   leap::InputStreamAdapter ssai{ ss };
-  leap::IArchiveImpl iArch(ssai);
+  leap::IArchiveLeapSerial iArch(ssai);
 
   oArch.WriteInteger(testNumber);
   auto output = iArch.ReadInteger(8);
   ASSERT_EQ(output, testNumber);
 }
 
-TEST_F(LeapArchiveTest, VarintTest) {
+TEST_F(ArchiveLeapSerialTest, VarintTest) {
   std::stringstream ss(std::ios::in | std::ios::out | std::ios::binary);
   leap::OutputStreamAdapter ssa{ ss };
-  leap::OArchiveImpl oArch(ssa);
+  leap::OArchiveLeapSerial oArch(ssa);
 
   ASSERT_EQ(10, oArch.SizeInteger(-43));
 
@@ -102,10 +101,10 @@ TEST_F(LeapArchiveTest, VarintTest) {
   TestVarint(std::numeric_limits<int64_t>::min());
 }
 
-TEST_F(LeapArchiveTest, VarintDoubleCheck) {
+TEST_F(ArchiveLeapSerialTest, VarintDoubleCheck) {
   std::stringstream ss;
   leap::OutputStreamAdapter ssa{ ss };
-  leap::OArchiveImpl oarch(ssa);
+  leap::OArchiveLeapSerial oarch(ssa);
 
   oarch.WriteInteger(150, 8);
 
@@ -114,11 +113,11 @@ TEST_F(LeapArchiveTest, VarintDoubleCheck) {
 
   // Read operation should result in the same value
   leap::internal::Allocation<std::string> alloc;
-  leap::IArchiveImpl iarch(ss);
+  leap::IArchiveLeapSerial iarch(ss);
   ASSERT_EQ(150, iarch.ReadInteger(8)) << "Read of a varint didn't return the original value";
 }
 
-TEST_F(LeapArchiveTest, VarintSizeExpectationCheck) {
+TEST_F(ArchiveLeapSerialTest, VarintSizeExpectationCheck) {
 #ifndef _MSC_VER
   ASSERT_EQ(
     29,
@@ -131,7 +130,7 @@ TEST_F(LeapArchiveTest, VarintSizeExpectationCheck) {
 #endif
   std::stringstream ss;
   leap::OutputStreamAdapter ssa{ ss };
-  leap::OArchiveImpl oarch(ssa);
+  leap::OArchiveLeapSerial oarch(ssa);
 
   ASSERT_EQ(
     10,

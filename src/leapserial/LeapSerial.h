@@ -4,9 +4,8 @@
 #include "Archive.h"
 #include "Descriptor.h"
 #include "field_serializer.h"
-#include "IArchiveImpl.h"
+#include "ArchiveLeapSerial.h"
 #include "IArchiveProtobuf.h"
-#include "OArchiveImpl.h"
 #include "OArchiveProtobuf.h"
 #include "SchemaWriterProtobuf.h"
 #include <memory>
@@ -19,8 +18,8 @@ namespace leap {
   struct field_serializer_t;
 
   struct leapserial {
-    typedef IArchiveImpl iarchive;
-    typedef OArchiveImpl oarchive;
+    typedef IArchiveLeapSerial iarchive;
+    typedef OArchiveLeapSerial oarchive;
   };
 
   struct protobuf_v1 {
@@ -68,29 +67,29 @@ namespace leap {
   template<typename T>
   void Serialize(std::ostream& os, const T& obj) {
     leap::OutputStreamAdapter osa{ os };
-    leap::OArchiveImpl ar(osa);
+    leap::OArchiveLeapSerial ar(osa);
     SerializeWithArchive(ar, obj);
   }
   template<typename T>
   void Serialize(IOutputStream& os, const T& obj) {
-    leap::OArchiveImpl ar(os);
+    leap::OArchiveLeapSerial ar(os);
     SerializeWithArchive(ar, obj);
   }
 
-  ///I/OArchiveImpl defaulted versions:
+  ///I/OArchiveLeapSerial defaulted versions:
   template<typename archive_t, typename stream_t, typename T>
   void Serialize(stream_t&& os, const T& obj) {
     Serialize<archive_t, T>(os, obj);
   }
   template<typename stream_t, typename T>
   void Serialize(stream_t&& os, const T& obj) {
-    Serialize<leap::OArchiveImpl, T>(os, obj);
+    Serialize<leap::OArchiveLeapSerial, T>(os, obj);
   }
 
   /// <summary>
   /// Deserialization routine that returns an std::shared_ptr for memory allocation maintenance
   /// </summary>
-  template<class T = void, class archive_t = IArchiveImpl, class stream_t = std::istream>
+  template<class T = void, class archive_t = IArchiveLeapSerial, class stream_t = std::istream>
   std::shared_ptr<T> Deserialize(stream_t&& is) {
     auto retVal = std::make_shared<leap::internal::Allocation<T>>();
     T* pObj = &retVal->val;
@@ -106,7 +105,7 @@ namespace leap {
   /// <summary>
   /// Deserialization routine that modifies object in place
   /// </summary>
-  template<class archive_t = IArchiveImpl, class T = void, class stream_t = std::istream>
+  template<class archive_t = IArchiveLeapSerial, class T = void, class stream_t = std::istream>
   void Deserialize(stream_t&& is, T& obj) {
     // Initialize the archive with work to be done:
     archive_t ar(is);
@@ -115,7 +114,7 @@ namespace leap {
 
   // Fill a collection with objects serialized to 'is'
   // Returns one past the end of the container
-  template<class T, class archive_t = IArchiveImpl, class stream_t = std::istream>
+  template<class T, class archive_t = IArchiveLeapSerial, class stream_t = std::istream>
   std::vector<T> DeserializeToVector(stream_t&& is) {
     std::vector<T> collection;
     while (is.peek() != std::char_traits<char>::eof()) {
