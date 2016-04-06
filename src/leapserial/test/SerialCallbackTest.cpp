@@ -132,12 +132,12 @@ TEST(SerialCallbackTest, LambdaMethodTest) {
   };
 
   leap::OutputStreamAdapter ssao{ ss };
-  leap::OArchiveImpl(ssao).WriteObject(desc, &st);
+  leap::OArchiveLeapSerial(ssao).WriteObject(desc, &st);
 
   MyAccessorStruct stIn;
 
   leap::InputStreamAdapter ssai{ ss };
-  leap::IArchiveImpl(ssai).ReadObject(desc, &stIn, nullptr);
+  leap::IArchiveLeapSerial(ssai).ReadObject(desc, &stIn, nullptr);
 
   ASSERT_EQ(st.a, stIn.a) << "Field A was not serialized correctly";
   ASSERT_EQ(st.b, stIn.b) << "Field B was not serialized correctly";
