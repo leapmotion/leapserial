@@ -27,6 +27,8 @@ else()
 endif()
 message(STATUS "Using architecture: ${LeapSerial_BUILD_ARCHITECTURES}")
 
+message(STATUS "Compiler version ${CMAKE_CXX_COMPILER_VERSION}")
+
 if(CMAKE_COMPILER_IS_GNUCC)
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.8")
     message(FATAL_ERROR "GCC version 4.8 minimum is required to build LeapSerial")
@@ -36,8 +38,6 @@ elseif (MSVC)
     message(FATAL_ERROR "MSVC 2013 minimum is required to build LeapSerial")
   endif()
 endif()
-
-message(STATUS "Compiler version ${CMAKE_CXX_COMPILER_VERSION}")
 
 # Always use c++11 compiler with hidden visibility
 if(NOT WIN32)
