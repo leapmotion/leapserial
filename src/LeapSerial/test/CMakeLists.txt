@@ -35,7 +35,7 @@ endif()
 
 add_conditional_sources(
   LeapSerialTest_SRCS
-  "FlatBuffers_FOUND"
+  "FlatBuffers"
   GROUP_NAME "FlatBuffers"
   FILES
   ArchiveFlatbufferTest.cpp
