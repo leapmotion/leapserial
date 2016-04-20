@@ -70,7 +70,7 @@ target_include_directories(
 add_subdirectory(test)
 
 # Install public header files
-install_headers(TARGET LeapSerial DESTINATION include/leapserial COMPONENT LeapSerial)
+install_headers(TARGET LeapSerial DESTINATION include/LeapSerial COMPONENT LeapSerial)
 
 install(TARGETS LeapSerial EXPORT LeapSerialTargets
   DESTINATION lib

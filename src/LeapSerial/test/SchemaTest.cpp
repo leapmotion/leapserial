@@ -5,7 +5,7 @@
 #include <google/protobuf/compiler/importer.h>
 #include <google/protobuf/io/zero_copy_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
-#include <leapserial/LeapSerial.h>
+#include <LeapSerial/LeapSerial.h>
 #include <array>
 #include <iomanip>
 #include <sstream>

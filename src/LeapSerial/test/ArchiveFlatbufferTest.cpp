@@ -3,8 +3,8 @@
 #include "TestObject.h"
 #include "TestObject_generated.h"
 #include <flatbuffers/flatbuffers.h>
-#include <leapserial/ArchiveFlatbuffer.h>
-#include <leapserial/LeapSerial.h>
+#include <LeapSerial/ArchiveFlatbuffer.h>
+#include <LeapSerial/LeapSerial.h>
 #include <gtest/gtest.h>
 #include <sstream>
 

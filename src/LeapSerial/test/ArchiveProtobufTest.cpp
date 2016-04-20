@@ -1,9 +1,9 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "TestProtobufLS.hpp"
-#include <leapserial/LeapSerial.h>
-#include <leapserial/IArchiveProtobuf.h>
-#include <leapserial/OArchiveProtobuf.h>
+#include <LeapSerial/LeapSerial.h>
+#include <LeapSerial/IArchiveProtobuf.h>
+#include <LeapSerial/OArchiveProtobuf.h>
 #include <gtest/gtest.h>
 #include <sstream>
 

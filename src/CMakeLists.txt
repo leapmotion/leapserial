@@ -4,5 +4,5 @@ include_directories(
   .
 )
 
-add_subdirectory(leapserial)
-add_subdirectory(leapserialbench)
+add_subdirectory(LeapSerial)
+add_subdirectory(LeapSerialBench)

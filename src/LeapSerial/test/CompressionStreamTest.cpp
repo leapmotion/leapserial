@@ -1,9 +1,9 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include <leapserial/LeapSerial.h>
-#include <leapserial/BufferedStream.h>
-#include <leapserial/CompressionStream.h>
-#include <leapserial/ForwardingStream.h>
+#include <LeapSerial/LeapSerial.h>
+#include <LeapSerial/BufferedStream.h>
+#include <LeapSerial/CompressionStream.h>
+#include <LeapSerial/ForwardingStream.h>
 #include <gtest/gtest.h>
 #include <numeric>
 #include <vector>

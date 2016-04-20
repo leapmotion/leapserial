@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include <leapserial/ArchiveLeapSerial.h>
-#include <leapserial/LeapSerial.h>
+#include <LeapSerial/ArchiveLeapSerial.h>
+#include <LeapSerial/LeapSerial.h>
 #include <gtest/gtest.h>
 #include <sstream>
 

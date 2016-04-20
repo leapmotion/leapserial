@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include <leapserial/optional.h>
+#include <LeapSerial/optional.h>
 #include <gtest/gtest.h>
 #include <sstream>
 
