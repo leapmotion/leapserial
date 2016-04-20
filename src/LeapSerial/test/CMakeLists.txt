@@ -21,7 +21,7 @@ set(LeapSerialTest_SRCS
 add_pch(LeapSerialTest_SRCS "stdafx.h" "stdafx.cpp")
 
 find_package(FlatBuffers QUIET)
-if(${FlatBuffers_FOUND})
+if(FlatBuffers)
   add_custom_command(
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/TestObject_generated.h
     COMMAND FlatBuffers::flatc -c -I ${CMAKE_CURRENT_SOURCE_DIR} -o ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/TestObject.fbs
@@ -35,7 +35,7 @@ endif()
 
 add_conditional_sources(
   LeapSerialTest_SRCS
-  "FlatBuffers_FOUND"
+  "FlatBuffers"
   GROUP_NAME "FlatBuffers"
   FILES
   ArchiveFlatbufferTest.cpp
@@ -53,7 +53,7 @@ if(LS_ENABLE_PROTOBUF_TESTS OR LS_PROTOBUF_REQUIRED)
   endif()
 endif()
 
-if(Protobuf_FOUND)
+if(Protobuf)
   add_custom_command(
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/TestProtobuf.pb.cc ${CMAKE_CURRENT_SOURCE_DIR}/TestProtobuf.pb.h
     COMMAND Protobuf::protoc -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/TestProtobuf.proto
@@ -68,7 +68,7 @@ endif()
 
 add_conditional_sources(
   LeapSerialTest_SRCS
-  "Protobuf_FOUND"
+  "Protobuf"
   GROUP_NAME "Protobuf"
   FILES
   ArchiveProtobufTest.cpp
@@ -83,10 +83,10 @@ add_executable(LeapSerialTest ${LeapSerialTest_SRCS} ../../gtest-all-guard.cpp)
 target_link_libraries(LeapSerialTest LeapSerial ${CMAKE_THREAD_LIBS_INIT})
 add_test(NAME LeapSerialTest COMMAND $<TARGET_FILE:LeapSerialTest>)
 
-if(${FlatBuffers_FOUND})
+if(FlatBuffers)
   target_link_libraries(LeapSerialTest FlatBuffers::FlatBuffers)
 endif()
 
-if(${Protobuf_FOUND})
+if(Protobuf)
   target_link_libraries(LeapSerialTest Protobuf::Protobuf)
 endif()

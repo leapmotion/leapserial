@@ -44,7 +44,7 @@ include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Protobuf DEFAULT_MSG
                                   Protobuf_LIBRARY Protobuf_INCLUDE_DIR)
 
-if(NOT Protobuf_FOUND)
+if(NOT Protobuf_HOST_DIR OR NOT Protobuf_ROOT_DIR OR NOT Protobuf_protoc OR NOT Protobuf)
   return()
 endif()
 
