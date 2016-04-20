@@ -703,9 +703,9 @@ namespace {
 
 TEST_F(SerializationTest, FloatingTypesTest) {
   HasManyFloats hmf;
-  hmf.a = std::nextafter(10000.0f, 10000.1f);
-  hmf.b = std::nextafter(20000.0, 20000.1);
-  hmf.c = std::nextafter(30000.0L, 30000.1L);
+  hmf.a = nextafter(10000.0f, 10000.1f);
+  hmf.b = nextafter(20000.0, 20000.1);
+  hmf.c = nextafter(30000.0L, 30000.1L);
 
   std::stringstream ss;
   leap::Serialize(ss, hmf);
