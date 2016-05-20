@@ -33,6 +33,7 @@ set(LeapSerial_SRCS
   ForwardingStream.h
   IArchiveProtobuf.h
   IArchiveProtobuf.cpp
+  OArchiveProtobuf.h
   OArchiveProtobuf.cpp
   IArray.h
   IDictionary.h
