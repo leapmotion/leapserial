@@ -6,22 +6,22 @@
 #include <unordered_map>
 
 namespace leap {
-  class IArchiveImplV0 :
+  class IArchiveLeapSerialV0 :
     public IArchiveLeapSerial
   {
   public:
-    IArchiveImplV0(IInputStream& is);
-    IArchiveImplV0(std::istream& is);
+    IArchiveLeapSerialV0(IInputStream& is);
+    IArchiveLeapSerialV0(std::istream& is);
 
   public:
     void ReadArray(IArrayAppender&& ary) override;
   };
 
-  class ArchiveLeapSerialV0:
+  class OArchiveLeapSerialV0 :
     public OArchiveLeapSerial
   {
   public:
-    ArchiveLeapSerialV0(IOutputStream& os);
+    OArchiveLeapSerialV0(IOutputStream& os);
 
   private:
     void WriteArray(IArrayReader&& ary) override;

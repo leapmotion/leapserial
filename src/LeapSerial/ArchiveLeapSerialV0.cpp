@@ -10,11 +10,11 @@
 using namespace leap;
 
 
-IArchiveImplV0::IArchiveImplV0(IInputStream& is) : IArchiveLeapSerial(is) { }
+IArchiveLeapSerialV0::IArchiveLeapSerialV0(IInputStream& is) : IArchiveLeapSerial(is) { }
 
-IArchiveImplV0::IArchiveImplV0(std::istream& is) : IArchiveLeapSerial(is) {}
+IArchiveLeapSerialV0::IArchiveLeapSerialV0(std::istream& is) : IArchiveLeapSerial(is) {}
 
-void IArchiveImplV0::ReadArray(IArrayAppender&& ary) {
+void IArchiveLeapSerialV0::ReadArray(IArrayAppender&& ary) {
   // Read the number of entries first:
   uint32_t nEntries;
   ReadByteArray(&nEntries, sizeof(nEntries));
@@ -25,9 +25,9 @@ void IArchiveImplV0::ReadArray(IArrayAppender&& ary) {
     ary.serializer.deserialize(*this, ary.allocate(), 0);
 }
 
-ArchiveLeapSerialV0::ArchiveLeapSerialV0(IOutputStream& os) : OArchiveLeapSerial(os) {}
+OArchiveLeapSerialV0::OArchiveLeapSerialV0(IOutputStream& os) : OArchiveLeapSerial(os) {}
 
-void ArchiveLeapSerialV0::WriteArray(IArrayReader&& ary) {
+void OArchiveLeapSerialV0::WriteArray(IArrayReader&& ary) {
   uint32_t n = (uint32_t)ary.size();
   WriteSize(n);
 
@@ -35,7 +35,7 @@ void ArchiveLeapSerialV0::WriteArray(IArrayReader&& ary) {
     ary.serializer.serialize(*this, ary.get(i));
 }
 
-uint64_t ArchiveLeapSerialV0::SizeArray(IArrayReader&& ary) const {
+uint64_t OArchiveLeapSerialV0::SizeArray(IArrayReader&& ary) const {
   uint64_t sz = sizeof(uint32_t);
   size_t n = ary.size();
 
