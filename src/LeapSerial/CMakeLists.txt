@@ -31,6 +31,7 @@ set(LeapSerial_SRCS
   FilterStreamBase.h
   FilterStreamBase.cpp
   ForwardingStream.h
+  IArchiveProtobuf.h
   IArchiveProtobuf.cpp
   OArchiveProtobuf.cpp
   IArray.h
