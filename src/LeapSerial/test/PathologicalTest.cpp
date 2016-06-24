@@ -36,3 +36,23 @@ TEST(PathologicalTest, ComplexMapOfStringToVectorTest) {
   ASSERT_EQ(8, c[1]);
   ASSERT_EQ(9, c[2]);
 }
+
+struct HasBoolAndVector {
+  bool bVal;
+  std::vector<int> vect;
+  static leap::descriptor GetDescriptor() {
+    return{
+      &HasBoolAndVector::bVal,
+      &HasBoolAndVector::vect
+    };
+  }
+};
+
+TEST(PathologicalTest, PathologicalBool) {
+  std::stringstream ss;
+  HasBoolAndVector sd;
+  leap::Serialize(ss, sd);
+
+  std::shared_ptr<HasBoolAndVector> psd;
+  ASSERT_NO_THROW(psd = leap::Deserialize<HasBoolAndVector>(ss));
+}
