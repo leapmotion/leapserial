@@ -247,9 +247,9 @@ void IArchiveLeapSerial::Transfer(internal::AllocationBase& alloc) {
 }
 
 bool IArchiveLeapSerial::ReadBool() {
-  bool b;
+  uint8_t b;
   ReadByteArray(&b, 1);
-  return b;
+  return !!b;
 }
 
 uint64_t IArchiveLeapSerial::ReadInteger(uint8_t) {
@@ -433,7 +433,8 @@ void OArchiveLeapSerial::WriteString(const void* pBuf, uint64_t charCount, uint8
 }
 
 void OArchiveLeapSerial::WriteBool(bool value) {
-  WriteByteArray(&value, 1);
+  uint8_t v = value ? 1 : 0;
+  WriteByteArray(&v, 1);
 }
 
 void OArchiveLeapSerial::WriteInteger(int64_t value, uint8_t) {
