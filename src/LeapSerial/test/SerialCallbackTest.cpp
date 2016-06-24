@@ -22,15 +22,15 @@ struct HasPostInitRoutine {
 };
 
 TEST(SerialCallbackTest, PostInitTest) {
-  std::ostringstream os;
+  std::stringstream ss;
   {
     HasPostInitRoutine hpit;
     hpit.foo = 12991;
 
-    leap::Serialize(os, hpit);
+    leap::Serialize(ss, hpit);
   }
 
-  auto read = leap::Deserialize<HasPostInitRoutine>(std::istringstream(os.str()));
+  auto read = leap::Deserialize<HasPostInitRoutine>(ss);
   ASSERT_EQ("Hello World", read->helloWorld) << "Identified field not correctly deserialized";
   ASSERT_EQ(12991, read->foo) << "Deserialization of primitve member did not correctly occur";
   ASSERT_EQ(12991, read->bar) << "Post initialization routine did not run as expected";

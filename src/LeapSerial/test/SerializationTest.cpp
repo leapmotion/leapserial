@@ -157,10 +157,10 @@ TEST_F(SerializationTest, VectorOfFields) {
   std::vector<HasOneMember> a;
   a.resize(20);
 
-  std::ostringstream os;
-  leap::Serialize(os, a);
+  std::stringstream ss;
+  leap::Serialize(ss, a);
 
-  auto b = leap::Deserialize<std::vector<HasOneMember>>(std::istringstream(os.str()));
+  auto b = leap::Deserialize<std::vector<HasOneMember>>(ss);
   ASSERT_EQ(20UL, b->size()) << "Unexpected number of elements deserialized from a vector";
   for (auto& cur : *b)
     ASSERT_EQ(10009, cur.foo);
@@ -198,10 +198,10 @@ TEST_F(SerializationTest, NamedFieldCheck) {
   // Serialize structure A, deserialize as structure B
   StructureVersionA a;
 
-  std::ostringstream os;
-  leap::Serialize(os, a);
+  std::stringstream ss;
+  leap::Serialize(ss, a);
 
-  auto b = leap::Deserialize<StructureVersionB>(std::istringstream(os.str()));
+  auto b = leap::Deserialize<StructureVersionB>(ss);
 
   // This value should have come over as a positional value from the original structure
   ASSERT_EQ(99, b->base);
@@ -224,7 +224,7 @@ struct HasArrayOfPointers {
 };
 
 TEST_F(SerializationTest, ArrayOfPointersTest) {
-  std::ostringstream os;
+  std::stringstream ss;
 
   {
     int v = 999;
@@ -240,10 +240,10 @@ TEST_F(SerializationTest, ArrayOfPointersTest) {
     aop.mrs[3] = nullptr;
 
     // Round-trip serialize:
-    leap::Serialize(os, aop);
+    leap::Serialize(ss, aop);
   }
 
-  auto obj = leap::Deserialize<HasArrayOfPointers>(std::istringstream(os.str()));
+  auto obj = leap::Deserialize<HasArrayOfPointers>(ss);
 
   ASSERT_NE(obj->mrs[0], obj->mrs[1]) << "Object identity incorrectly aliased";
   ASSERT_EQ(obj->mrs[1], obj->mrs[2]) << "Object identity not correctly detected in array serialization";
