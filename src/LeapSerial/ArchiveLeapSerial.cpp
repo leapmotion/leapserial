@@ -433,7 +433,7 @@ void OArchiveLeapSerial::WriteString(const void* pBuf, uint64_t charCount, uint8
 }
 
 void OArchiveLeapSerial::WriteBool(bool value) {
-  WriteInteger(value, sizeof(bool));
+  WriteByteArray(&value, 1);
 }
 
 void OArchiveLeapSerial::WriteInteger(int64_t value, uint8_t) {
