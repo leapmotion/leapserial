@@ -61,7 +61,7 @@ namespace leap {
 
     ~OutputFilterStreamBase(void);
 
-  private:
+  protected:
     // Base output stream, where our data goes
     const std::unique_ptr<IOutputStream> os;
 
@@ -71,7 +71,6 @@ namespace leap {
     // Fail bit, used to indicate something went wrong with compression
     bool fail = false;
 
-  protected:
     /// <summary>
     /// In-memory transform operation
     /// </summary>
