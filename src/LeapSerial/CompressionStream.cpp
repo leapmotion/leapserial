@@ -57,7 +57,33 @@ CompressionStream::CompressionStream(std::unique_ptr<IOutputStream>&& os, int le
 }
 
 CompressionStream::~CompressionStream(void) {
-  Flush();
+  uint8_t buf[256];
+
+  // Completed!  Finish writing anything that remains to be written, and keep going
+  // as long as zlib fills up the proffered output buffer.
+  for(;;) {
+    strm->avail_in = 0;
+    strm->next_in = nullptr;
+    strm->next_out = buf;
+    strm->avail_out = sizeof(buf);
+
+    int ret = deflate(strm.get(), Z_FINISH);
+    switch (ret) {
+    case Z_STREAM_END:  // Return case when we are at the end
+    case Z_OK:          // Return case when more data exists to be written
+
+      // Handoff to lower level stream to complete the write
+      os->Write(buf, sizeof(buf) - strm->avail_out);
+
+      if (ret == Z_STREAM_END)
+        // Clean return
+        return;
+      break;
+    default:
+      // Something went wrong, and we can't throw from here, so we just have to give up
+      return;
+    }
+  }
 }
 
 bool CompressionStream::Transform(const void* input, size_t& ncbIn, void* output, size_t& ncbOut, bool flush) {
