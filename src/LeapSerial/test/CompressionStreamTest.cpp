@@ -14,6 +14,11 @@ class CompressionStreamTest:
 
 namespace {
   struct SimpleStruct {
+    SimpleStruct(void) = default;
+    SimpleStruct(SimpleStruct&& rhs) :
+      value(std::move(rhs.value))
+    {}
+
     std::string value;
 
     static leap::descriptor GetDescriptor(void) {
@@ -24,13 +29,18 @@ namespace {
   };
 }
 
-static SimpleStruct MakeSimpleStruct(void) {
-  SimpleStruct val;
-  val.value = "I thought what I'd do is I'd pretend I was one of those deaf-mutes";
+static const char sc_ryecatcher[] = "I thought what I'd do is I'd pretend I was one of those deaf-mutes";
 
-  // Reduplicate 2^4 times
-  for (size_t i = 0; i < 4; i++)
-    val.value += val.value;
+static SimpleStruct MakeSimpleStruct(size_t r) {
+  SimpleStruct val;
+  val.value.resize((sizeof(sc_ryecatcher) - 1) << r);
+
+  // Reduplicate 2^r times
+  char* p = &val.value[0];
+  for (size_t i = 1 << r; i--;) {
+    memcpy(p, sc_ryecatcher, sizeof(sc_ryecatcher) - 1);
+    p += sizeof(sc_ryecatcher) - 1;
+  }
   return val;
 }
 
@@ -59,7 +69,7 @@ TEST_F(CompressionStreamTest, KnownValueRoundTrip) {
 }
 
 TEST_F(CompressionStreamTest, CompressionPropCheck) {
-  auto val = MakeSimpleStruct();
+  auto val = MakeSimpleStruct(4);
 
   std::stringstream ss;
   {
@@ -74,8 +84,12 @@ TEST_F(CompressionStreamTest, CompressionPropCheck) {
   ASSERT_GT(val.value.size(), str.size()) << "Compression call did not actually compress anything";
 }
 
-TEST_F(CompressionStreamTest, RoundTrip) {
-  auto val = MakeSimpleStruct();
+class CompressionStreamTestF :
+  public testing::TestWithParam<int>
+{};
+
+TEST_P(CompressionStreamTestF, RoundTrip) {
+  auto val = MakeSimpleStruct(GetParam());
 
   std::stringstream ss;
   {
@@ -96,8 +110,8 @@ TEST_F(CompressionStreamTest, RoundTrip) {
   ASSERT_EQ(val.value, reacq.value);
 }
 
-TEST_F(CompressionStreamTest, TruncatedStreamTest) {
-  auto val = MakeSimpleStruct();
+TEST_P(CompressionStreamTestF, TruncatedStreamTest) {
+  auto val = MakeSimpleStruct(GetParam());
 
   std::string str;
   {
@@ -122,6 +136,12 @@ TEST_F(CompressionStreamTest, TruncatedStreamTest) {
     ASSERT_ANY_THROW(leap::Deserialize(ds, reacq));
   }
 }
+
+INSTANTIATE_TEST_CASE_P(
+  MultiRoundTrip,
+  CompressionStreamTestF,
+  ::testing::Values(4, 18)
+);
 
 TEST_F(CompressionStreamTest, EofCheck) {
   char buf[200];
