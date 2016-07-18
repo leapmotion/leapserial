@@ -51,7 +51,7 @@ TEST_F(CompressionStreamTest, KnownValueRoundTrip) {
   std::stringstream ss;
 
   {
-    leap::CompressionStream cs(
+    leap::CompressionStream<leap::Zlib> cs(
       leap::make_unique<leap::OutputStreamAdapter>(ss)
     );
     cs.Write(vec.data(), vec.size());
@@ -59,7 +59,7 @@ TEST_F(CompressionStreamTest, KnownValueRoundTrip) {
 
   ss.seekg(0);
 
-  leap::DecompressionStream ds{
+  leap::DecompressionStream<leap::Zlib> ds{
     leap::make_unique<leap::InputStreamAdapter>(ss)
   };
 
@@ -73,7 +73,7 @@ TEST_F(CompressionStreamTest, CompressionPropCheck) {
 
   std::stringstream ss;
   {
-    leap::CompressionStream cs{
+    leap::CompressionStream<leap::Zlib> cs{
       leap::make_unique<leap::OutputStreamAdapter>(ss),
       9
     };
@@ -93,7 +93,7 @@ TEST_P(CompressionStreamTestF, RoundTrip) {
 
   std::stringstream ss;
   {
-    leap::CompressionStream cs{
+    leap::CompressionStream<leap::Zlib> cs{
       leap::make_unique<leap::OutputStreamAdapter>(ss)
     };
     leap::Serialize(cs, val);
@@ -101,7 +101,7 @@ TEST_P(CompressionStreamTestF, RoundTrip) {
 
   SimpleStruct reacq;
   {
-    leap::DecompressionStream ds{
+    leap::DecompressionStream<leap::Zlib> ds{
       leap::make_unique<leap::InputStreamAdapter>(ss)
     };
     leap::Deserialize(ds, reacq);
@@ -116,7 +116,7 @@ TEST_P(CompressionStreamTestF, TruncatedStreamTest) {
   std::string str;
   {
     std::stringstream ss;
-    leap::CompressionStream cs{
+    leap::CompressionStream<leap::Zlib> cs{
       leap::make_unique<leap::OutputStreamAdapter>(ss)
     };
     leap::Serialize(cs, val);
@@ -130,7 +130,7 @@ TEST_P(CompressionStreamTestF, TruncatedStreamTest) {
   SimpleStruct reacq;
   {
     std::stringstream ss(std::move(str));
-    leap::DecompressionStream ds{
+    leap::DecompressionStream<leap::Zlib> ds{
       leap::make_unique<leap::InputStreamAdapter>(ss)
     };
     ASSERT_ANY_THROW(leap::Deserialize(ds, reacq));
@@ -146,8 +146,8 @@ INSTANTIATE_TEST_CASE_P(
 TEST_F(CompressionStreamTest, EofCheck) {
   char buf[200];
   leap::BufferedStream bs(buf, sizeof(buf));
-  leap::CompressionStream cs{ leap::make_unique<leap::ForwardingOutputStream>(bs) };
-  leap::DecompressionStream dcs{ leap::make_unique<leap::ForwardingInputStream>(bs) };
+  leap::CompressionStream<leap::Zlib> cs{ leap::make_unique<leap::ForwardingOutputStream>(bs) };
+  leap::DecompressionStream<leap::Zlib> dcs{ leap::make_unique<leap::ForwardingInputStream>(bs) };
 
   // EOF not initially set until a read is attempted
   ASSERT_FALSE(dcs.IsEof());

@@ -5,26 +5,44 @@
 #include <memory>
 #include <vector>
 
-struct z_stream_s;
-
 namespace leap {
-  class ZStreamBase {
-  public:
-    ZStreamBase(void);
-    ZStreamBase(ZStreamBase&& rhs);
-    ~ZStreamBase(void);
 
+  /// <summary>
+  /// Supported compression/decompression implementations:
+  /// </summary>
+  struct Zlib;
+
+  /// <summary>
+  /// Decompression interface
+  /// </summary>
+  template<typename T>
+  class Decompressor {
+  public:
+    Decompressor(void);
+    ~Decompressor(void);
   protected:
-    // zlib state
-    std::unique_ptr<z_stream_s> strm;
+    std::unique_ptr<T> impl;
+  };
+
+  /// <summary>
+  /// Compression interface
+  /// </summary>
+  template<typename T>
+  class Compressor {
+  public:
+    Compressor(int level = 9);
+    ~Compressor(void);
+  protected:
+    std::unique_ptr<T> impl;
   };
 
   /// <summary>
   /// Input decompression stream
   /// <summary>
+  template<typename T = Zlib>
   class DecompressionStream :
     public InputFilterStreamBase,
-    public ZStreamBase
+    public Decompressor<T>
   {
   public:
     /// <summary>
@@ -34,15 +52,16 @@ namespace leap {
 
   protected:
     // InputFilterStreamBase overrides:
-    bool Transform(const void* input, size_t& ncbIn, void* output, size_t& ncbOut) override;
+    bool Transform(const void* input, size_t& ncbIn, void* output, size_t& ncbOut);
   };
 
   /// <summary>
-  /// Output decompression stream
+  /// Output compression stream
   /// <summary>
+  template<typename T = Zlib>
   class CompressionStream :
     public OutputFilterStreamBase,
-    public ZStreamBase
+    public Compressor<T>
   {
   public:
     /// <summary>
