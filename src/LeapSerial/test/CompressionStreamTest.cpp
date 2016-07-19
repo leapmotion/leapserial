@@ -146,24 +146,37 @@ INSTANTIATE_TEST_CASE_P(
 TEST_F(CompressionStreamTest, EofCheck) {
   char buf[200];
   leap::BufferedStream bs(buf, sizeof(buf));
-  leap::CompressionStream<leap::Zlib> cs{ leap::make_unique<leap::ForwardingOutputStream>(bs) };
   leap::DecompressionStream<leap::Zlib> dcs{ leap::make_unique<leap::ForwardingInputStream>(bs) };
+  std::streamsize nRead;
+  {
+    leap::CompressionStream<leap::Zlib> cs{ leap::make_unique<leap::ForwardingOutputStream>(bs) };
 
-  // EOF not initially set until a read is attempted
-  ASSERT_FALSE(dcs.IsEof());
-  ASSERT_EQ(0, dcs.Read(buf, 1));
-  ASSERT_TRUE(dcs.IsEof());
+    // EOF not initially set until a read is attempted
+    ASSERT_FALSE(dcs.IsEof());
+    ASSERT_EQ(0, dcs.Read(buf, 1));
+    ASSERT_TRUE(dcs.IsEof());
 
-  // Write, but EOF flag should be sticky
-  ASSERT_TRUE(cs.Write("a", 1));
-  cs.Flush();
-  ASSERT_TRUE(dcs.IsEof());
-  ASSERT_EQ(1, dcs.Read(buf, 1));
-  ASSERT_FALSE(dcs.IsEof());
+    // Write, but EOF flag should be sticky
+    ASSERT_TRUE(cs.Write("a", 1));
+    cs.Flush();
+    ASSERT_TRUE(dcs.IsEof());
 
-  // Write again and attempt to read more than is available--this should also set EOF
-  cs.Write("abc", 3);
-  cs.Flush();
-  ASSERT_EQ(3, dcs.Read(buf, sizeof(buf)));
+    // The compressed buffer, although flushed, may not contain a complete last
+    // byte, due to a partially completed byte in the compressed stream. In that
+    // case, we will not get back the expected content. In those cases, wait
+    // until the stream is closed before trying to get all of our content.
+    nRead = dcs.Read(buf, 1);
+    if (nRead > 0) {
+      ASSERT_EQ(1, nRead);
+      ASSERT_FALSE(dcs.IsEof());
+    } else {
+      ASSERT_TRUE(dcs.IsEof());
+    }
+
+    // Write again and attempt to read more than is available--this should also set EOF
+    cs.Write("abc", 3);
+    cs.Flush();
+  }
+  ASSERT_EQ(4 - nRead, dcs.Read(buf, sizeof(buf)));
   ASSERT_TRUE(dcs.IsEof());
 }
