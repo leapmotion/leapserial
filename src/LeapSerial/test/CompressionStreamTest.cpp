@@ -116,10 +116,15 @@ TEST_P(CompressionStreamTestF, TruncatedStreamTest) {
   std::string str;
   {
     std::stringstream ss;
-    leap::CompressionStream<leap::Zlib> cs{
-      leap::make_unique<leap::OutputStreamAdapter>(ss)
-    };
-    leap::Serialize(cs, val);
+    {
+      leap::CompressionStream<leap::Zlib> cs{
+        leap::make_unique<leap::OutputStreamAdapter>(ss)
+      };
+      leap::Serialize(cs, val);
+    }
+    // To capture the entire compressed stream, we need to "finish" it first.
+    // This is accomplished by destructing the compression stream. Flushing
+    // isn't sufficient, as it doesn't include the trailer.
     str = ss.str();
   }
 
