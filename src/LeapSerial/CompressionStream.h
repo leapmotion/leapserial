@@ -11,6 +11,7 @@ namespace leap {
   /// Supported compression/decompression implementations:
   /// </summary>
   struct Zlib;
+  struct BZip2;
 
   /// <summary>
   /// Decompression interface
