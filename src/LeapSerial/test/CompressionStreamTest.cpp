@@ -51,7 +51,7 @@ TEST_F(CompressionStreamTest, KnownValueRoundTrip) {
   std::stringstream ss;
 
   {
-    leap::CompressionStream cs(
+    leap::CompressionStream<leap::Zlib> cs(
       leap::make_unique<leap::OutputStreamAdapter>(ss)
     );
     cs.Write(vec.data(), vec.size());
@@ -59,7 +59,7 @@ TEST_F(CompressionStreamTest, KnownValueRoundTrip) {
 
   ss.seekg(0);
 
-  leap::DecompressionStream ds{
+  leap::DecompressionStream<leap::Zlib> ds{
     leap::make_unique<leap::InputStreamAdapter>(ss)
   };
 
@@ -73,7 +73,7 @@ TEST_F(CompressionStreamTest, CompressionPropCheck) {
 
   std::stringstream ss;
   {
-    leap::CompressionStream cs{
+    leap::CompressionStream<leap::Zlib> cs{
       leap::make_unique<leap::OutputStreamAdapter>(ss),
       9
     };
@@ -93,7 +93,7 @@ TEST_P(CompressionStreamTestF, RoundTrip) {
 
   std::stringstream ss;
   {
-    leap::CompressionStream cs{
+    leap::CompressionStream<leap::Zlib> cs{
       leap::make_unique<leap::OutputStreamAdapter>(ss)
     };
     leap::Serialize(cs, val);
@@ -101,7 +101,7 @@ TEST_P(CompressionStreamTestF, RoundTrip) {
 
   SimpleStruct reacq;
   {
-    leap::DecompressionStream ds{
+    leap::DecompressionStream<leap::Zlib> ds{
       leap::make_unique<leap::InputStreamAdapter>(ss)
     };
     leap::Deserialize(ds, reacq);
@@ -116,10 +116,15 @@ TEST_P(CompressionStreamTestF, TruncatedStreamTest) {
   std::string str;
   {
     std::stringstream ss;
-    leap::CompressionStream cs{
-      leap::make_unique<leap::OutputStreamAdapter>(ss)
-    };
-    leap::Serialize(cs, val);
+    {
+      leap::CompressionStream<leap::Zlib> cs{
+        leap::make_unique<leap::OutputStreamAdapter>(ss)
+      };
+      leap::Serialize(cs, val);
+    }
+    // To capture the entire compressed stream, we need to "finish" it first.
+    // This is accomplished by destructing the compression stream. Flushing
+    // isn't sufficient, as it doesn't include the trailer.
     str = ss.str();
   }
 
@@ -130,7 +135,7 @@ TEST_P(CompressionStreamTestF, TruncatedStreamTest) {
   SimpleStruct reacq;
   {
     std::stringstream ss(std::move(str));
-    leap::DecompressionStream ds{
+    leap::DecompressionStream<leap::Zlib> ds{
       leap::make_unique<leap::InputStreamAdapter>(ss)
     };
     ASSERT_ANY_THROW(leap::Deserialize(ds, reacq));
@@ -146,24 +151,37 @@ INSTANTIATE_TEST_CASE_P(
 TEST_F(CompressionStreamTest, EofCheck) {
   char buf[200];
   leap::BufferedStream bs(buf, sizeof(buf));
-  leap::CompressionStream cs{ leap::make_unique<leap::ForwardingOutputStream>(bs) };
-  leap::DecompressionStream dcs{ leap::make_unique<leap::ForwardingInputStream>(bs) };
+  leap::DecompressionStream<leap::Zlib> dcs{ leap::make_unique<leap::ForwardingInputStream>(bs) };
+  std::streamsize nRead;
+  {
+    leap::CompressionStream<leap::Zlib> cs{ leap::make_unique<leap::ForwardingOutputStream>(bs) };
 
-  // EOF not initially set until a read is attempted
-  ASSERT_FALSE(dcs.IsEof());
-  ASSERT_EQ(0, dcs.Read(buf, 1));
-  ASSERT_TRUE(dcs.IsEof());
+    // EOF not initially set until a read is attempted
+    ASSERT_FALSE(dcs.IsEof());
+    ASSERT_EQ(0, dcs.Read(buf, 1));
+    ASSERT_TRUE(dcs.IsEof());
 
-  // Write, but EOF flag should be sticky
-  ASSERT_TRUE(cs.Write("a", 1));
-  cs.Flush();
-  ASSERT_TRUE(dcs.IsEof());
-  ASSERT_EQ(1, dcs.Read(buf, 1));
-  ASSERT_FALSE(dcs.IsEof());
+    // Write, but EOF flag should be sticky
+    ASSERT_TRUE(cs.Write("a", 1));
+    cs.Flush();
+    ASSERT_TRUE(dcs.IsEof());
 
-  // Write again and attempt to read more than is available--this should also set EOF
-  cs.Write("abc", 3);
-  cs.Flush();
-  ASSERT_EQ(3, dcs.Read(buf, sizeof(buf)));
+    // The compressed buffer, although flushed, may not contain a complete last
+    // byte, due to a partially completed byte in the compressed stream. In that
+    // case, we will not get back the expected content. In those cases, wait
+    // until the stream is closed before trying to get all of our content.
+    nRead = dcs.Read(buf, 1);
+    if (nRead > 0) {
+      ASSERT_EQ(1, nRead);
+      ASSERT_FALSE(dcs.IsEof());
+    } else {
+      ASSERT_TRUE(dcs.IsEof());
+    }
+
+    // Write again and attempt to read more than is available--this should also set EOF
+    cs.Write("abc", 3);
+    cs.Flush();
+  }
+  ASSERT_EQ(4 - nRead, dcs.Read(buf, sizeof(buf)));
   ASSERT_TRUE(dcs.IsEof());
 }

@@ -47,6 +47,7 @@ std::streamsize InputFilterStreamBase::Read(void* pBuf, std::streamsize ncb) {
 
       // Handoff to transform behavior:
       size_t ncbIn = static_cast<size_t>(nRead);
+      buffer.resize(1024);
       ncbAvail = buffer.size();
       if(!Transform(inputChunk.data(), ncbIn, buffer.data(), ncbAvail))
         return -1;
