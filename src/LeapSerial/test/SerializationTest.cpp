@@ -738,3 +738,21 @@ TEST_F(SerializationTest, ResponsibleType) {
   leap::Deserialize(ss, mss);
   ASSERT_EQ(mss.str, original.str);
 }
+
+namespace {
+  class HasAPointer {
+  public:
+    int* ptr = nullptr;
+    static leap::descriptor GetDescriptor(void) {
+      return{
+        &HasAPointer::ptr
+      };
+    }
+  };
+}
+
+TEST_F(SerializationTest, IrresponsibleType) {
+  std::stringstream ss;
+  HasAPointer hap;
+  ASSERT_THROW(leap::Deserialize(ss, hap), std::runtime_error);
+}
