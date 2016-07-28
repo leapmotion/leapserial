@@ -12,7 +12,11 @@ the required conventions for Leap Motion external libraries.  This function does
 ]]
 macro(set_standard_output_variables)
   if(APPLE)
-    set(CMAKE_OSX_ARCHITECTURES "x86_64;i386" CACHE STRING "Mac OS X build architectures" FORCE)
+    if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
+      set(CMAKE_OSX_ARCHITECTURES "arm" CACHE STRING "Mac OS X build architectures")
+    else()
+      set(CMAKE_OSX_ARCHITECTURES "x86_64;i386" CACHE STRING "Mac OS X build architectures")
+    endif()
   endif()
 
   if(CMAKE_COMPILER_IS_GNUCC)
