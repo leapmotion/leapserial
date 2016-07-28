@@ -42,3 +42,4 @@ LeapSerialTargets.cmake
 leapserial/LeapSerialConfig.h
 *.opendb
 *.VC.db
+.vscode
