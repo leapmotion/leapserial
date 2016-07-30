@@ -714,3 +714,45 @@ TEST_F(SerializationTest, FloatingTypesTest) {
   ASSERT_EQ(hmf.b, deserialized->b) << "Double datatype not properly round-trip serialized";
   ASSERT_EQ(hmf.c, deserialized->c) << "Long double datatype not properly round-trip serialized";
 }
+
+namespace {
+  class MyResponsibleType {
+  public:
+    std::string str;
+
+    static leap::descriptor GetDescriptor(void) {
+      return{
+        &MyResponsibleType::str
+      };
+    }
+  };
+}
+
+TEST_F(SerializationTest, ResponsibleType) {
+  std::stringstream ss;
+  MyResponsibleType original;
+  original.str = "ABCDE!";
+  leap::Serialize(ss, original);
+
+  MyResponsibleType mss;
+  leap::Deserialize(ss, mss);
+  ASSERT_EQ(mss.str, original.str);
+}
+
+namespace {
+  class HasAPointer {
+  public:
+    int* ptr = nullptr;
+    static leap::descriptor GetDescriptor(void) {
+      return{
+        &HasAPointer::ptr
+      };
+    }
+  };
+}
+
+TEST_F(SerializationTest, IrresponsibleType) {
+  std::stringstream ss;
+  HasAPointer hap;
+  ASSERT_THROW(leap::Deserialize(ss, hap), std::runtime_error);
+}
