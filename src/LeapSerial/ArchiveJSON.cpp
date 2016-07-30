@@ -25,7 +25,23 @@ void OArchiveJSON::WriteByteArray(const void* pBuf, uint64_t ncb, bool writeSize
 }
 
 void OArchiveJSON::WriteString(const void* pBuf, uint64_t charCount, uint8_t charSize) {
-  throw not_implemented_exception();
+  os << '"';
+  if (charSize == 1) {
+    for (const char* p = static_cast<const char*>(pBuf); charCount--; p++)
+      switch (*p) {
+      case '\\':
+        os << "\\\\";
+        break;
+      case '"':
+        os << "\\\"";
+      default:
+        os << *p;
+        break;
+      }
+  }
+  else
+    throw not_implemented_exception{};
+  os << '"';
 }
 
 void OArchiveJSON::WriteBool(bool value) {
