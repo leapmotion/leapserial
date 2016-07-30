@@ -9,8 +9,12 @@
 
 // This is required on Windows due to the way protobuf uses std::copy
 #define _SCL_SECURE_NO_WARNINGS
+#pragma warning(push)
+#pragma warning(disable: 4244)
+#pragma warning(disable: 4267)
 #include "TestProtobuf.pb.h"
 #undef _SCL_SECURE_NO_WARNINGS
+#pragma warning(pop)
 
 static std::string ToProtobuf(const Person& in) {
   // Write the protobuf version first:
@@ -53,7 +57,7 @@ TEST(ArchiveProtobufTest, LeapSerialToProtobuf) {
   const Person defaultPerson = MakeDefaultPerson();
 
   std::stringstream ss;
-  leap::Serialize<leap::OArchiveProtobuf>(leap::OutputStreamAdapter(ss), defaultPerson);
+  leap::Serialize<leap::OArchiveProtobuf>(ss, defaultPerson);
   std::string val = ss.str();
 
   leap::test::Person person;

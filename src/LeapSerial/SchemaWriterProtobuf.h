@@ -53,8 +53,9 @@ namespace leap {
   };
 
   class SchemaWriterProtobuf2:
-    SchemaWriterProtobuf
+    public SchemaWriterProtobuf
   {
+  public:
     SchemaWriterProtobuf2(const descriptor& desc) :
       SchemaWriterProtobuf(desc, protobuf::Version::Proto2)
     {}
