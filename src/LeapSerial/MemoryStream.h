@@ -27,6 +27,9 @@ namespace leap {
     bool m_eof = false;
 
   public:
+    std::vector<uint8_t>& GetData(void) { return buffer; }
+    const std::vector<uint8_t>& GetData(void) const { return buffer; }
+
     bool Write(const void* pBuf, std::streamsize ncb) override;
     bool IsEof(void) const override { return m_eof; }
     std::streamsize Read(void* pBuf, std::streamsize ncb) override;
