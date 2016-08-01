@@ -165,7 +165,15 @@ void OArchiveJSON::WriteDescriptor(const descriptor& descriptor, const void* pOb
 }
 
 void OArchiveJSON::WriteArray(IArrayReader&& ary) {
-  throw not_implemented_exception();
+  os << '[';
+  if (ary.size() != 0) {
+    ary.serializer.serialize(*this, ary.get(0));
+    for(size_t i = 1; i < ary.size(); i++) {
+      os << ',';
+      ary.serializer.serialize(*this, ary.get(i));
+    }
+  }
+  os << ']';
 }
 
 void OArchiveJSON::WriteDictionary(IDictionaryReader&& dictionary)
