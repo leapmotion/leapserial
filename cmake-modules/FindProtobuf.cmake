@@ -48,6 +48,10 @@ include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Protobuf DEFAULT_MSG
                                   Protobuf_LIBRARY Protobuf_INCLUDE_DIR)
 
+if(NOT Protobuf)
+  return()
+endif()
+
 generate_import_target(Protobuf STATIC TARGET protobuf::protobuf)
 include(CMakeFindDependencyMacro)
 find_dependency(ZLIB)
