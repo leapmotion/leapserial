@@ -56,7 +56,7 @@ endif()
 
 if(Protobuf_FOUND)
   add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/TestProtobuf.pb.cc ${CMAKE_CURRENT_SOURCE_DIR}/TestProtobuf.pb.h
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/TestProtobuf.pb.cc ${CMAKE_CURRENT_BINARY_DIR}/TestProtobuf.pb.h
     COMMAND protobuf::protoc
     ARGS -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/TestProtobuf.proto
     MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/TestProtobuf.proto
@@ -70,13 +70,13 @@ endif()
 
 add_conditional_sources(
   LeapSerialTest_SRCS
-  Protobuf_FOUND
+  "Protobuf_FOUND"
   GROUP_NAME "Protobuf"
   FILES
   ArchiveProtobufTest.cpp
   SchemaTest.cpp
   TestProtobuf.proto
-  TestProtobuf.pb.h
+  ${CMAKE_CURRENT_BINARY_DIR}/TestProtobuf.pb.h
   ${CMAKE_CURRENT_BINARY_DIR}/TestProtobuf.pb.cc
 )
 
