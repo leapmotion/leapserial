@@ -62,7 +62,7 @@ MyClass b;
 leap::Deserialize(ss, b);
 ```
 
-Alternative Archivers
+Protobuf
 ===
 LeapSerial has a few output formats that are well supported.  The `leap::Serialize` call, by default, will use the internal LeapSerial archiver, which formats data in a custom bitstream format.  You can use other formats, though, such as Protobuf, but this requires that your fields are numbered:
 
@@ -116,7 +116,10 @@ message MyProtobufObject {
 }
 ```
 
-JSON serialization is also supported.  The protov3 specification's JSON mapping is used wherever possible:
+JSON
+===
+
+JSON serialization is also supported.  The protov3 specification's JSON mapping is used wherever possible.  Currently, deserialization is not supported, but there is a `leap::IArchiveJSON` type which will provide deserialization once it's implemented.
 
 ```C++
 #include <LeapSerial/ArchiveJSON.h>
