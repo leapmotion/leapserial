@@ -21,7 +21,9 @@ find_path(Protobuf_HOST_DIR
                 protobuf
   NO_CMAKE_PATH)
 
-set(Protobuf_INCLUDE_DIR ${Protobuf_ROOT_DIR}/include CACHE STRING "")
+find_path(Protobuf_INCLUDE_DIR
+  NAMES google/protobuf/descriptor.h
+  HINTS ${Protobuf_ROOT_DIR}/include CACHE STRING "")
 
 if(DEFINED Protobuf_LIBRARY AND NOT EXISTS ${Protobuf_LIBRARY})
   unset(Protobuf_LIBRARY CACHE)
