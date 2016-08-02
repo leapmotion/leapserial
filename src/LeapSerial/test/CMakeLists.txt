@@ -63,9 +63,11 @@ if(Protobuf_FOUND)
     COMMENT "Generating TestProtobuf.pb.cc and TestProtobuf.pb.h"
     VERBATIM
   )
-else()
-  file(WRITE TestProtobuf.pb.h)
-  file(WRITE TestProtobuf.pb.cc)
+
+  list(APPEND LeapSerialTest_SRCS
+    ${CMAKE_CURRENT_BINARY_DIR}/TestProtobuf.pb.h
+    ${CMAKE_CURRENT_BINARY_DIR}/TestProtobuf.pb.cc
+  )
 endif()
 
 add_conditional_sources(
@@ -76,8 +78,6 @@ add_conditional_sources(
   ArchiveProtobufTest.cpp
   SchemaTest.cpp
   TestProtobuf.proto
-  ${CMAKE_CURRENT_BINARY_DIR}/TestProtobuf.pb.h
-  ${CMAKE_CURRENT_BINARY_DIR}/TestProtobuf.pb.cc
 )
 
 find_package(Threads)
