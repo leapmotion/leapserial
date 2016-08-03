@@ -24,24 +24,27 @@ add_pch(LeapSerialTest_SRCS "stdafx.h" "stdafx.cpp")
 find_package(FlatBuffers QUIET)
 if(FlatBuffers)
   add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/TestObject_generated.h
-    COMMAND FlatBuffers::flatc -c -I ${CMAKE_CURRENT_SOURCE_DIR} -o ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/TestObject.fbs
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/TestObject_generated.h
+    COMMAND FlatBuffers::flatc -c -I ${CMAKE_CURRENT_SOURCE_DIR} -o ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/TestObject.fbs
     MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/TestObject.fbs
     COMMENT "Generating TestObject_generated.h"
     VERBATIM
   )
-else()
-  file(WRITE TestObject_generated.h)
+
+  add_conditional_sources(LeapSerialTest_SRCS "TRUE"
+    GROUP_NAME "Flatbuffers"
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/TestObject_generated.h
+  )
+  set_property(SOURCE ${CMAKE_CURRENT_BINARY_DIR}/TestObject_generated.h
+    PROPERTY GROUP_NAME "Flatbuffers"
+  )
 endif()
 
 add_conditional_sources(
   LeapSerialTest_SRCS
   "FlatBuffers"
   GROUP_NAME "FlatBuffers"
-  FILES
-  ArchiveFlatbufferTest.cpp
-  TestObject.fbs
-  TestObject_generated.h
+  FILES ArchiveFlatbufferTest.cpp TestObject.fbs
 )
 
 option(LS_ENABLE_PROTOBUF_TESTS "Enable protobuf tests" ON)
@@ -64,9 +67,9 @@ if(Protobuf_FOUND)
     VERBATIM
   )
 
-  list(APPEND LeapSerialTest_SRCS
-    ${CMAKE_CURRENT_BINARY_DIR}/TestProtobuf.pb.h
-    ${CMAKE_CURRENT_BINARY_DIR}/TestProtobuf.pb.cc
+  add_conditional_sources(LeapSerialTest_SRCS "TRUE"
+    GROUP_NAME "Protobuf"
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/TestProtobuf.pb.h ${CMAKE_CURRENT_BINARY_DIR}/TestProtobuf.pb.cc
   )
 endif()
 
@@ -74,10 +77,7 @@ add_conditional_sources(
   LeapSerialTest_SRCS
   "Protobuf_FOUND"
   GROUP_NAME "Protobuf"
-  FILES
-  ArchiveProtobufTest.cpp
-  SchemaTest.cpp
-  TestProtobuf.proto
+  FILES ArchiveProtobufTest.cpp SchemaTest.cpp TestProtobuf.proto
 )
 
 find_package(Threads)
