@@ -8,16 +8,22 @@ if(APPLE)
 find_path(Protobuf_ROOT_DIR
   NAMES include/google/protobuf/descriptor.h
   PATH_SUFFIXES protobuf-${Protobuf_FIND_VERSION}${_suffix}
-                protobuf${_suffix})
+                protobuf${_suffix}
+                protobuf-${Protobuf_FIND_VERSION}
+                protobuf)
 
 find_path(Protobuf_HOST_DIR
   NAMES include/google/protobuf/descriptor.h
   HINTS ${Protobuf_ROOT_DIR}
   PATH_SUFFIXES protobuf-${Protobuf_FIND_VERSION}${_suffix}
                 protobuf${_suffix}
+                protobuf-${Protobuf_FIND_VERSION}
+                protobuf
   NO_CMAKE_PATH)
 
-set(Protobuf_INCLUDE_DIR ${Protobuf_ROOT_DIR}/include CACHE STRING "")
+find_path(Protobuf_INCLUDE_DIR
+  NAMES google/protobuf/descriptor.h
+  HINTS ${Protobuf_ROOT_DIR}/include CACHE STRING "")
 
 if(DEFINED Protobuf_LIBRARY AND NOT EXISTS ${Protobuf_LIBRARY})
   unset(Protobuf_LIBRARY CACHE)
@@ -30,12 +36,12 @@ find_library(Protobuf_LIBRARY
 )
 
 if(WIN32)
-  set(Protobuf_LIBRARY_RELEASE ${Protobuf_LIBRARY})
+  set(Protobuf_LIBRARY_RELEASE ${Protobuf_LIBRARY} CACHE FILEPATH "")
   find_library(Protobuf_LIBRARY_DEBUG
-    NAMES protobuf libprotobuf
-    HINTS ${Protobuf_ROOT_DIR}/lib/Debug
+    NAMES libprotobufd
+    HINTS ${Protobuf_ROOT_DIR}/lib/Debug ${Protobuf_ROOT_DIR}/lib
   )
-  mark_as_advanced(Protobuf_LIBRARY_DEBUG)
+  mark_as_advanced(Protobuf_LIBRARY_DEBUG Protobuf_LIBRARY_RELEASE)
 endif()
 
 find_program(Protobuf_protoc protoc HINTS ${Protobuf_HOST_DIR} PATH_SUFFIXES bin${CROSS_COMPILE_EXE_TYPE} bin NO_CMAKE_PATH)
@@ -44,15 +50,14 @@ include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Protobuf DEFAULT_MSG
                                   Protobuf_LIBRARY Protobuf_INCLUDE_DIR)
 
-if(NOT Protobuf_HOST_DIR OR NOT Protobuf_ROOT_DIR OR NOT Protobuf_protoc OR NOT Protobuf)
+if(NOT Protobuf_FOUND)
   return()
 endif()
 
-generate_import_target(Protobuf STATIC)
-
+generate_import_target(Protobuf STATIC TARGET protobuf::protobuf)
 include(CMakeFindDependencyMacro)
 find_dependency(ZLIB)
-set_property(TARGET Protobuf::Protobuf APPEND PROPERTY INTERFACE_LINK_LIBRARIES ZLIB::ZLIB)
+set_property(TARGET protobuf::protobuf APPEND PROPERTY INTERFACE_LINK_LIBRARIES ZLIB::ZLIB)
 
-add_executable(Protobuf::protoc IMPORTED)
-set_property(TARGET Protobuf::protoc PROPERTY IMPORTED_LOCATION ${Protobuf_protoc})
+add_executable(protobuf::protoc IMPORTED)
+set_property(TARGET protobuf::protoc PROPERTY IMPORTED_LOCATION ${Protobuf_protoc})

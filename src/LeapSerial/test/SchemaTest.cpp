@@ -2,13 +2,18 @@
 #include "stdafx.h"
 #include "TestProtobufLS.hpp"
 #include <gtest/gtest.h>
-#include <google/protobuf/compiler/importer.h>
-#include <google/protobuf/io/zero_copy_stream.h>
-#include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <LeapSerial/LeapSerial.h>
 #include <array>
 #include <iomanip>
 #include <sstream>
+
+#pragma warning(push)
+#pragma warning(disable: 4244)
+#pragma warning(disable: 4267)
+#include <google/protobuf/compiler/importer.h>
+#include <google/protobuf/io/zero_copy_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
+#pragma warning(pop)
 
 namespace io = google::protobuf::io;
 namespace cl = google::protobuf::compiler;
