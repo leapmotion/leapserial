@@ -63,13 +63,10 @@ leap::Deserialize(ss, b);
 ```
 
 Alternative Archivers
-===
-LeapSerial has a few output formats that are well supported.  The `leap::Serialize` call, by default, will use the internal LeapSerial archiver, which formats data in a custom bitstream format.  You can use other formats, though, such as Protobuf, but this requires that your fields are numbered:
+---
+LeapSerial has a few output formats that are well supported.  The `leap::Serialize` call, by default, will use the internal LeapSerial archiver, which formats data in a custom bitstream format.  You can use other formats, though, such as Protobuf, but this requires that your fields are numbered or named.  The following sections all use the following numbered and named data structure:
 
 ```C++
-#include <LeapSerial/IArchiveProtobuf.h>
-#include <LeapSerial/OArchiveProtobuf.h>
-
 class MyProtobufObject {
 public:
   int a = 949;
@@ -87,6 +84,15 @@ public:
     };
   }
 };
+```
+
+Protobuf
+===
+Protobuf serialization can be done with `OArchiveProtobuf`:
+
+```C++
+#include <LeapSerial/IArchiveProtobuf.h>
+#include <LeapSerial/OArchiveProtobuf.h>
 
 void Foo() {
   MyProtobufObject myobj;
@@ -96,7 +102,7 @@ void Foo() {
 }
 ```
 
-The resulting object can be parsed by Protobuf, if you have a schema for `MyProtobufObject`.  You can create a schema by serializing the descriptor, like this:
+The resulting object can be parsed by Protobuf, if you have a schema for `MyProtobufObject`.  You can also create the corresponding `proto` file by serializing the descriptor, like this:
 
 ```C++
 std::stringstream ss;
@@ -116,7 +122,12 @@ message MyProtobufObject {
 }
 ```
 
-JSON serialization is also supported.  The protov3 specification's JSON mapping is used wherever possible:
+Right now, `leap::protobuf_v1` and `leap::protobuf_v2` are supported to ensure the generated `proto` file can be parsed by your chosen version of `protoc`.
+
+JSON
+===
+
+JSON serialization is also supported.  The protov3 specification's JSON mapping is used wherever possible.  Currently, deserialization is not supported, but there is a `leap::IArchiveJSON` type which will provide deserialization once it's implemented.
 
 ```C++
 #include <LeapSerial/ArchiveJSON.h>
