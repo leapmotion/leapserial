@@ -131,6 +131,7 @@ void SchemaWriterProtobuf::Write(IOutputStream& os) {
 }
 
 void SchemaWriterProtobuf::Write(std::ostream& os) {
+  os << "syntax = \"proto2\";" << std::endl;
   awaiting.push_back(&Desc);
   encountered.clear();
   synthetic.clear();
