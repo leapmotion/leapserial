@@ -1,15 +1,16 @@
 cmake_minimum_required(VERSION 3.4)
 include(version.cmake)
-project(LeapSerial VERSION ${LeapSerial_VERSION})
 include("standard/Standard.cmake")
+
+standard_project_preinit()
+project(LeapSerial VERSION ${LeapSerial_VERSION})
+standard_project_postinit()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules")
 include(AddPCH)
 include(ConditionalSources)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-# Standard calls
-set_standard_output_variables()
 
 # We have unit test projects via googletest, they're added in the places where they are defined
 enable_testing()
