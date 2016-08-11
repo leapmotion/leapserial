@@ -13,7 +13,10 @@ does the following:
 * Sets standard_BUILD* variables for consumption later down the line.
 * Enforces the project has a VERSION set.
 ]]
-function(standard_project project_name)
+
+#This must be a macro since project defines scope-local variables
+#that we generally rely on being in the root context.
+macro(standard_project project_name)
   cmake_parse_arguments(standard "" "VERSION" "LANGUAGES" ${ARGN})
   if(NOT standard_VERSION)
     message(FATAL_ERROR "Standard compliant projects must specify a version")
@@ -27,7 +30,7 @@ function(standard_project project_name)
   standard_project_preinit()
   project(${project_name} VERSION ${standard_VERSION} ${_language_arg})
   standard_project_postinit()
-endfunction()
+endmacro()
 
 function(standard_project_preinit)
   # Pre-initialization steps - these variables must be set before the first call to
@@ -87,10 +90,8 @@ function(standard_project_preinit)
     endforeach()
   endif()
 
-  # We want -fPIC code for all 64-bit non-windows builds
-  if(NOT WIN32)
-    set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE INTERNAL "Position-Independent Code")
-  endif()
+  # We want Position independent code for all builds
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE INTERNAL "Position-Independent Code")
 endfunction()
 
 function(standard_project_postinit)
