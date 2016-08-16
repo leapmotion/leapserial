@@ -1,26 +1,11 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "CompressionStream.h"
+#include "CompressionStreamInternal.h"
 #include "LeapSerial.h"
 #include <algorithm>
 #include <memory.h>
-#include <zlib/zlib.h>
-#include <bzip2/bzlib.h>
 
 namespace leap {
-
-struct Zlib {
-  Zlib(void) {
-    strm.zalloc = nullptr;
-    strm.zfree = nullptr;
-    strm.opaque = nullptr;
-    strm.avail_in = 0;
-    strm.next_in = nullptr;
-  }
-
-  // zlib state
-  z_stream_s strm;
-};
 
 // Zlib decompressor
 template<> Decompressor<Zlib>::Decompressor(void) : impl{leap::make_unique<Zlib>()} { inflateInit(&impl->strm); }
@@ -35,22 +20,12 @@ template<> Compressor<Zlib>::Compressor(int level) : impl{leap::make_unique<Zlib
 }
 template<> Compressor<Zlib>::~Compressor(void) { deflateEnd(&impl->strm); }
 
-struct BZip2 {
-  BZip2(void) {
-    strm.bzalloc = nullptr;
-    strm.bzfree = nullptr;
-    strm.opaque = nullptr;
-    strm.avail_in = 0;
-    strm.next_in = nullptr;
-  }
-
-  // zlib state
-  bz_stream strm;
-};
+// BZip2 decompressor
 
 template<> Decompressor<BZip2>::Decompressor(void) : impl{leap::make_unique<BZip2>()} { BZ2_bzDecompressInit(&impl->strm, 0, 0); }
 template<> Decompressor<BZip2>::~Decompressor(void) { BZ2_bzDecompressEnd(&impl->strm); }
 
+// BZip2 Compressor
 template<> Compressor<BZip2>::Compressor(int level) : impl{leap::make_unique<BZip2>()} {
   if (level < -1 || 9 < level)
     throw std::invalid_argument("Compression stream level must be in the range [0, 9]");
