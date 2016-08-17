@@ -2,15 +2,19 @@
 #include "stdafx.h"
 #include <LeapSerial/LeapSerial.h>
 #include <LeapSerial/BufferedStream.h>
-#include <LeapSerial/CompressionStream.h>
+#include <LeapSerial/CompressionStreamInternal.h>
 #include <LeapSerial/ForwardingStream.h>
 #include <gtest/gtest.h>
 #include <numeric>
 #include <vector>
 
+using CompressionTypes = testing::Types<leap::Zlib, leap::BZip2>;
+
+template <typename T>
 class CompressionStreamTest:
   public testing::Test
 {};
+TYPED_TEST_CASE(CompressionStreamTest, CompressionTypes);
 
 namespace {
   struct SimpleStruct {
@@ -44,14 +48,14 @@ static SimpleStruct MakeSimpleStruct(size_t r) {
   return val;
 }
 
-TEST_F(CompressionStreamTest, KnownValueRoundTrip) {
+TYPED_TEST(CompressionStreamTest, KnownValueRoundTrip) {
   std::vector<uint8_t> vec(0x100);
   std::iota(vec.begin(), vec.end(), 0);
 
   std::stringstream ss;
 
   {
-    leap::CompressionStream<leap::Zlib> cs(
+    leap::CompressionStream<TypeParam> cs(
       leap::make_unique<leap::OutputStreamAdapter>(ss)
     );
     cs.Write(vec.data(), vec.size());
@@ -59,7 +63,7 @@ TEST_F(CompressionStreamTest, KnownValueRoundTrip) {
 
   ss.seekg(0);
 
-  leap::DecompressionStream<leap::Zlib> ds{
+  leap::DecompressionStream<TypeParam> ds{
     leap::make_unique<leap::InputStreamAdapter>(ss)
   };
 
@@ -68,12 +72,12 @@ TEST_F(CompressionStreamTest, KnownValueRoundTrip) {
   ASSERT_EQ(vec, read) << "Reconstructed vector was not read back intact";
 }
 
-TEST_F(CompressionStreamTest, CompressionPropCheck) {
+TYPED_TEST(CompressionStreamTest, CompressionPropCheck) {
   auto val = MakeSimpleStruct(4);
 
   std::stringstream ss;
   {
-    leap::CompressionStream<leap::Zlib> cs{
+    leap::CompressionStream<TypeParam> cs{
       leap::make_unique<leap::OutputStreamAdapter>(ss),
       9
     };
@@ -84,77 +88,71 @@ TEST_F(CompressionStreamTest, CompressionPropCheck) {
   ASSERT_GT(val.value.size(), str.size()) << "Compression call did not actually compress anything";
 }
 
-class CompressionStreamTestF :
-  public testing::TestWithParam<int>
-{};
+TYPED_TEST(CompressionStreamTest, RoundTrip) {
+  for (const auto param : {4, 16}) {
+    auto val = MakeSimpleStruct(param);
 
-TEST_P(CompressionStreamTestF, RoundTrip) {
-  auto val = MakeSimpleStruct(GetParam());
-
-  std::stringstream ss;
-  {
-    leap::CompressionStream<leap::Zlib> cs{
-      leap::make_unique<leap::OutputStreamAdapter>(ss)
-    };
-    leap::Serialize(cs, val);
-  }
-
-  SimpleStruct reacq;
-  {
-    leap::DecompressionStream<leap::Zlib> ds{
-      leap::make_unique<leap::InputStreamAdapter>(ss)
-    };
-    leap::Deserialize(ds, reacq);
-  }
-
-  ASSERT_EQ(val.value, reacq.value);
-}
-
-TEST_P(CompressionStreamTestF, TruncatedStreamTest) {
-  auto val = MakeSimpleStruct(GetParam());
-
-  std::string str;
-  {
     std::stringstream ss;
     {
-      leap::CompressionStream<leap::Zlib> cs{
+      leap::CompressionStream<TypeParam> cs{
         leap::make_unique<leap::OutputStreamAdapter>(ss)
       };
       leap::Serialize(cs, val);
     }
-    // To capture the entire compressed stream, we need to "finish" it first.
-    // This is accomplished by destructing the compression stream. Flushing
-    // isn't sufficient, as it doesn't include the trailer.
-    str = ss.str();
-  }
 
-  str.resize(str.size() / 2);
-  ASSERT_FALSE(str.empty());
+    SimpleStruct reacq;
+    {
+      leap::DecompressionStream<TypeParam> ds{
+        leap::make_unique<leap::InputStreamAdapter>(ss)
+      };
+      leap::Deserialize(ds, reacq);
+    }
 
-  // Deserialization should cause a problem
-  SimpleStruct reacq;
-  {
-    std::stringstream ss(std::move(str));
-    leap::DecompressionStream<leap::Zlib> ds{
-      leap::make_unique<leap::InputStreamAdapter>(ss)
-    };
-    ASSERT_ANY_THROW(leap::Deserialize(ds, reacq));
+    ASSERT_EQ(val.value, reacq.value);
   }
 }
 
-INSTANTIATE_TEST_CASE_P(
-  MultiRoundTrip,
-  CompressionStreamTestF,
-  ::testing::Values(4, 18)
-);
+TYPED_TEST(CompressionStreamTest, TruncatedStreamTest) {
+  for (const auto param : {4, 16}) {
+    auto val = MakeSimpleStruct(param);
 
-TEST_F(CompressionStreamTest, EofCheck) {
+    std::string str;
+    {
+      std::stringstream ss;
+      {
+        leap::CompressionStream<TypeParam> cs{
+          leap::make_unique<leap::OutputStreamAdapter>(ss)
+        };
+        leap::Serialize(cs, val);
+      }
+      // To capture the entire compressed stream, we need to "finish" it first.
+      // This is accomplished by destructing the compression stream. Flushing
+      // isn't sufficient, as it doesn't include the trailer.
+      str = ss.str();
+    }
+
+    str.resize(str.size() / 2);
+    ASSERT_FALSE(str.empty());
+
+    // Deserialization should cause a problem
+    SimpleStruct reacq;
+    {
+      std::stringstream ss(std::move(str));
+      leap::DecompressionStream<TypeParam> ds{
+        leap::make_unique<leap::InputStreamAdapter>(ss)
+      };
+      ASSERT_ANY_THROW(leap::Deserialize(ds, reacq));
+    }
+  }
+}
+
+TYPED_TEST(CompressionStreamTest, EofCheck) {
   char buf[200];
   leap::BufferedStream bs(buf, sizeof(buf));
-  leap::DecompressionStream<leap::Zlib> dcs{ leap::make_unique<leap::ForwardingInputStream>(bs) };
+  leap::DecompressionStream<TypeParam> dcs{ leap::make_unique<leap::ForwardingInputStream>(bs) };
   std::streamsize nRead;
   {
-    leap::CompressionStream<leap::Zlib> cs{ leap::make_unique<leap::ForwardingOutputStream>(bs) };
+    leap::CompressionStream<TypeParam> cs{ leap::make_unique<leap::ForwardingOutputStream>(bs) };
 
     // EOF not initially set until a read is attempted
     ASSERT_FALSE(dcs.IsEof());
