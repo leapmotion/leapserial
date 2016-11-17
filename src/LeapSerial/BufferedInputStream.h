@@ -29,10 +29,10 @@ namespace leap {
     const size_t ncbBuffer;
 
     // The READ offset in the buffer
-    size_t m_readOffset = 0;
+    std::streamoff m_readOffset = 0;
 
     // The last valid byte in the buffer
-    size_t m_lastValidByte = 0;
+    std::streamoff m_lastValidByte = 0;
 
     // True if the last read operation resulted in EOF
     bool m_eof = false;
@@ -42,5 +42,6 @@ namespace leap {
     std::streamsize Read(void* pBuf, std::streamsize ncb) override;
     std::streamsize Skip(std::streamsize ncb) override;
     std::streamsize Length(void) override;
+    IInputStream* Seek(std::streampos off) override;
   };
 }
