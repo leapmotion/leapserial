@@ -29,14 +29,15 @@ std::streamsize BufferedInputStream::Skip(std::streamsize ncb) {
   m_eof = skipCount != ncb;
   m_readOffset += static_cast<size_t>(skipCount);
 
-  if (m_readOffset == m_lastValidByte) {
-    // Reset criteria, no data left in the buffer
-    m_readOffset = 0;
-    m_lastValidByte = 0;
-  }
   return skipCount;
 }
 
 std::streamsize BufferedInputStream::Length(void) {
   return static_cast<std::streamsize>(m_lastValidByte - m_readOffset);
+}
+
+IInputStream* BufferedInputStream::Seek(std::streampos pos) {
+  m_readOffset = std::min<std::streamoff>(std::max<std::streamoff>(0, pos), m_lastValidByte);
+  m_eof = m_readOffset != pos && m_readOffset > 0;
+  return this;
 }

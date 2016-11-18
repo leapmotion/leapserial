@@ -2,6 +2,7 @@
 #pragma once
 #include <ios>
 #include <iosfwd>
+#include <stdexcept>
 
 namespace leap {
   /// <summary>
@@ -55,7 +56,7 @@ namespace leap {
     /// <summary>
     /// Sets the stream offset
     /// </summary>
-    /// <returns>This, if the operation is supported, otherwise nullptr</returns>
-    virtual IInputStream* Seek(std::streampos off) { return nullptr; }
+    /// <returns>This, if the operation is supported, otherwise throw</returns>
+    virtual IInputStream* Seek(std::streampos off) { throw std::runtime_error("Seek is not implemented for this stream type"); }
   };
 }
