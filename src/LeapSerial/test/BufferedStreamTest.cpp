@@ -92,6 +92,4 @@ TEST_F(BufferedStreamTest, SeekCheck) {
   bs.Seek(100);
   ASSERT_TRUE(bs.IsEof());
   ASSERT_EQ(0, bs.Read(buf, sizeof(buf)));
-
 }
-
