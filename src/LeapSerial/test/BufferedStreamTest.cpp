@@ -29,6 +29,9 @@ TEST_F(BufferedStreamTest, ReadWithNoWrite) {
   char buf[sizeof(helloWorld) * 2] = {};
   ASSERT_EQ(sizeof(helloWorld) - 1, bs.Read(buf, sizeof(buf)));
   ASSERT_STREQ(helloWorld, buf);
+
+  ASSERT_EQ(0, bs.Read(buf, sizeof(buf)));
+  ASSERT_TRUE(bs.IsEof());
 }
 
 TEST_F(BufferedStreamTest, EofCheck) {
@@ -50,4 +53,43 @@ TEST_F(BufferedStreamTest, EofCheck) {
   bs.Write("abc", 3);
   ASSERT_EQ(3, bs.Read(buf, sizeof(buf)));
   ASSERT_TRUE(bs.IsEof());
+}
+
+TEST_F(BufferedStreamTest, SeekCheck) {
+  char helloWorld[] = "Hello world!";
+  leap::BufferedStream bs{ helloWorld, sizeof(helloWorld), sizeof(helloWorld) - 1 };
+
+  char buf[sizeof(helloWorld) * 2] = {};
+  ASSERT_EQ(sizeof(helloWorld) - 1, bs.Read(buf, sizeof(buf)));
+  ASSERT_STREQ(helloWorld, buf);
+
+  bs.Clear();
+  bs.Seek(0);
+  memset(buf, 0, sizeof(buf));
+
+  ASSERT_EQ(sizeof(helloWorld) - 1, bs.Read(buf, sizeof(buf)));
+  ASSERT_STREQ(helloWorld, buf);
+
+  bs.Clear();
+  bs.Seek(5);
+  memset(buf, 0, sizeof(buf));
+
+  ASSERT_EQ(sizeof(helloWorld) - 6, bs.Read(buf, sizeof(buf)));
+  ASSERT_STREQ(" world!", buf);
+
+  bs.Seek(1);
+  memset(buf, 0, sizeof(buf));
+  ASSERT_EQ(sizeof(helloWorld) - 2, bs.Read(buf, sizeof(buf)));
+  ASSERT_STREQ("ello world!", buf);
+
+  bs.Seek(0);
+  ASSERT_FALSE(bs.IsEof());
+  bs.Seek(std::streamoff(-1)); //-1 is invalid
+  ASSERT_FALSE(bs.IsEof());
+  ASSERT_EQ(sizeof(helloWorld) - 1, bs.Read(buf, sizeof(buf)));
+  ASSERT_STREQ(helloWorld, buf);
+
+  bs.Seek(100);
+  ASSERT_TRUE(bs.IsEof());
+  ASSERT_EQ(0, bs.Read(buf, sizeof(buf)));
 }
