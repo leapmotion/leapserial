@@ -43,7 +43,7 @@ add_conditional_sources(
   TestObject_generated.h
 )
 
-option(LS_ENABLE_PROTOBUF_TESTS "Enable protobuf tests" ON)
+option(LS_ENABLE_PROTOBUF_TESTS "Enable protobuf tests" OFF)
 option(LS_PROTOBUF_REQUIRED "Require protobuf tests" OFF)
 if(LS_ENABLE_PROTOBUF_TESTS OR LS_PROTOBUF_REQUIRED)
   if(LS_PROTOBUF_REQUIRED)
