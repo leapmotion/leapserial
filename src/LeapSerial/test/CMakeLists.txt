@@ -48,7 +48,7 @@ add_conditional_sources(
 )
 
 option(LS_ENABLE_PROTOBUF_TESTS "Enable protobuf tests" ON)
-option(LS_PROTOBUF_REQUIRED "Require protobuf tests" ON)
+option(LS_PROTOBUF_REQUIRED "Require protobuf tests" OFF)
 if(LS_ENABLE_PROTOBUF_TESTS OR LS_PROTOBUF_REQUIRED)
   if(LS_PROTOBUF_REQUIRED)
     find_package(Protobuf 3.0.0.2 EXACT REQUIRED)
