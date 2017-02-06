@@ -22,7 +22,6 @@ matrix:
           - libprotobuf-dev
           - libprotoc-dev
   - os: osx
-    osx_image: xcode6.4
     env:
     - _CC: clang
     - _CXX: clang++
