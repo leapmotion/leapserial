@@ -47,7 +47,11 @@ add_conditional_sources(
   FILES ArchiveFlatbufferTest.cpp TestObject.fbs
 )
 
-option(LS_ENABLE_PROTOBUF_TESTS "Enable protobuf tests" ON)
+if(MSVC OR CMAKE_CROSSCOMPILING)
+  option(LS_ENABLE_PROTOBUF_TESTS "Enable protobuf tests" OFF)
+else()
+  option(LS_ENABLE_PROTOBUF_TESTS "Enable protobuf tests" ON)
+endif()
 option(LS_PROTOBUF_REQUIRED "Require protobuf tests" OFF)
 if(LS_ENABLE_PROTOBUF_TESTS OR LS_PROTOBUF_REQUIRED)
   if(LS_PROTOBUF_REQUIRED)
