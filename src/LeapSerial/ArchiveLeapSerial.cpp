@@ -441,8 +441,8 @@ void OArchiveLeapSerial::WriteInteger(int64_t value, uint8_t) {
   size_t ncb = 0;
   if (value) {
     // Write out our composed varint
-    auto buf = ToBase128(value, ncb).data();
-    WriteByteArray(buf, ncb);
+    const auto arr = ToBase128(value, ncb);
+    WriteByteArray(arr.data(), ncb);
   }
   else
     // Just write one byte of zero
