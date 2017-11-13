@@ -1,1 +1,1 @@
-set(LeapSerial_VERSION 0.5.0)
+set(LeapSerial_VERSION 0.5.1)
