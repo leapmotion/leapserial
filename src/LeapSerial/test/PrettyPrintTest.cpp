@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2018 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include <LeapSerial/ArchiveJSON.h>
 #include <LeapSerial/LeapSerial.h>
