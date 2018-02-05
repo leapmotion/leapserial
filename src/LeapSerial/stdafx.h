@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2018 Leap Motion, Inc. All rights reserved.
 #pragma once
 
 // We want zlib to provide us with a const flag for its struct declarations
