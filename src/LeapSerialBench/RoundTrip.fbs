@@ -1,0 +1,43 @@
+namespace Bench.Flatbuffer;
+
+table Pet {
+  name:string;
+
+  enum Species : short {
+    DOG = 0,
+    CAT = 1
+  }
+
+  species:Species;
+}
+
+struct PetFieldEntry {
+  key:string;
+  value:Pet;
+}
+
+table Person {
+  name:string;
+  id:int32;
+  email:string;
+
+  enum PhoneType {
+    MOBILE = 0,
+    HOME = 1,
+    WORK = 2,
+  }
+
+  table PhoneNumber {
+    number:string;
+    type:PhoneType = HOME;
+  }
+
+  phone:[PhoneNumber];
+  pet:[PetFieldEntry];
+}
+
+message AddressBook {
+  person:[Person];
+}
+
+root_type AddressBook;
